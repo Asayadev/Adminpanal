@@ -1,0 +1,1125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Admin Panel - Growthxpress Xwallet</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .login-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .login-box {
+            background: rgba(255,255,255,0.98);
+            backdrop-filter: blur(10px);
+            padding: 45px 40px;
+            border-radius: 32px;
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+            width: 100%;
+            max-width: 440px;
+        }
+
+        .logo-icon {
+            width: 70px;
+            height: 70px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px;
+            font-size: 32px;
+            color: white;
+        }
+
+        .login-box h1 {
+            font-size: 28px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-align: center;
+            margin-bottom: 8px;
+        }
+
+        .input-group {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .input-group i {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #999;
+            font-size: 18px;
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 14px 16px 14px 48px;
+            border: 2px solid #e0e0e0;
+            border-radius: 16px;
+            font-size: 16px;
+            font-family: 'Inter', sans-serif;
+            transition: all 0.3s ease;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 4px rgba(102,126,234,0.1);
+        }
+
+        .btn-primary {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 16px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px -5px rgba(102,126,234,0.4);
+        }
+
+        .demo-text {
+            margin-top: 25px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 16px;
+            font-size: 12px;
+            color: #666;
+            text-align: center;
+        }
+
+        .dashboard-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 280px;
+            background: linear-gradient(180deg, #1a1a2e 0%, #16213e 100%);
+            color: white;
+            padding: 25px 20px;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            transition: all 0.3s ease;
+            z-index: 100;
+        }
+
+        .sidebar h2 {
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 20px;
+        }
+
+        .admin-info {
+            text-align: center;
+            margin-bottom: 35px;
+            padding-bottom: 25px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .avatar {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            margin: 0 auto 15px;
+        }
+
+        .nav-btn {
+            width: 100%;
+            padding: 12px 16px;
+            margin: 6px 0;
+            background: transparent;
+            color: rgba(255,255,255,0.8);
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            text-align: left;
+            font-size: 15px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .nav-btn:hover, .nav-btn.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            transform: translateX(5px);
+        }
+
+        .logout-btn {
+            margin-top: 40px;
+            background: rgba(220,53,69,0.2);
+            color: #ff6b6b;
+        }
+
+        .logout-btn:hover {
+            background: #dc3545;
+            color: white;
+        }
+
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            background: #f5f7fb;
+            padding: 25px;
+            min-height: 100vh;
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 22px;
+            border-radius: 20px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-card i {
+            font-size: 32px;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .stat-card h3 {
+            color: #666;
+            font-size: 13px;
+            margin-bottom: 8px;
+        }
+
+        .stat-card p {
+            font-size: 28px;
+            font-weight: 700;
+            color: #333;
+        }
+
+        .table-container {
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            margin-top: 20px;
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 600px;
+        }
+
+        th, td {
+            padding: 14px 12px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+
+        th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #333;
+        }
+
+        tr:hover {
+            background: #f8f9fa;
+        }
+
+        .action-btn-group {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .view-password-btn, .edit-btn, .delete-btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .view-password-btn { background: #28a745; color: white; }
+        .edit-btn { background: #17a2b8; color: white; }
+        .delete-btn { background: #dc3545; color: white; }
+
+        .search-container {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .search-input {
+            flex: 1;
+            min-width: 200px;
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 14px;
+            font-size: 14px;
+        }
+
+        .search-btn, .clear-btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 14px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+
+        .search-btn { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+        .clear-btn { background: #6c757d; color: white; }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.6);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: white;
+            width: 90%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+            padding: 28px;
+            border-radius: 28px;
+            position: relative;
+            animation: modalSlideIn 0.3s ease;
+        }
+
+        @keyframes modalSlideIn {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .close {
+            position: absolute;
+            right: 20px;
+            top: 20px;
+            font-size: 28px;
+            cursor: pointer;
+            color: #999;
+            transition: all 0.2s ease;
+        }
+
+        .close:hover {
+            color: #333;
+            transform: rotate(90deg);
+        }
+
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+            font-size: 14px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px 14px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            font-size: 14px;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .password-display {
+            background: #f0f0f0;
+            padding: 20px;
+            border-radius: 16px;
+            text-align: center;
+            margin: 15px 0;
+        }
+
+        .password-display span {
+            font-size: 24px;
+            font-weight: bold;
+            color: #667eea;
+            letter-spacing: 2px;
+        }
+
+        .toast-notification {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            padding: 14px 22px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            z-index: 1100;
+            animation: slideInRight 0.3s ease;
+            font-size: 14px;
+            font-weight: 500;
+            color: white;
+        }
+
+        @keyframes slideInRight {
+            from { opacity: 0; transform: translateX(100px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .mobile-menu-btn {
+            display: none;
+            background: white;
+            border: none;
+            padding: 12px;
+            border-radius: 12px;
+            cursor: pointer;
+            margin-bottom: 15px;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                width: 280px;
+            }
+            .sidebar.open {
+                transform: translateX(0);
+            }
+            .main-content {
+                margin-left: 0;
+                padding: 15px;
+            }
+            .mobile-menu-btn {
+                display: inline-block;
+            }
+            .stats-grid {
+                grid-template-columns: 1fr 1fr;
+                gap: 12px;
+            }
+            .stat-card p {
+                font-size: 22px;
+            }
+            .search-container {
+                flex-direction: column;
+            }
+            .search-btn, .clear-btn {
+                width: 100%;
+            }
+            .toast-notification {
+                bottom: 20px;
+                right: 20px;
+                left: 20px;
+                text-align: center;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<!-- LOGIN PAGE -->
+<div id="loginPage">
+    <div class="login-container">
+        <div class="login-box">
+            <div class="logo-icon">
+                <i class="fas fa-crown"></i>
+            </div>
+            <h1>Admin Panel</h1>
+            <div style="text-align:center; color:#666; font-size:14px; margin-bottom:30px;">Growthxpress Xwallet Management</div>
+            <div class="input-group">
+                <i class="fas fa-user-shield"></i>
+                <input type="text" id="adminId" placeholder="Admin ID" class="input-field">
+            </div>
+            <div class="input-group">
+                <i class="fas fa-lock"></i>
+                <input type="password" id="adminPassword" placeholder="Password" class="input-field">
+            </div>
+            <button onclick="loginAdmin()" class="btn-primary">
+                <i class="fas fa-sign-in-alt"></i> Login
+            </button>
+            <div class="demo-text">
+                <strong><i class="fas fa-info-circle"></i> Admin Credentials</strong><br>
+                ID: admin | Password: admin123
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ADMIN DASHBOARD -->
+<div id="adminDashboard" style="display:none;">
+    <div class="dashboard-container">
+        <div class="sidebar" id="sidebar">
+            <h2><i class="fas fa-crown"></i> Admin Panel</h2>
+            <div class="admin-info">
+                <div class="avatar"><i class="fas fa-user-tie"></i></div>
+                <h3>Administrator</h3>
+                <p>Growthxpress Xwallet</p>
+            </div>
+            <nav>
+                <button class="nav-btn active" data-tab="overview"><i class="fas fa-chart-line"></i> Overview</button>
+                <button class="nav-btn" data-tab="allTransfers"><i class="fas fa-exchange-alt"></i> All Transfers</button>
+                <button class="nav-btn" data-tab="users"><i class="fas fa-users"></i> Manage Users</button>
+                <button class="nav-btn logout-btn" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
+            </nav>
+        </div>
+
+        <div class="main-content">
+            <button class="mobile-menu-btn" onclick="toggleSidebar()">
+                <i class="fas fa-bars" style="font-size: 20px;"></i>
+            </button>
+
+            <div id="overviewTab" class="tab-content active">
+                <h2 style="margin-bottom: 20px;"><i class="fas fa-chart-line"></i> Dashboard Overview</h2>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <i class="fas fa-users"></i>
+                        <h3>Total Users</h3>
+                        <p id="totalUsers">0</p>
+                    </div>
+                    <div class="stat-card">
+                        <i class="fas fa-history"></i>
+                        <h3>Total Transactions</h3>
+                        <p id="totalTransactions">0</p>
+                    </div>
+                    <div class="stat-card">
+                        <i class="fas fa-rupee-sign"></i>
+                        <h3>Total Volume</h3>
+                        <p id="totalVolume">₹0</p>
+                    </div>
+                </div>
+                <h3 style="margin: 20px 0 15px;">Recent Transfers</h3>
+                <div id="recentTransfers"></div>
+            </div>
+
+            <div id="allTransfersTab" class="tab-content">
+                <h2 style="margin-bottom: 20px;"><i class="fas fa-list-alt"></i> All Transfer History</h2>
+                <div class="table-container">
+                    <table>
+                        <thead><tr><th>From User</th><th>To User</th><th>Amount</th><th>Date & Time</th></tr></thead>
+                        <tbody id="transfersList"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="usersTab" class="tab-content">
+                <h2 style="margin-bottom: 20px;"><i class="fas fa-users"></i> Manage Users</h2>
+                <button onclick="showAddUserModal()" class="btn-primary" style="width: auto; margin-bottom: 15px;">
+                    <i class="fas fa-plus"></i> Add New User
+                </button>
+                
+                <div class="search-container">
+                    <input type="text" id="searchUserName" placeholder="🔍 Search by Name or User ID..." class="search-input">
+                    <button onclick="searchUsers()" class="search-btn"><i class="fas fa-search"></i> Search</button>
+                    <button onclick="clearSearch()" class="clear-btn"><i class="fas fa-eraser"></i> Clear</button>
+                </div>
+                
+                <div id="searchResultInfo" style="display: none; padding: 10px; border-radius: 12px; margin-bottom: 15px;"></div>
+                
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>User ID</th>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Phone</th>
+                                <th>Balance</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="usersList"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ADD USER MODAL -->
+<div id="addUserModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeModal('addUserModal')">&times;</span>
+        <h3 style="margin-bottom: 20px;"><i class="fas fa-user-plus"></i> Add New User</h3>
+        <div class="form-group">
+            <label>User ID *</label>
+            <input type="text" id="newUserId" placeholder="Enter User ID" class="input-field">
+        </div>
+        <div class="form-group">
+            <label>Full Name *</label>
+            <input type="text" id="newUserName" placeholder="Enter Full Name" class="input-field">
+        </div>
+        <div class="form-group">
+            <label>Email</label>
+            <input type="email" id="newUserEmail" placeholder="Enter Email" class="input-field">
+        </div>
+        <div class="form-group">
+            <label>Phone</label>
+            <input type="text" id="newUserPhone" placeholder="Enter Phone Number" class="input-field">
+        </div>
+        <div class="form-group">
+            <label>Initial Balance (₹)</label>
+            <input type="number" id="newUserBalance" placeholder="Initial Balance" class="input-field" value="0">
+        </div>
+        <div class="form-group">
+            <label>Password *</label>
+            <input type="password" id="newUserPassword" placeholder="Enter Password" class="input-field">
+        </div>
+        <button onclick="addUser()" class="btn-primary"><i class="fas fa-check"></i> Create User</button>
+    </div>
+</div>
+
+<!-- EDIT USER MODAL -->
+<div id="editUserModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeModal('editUserModal')">&times;</span>
+        <h3 style="margin-bottom: 20px;"><i class="fas fa-edit"></i> Edit User Details</h3>
+        <input type="hidden" id="editUserId">
+        <div class="form-group">
+            <label>User ID</label>
+            <input type="text" id="editUserIdDisplay" class="input-field" disabled style="background:#f5f5f5;">
+        </div>
+        <div class="form-group">
+            <label>Full Name *</label>
+            <input type="text" id="editUserName" class="input-field">
+        </div>
+        <div class="form-group">
+            <label>Email</label>
+            <input type="email" id="editUserEmail" class="input-field">
+        </div>
+        <div class="form-group">
+            <label>Phone</label>
+            <input type="text" id="editUserPhone" class="input-field">
+        </div>
+        <div class="form-group">
+            <label>Balance (₹)</label>
+            <input type="number" id="editUserBalance" class="input-field">
+        </div>
+        <div class="form-group">
+            <label>Password</label>
+            <input type="password" id="editUserPassword" placeholder="New Password (leave blank to keep current)" class="input-field">
+            <small style="color:#666;">Leave empty to keep existing password</small>
+        </div>
+        <div style="display: flex; gap: 10px; margin-top: 20px;">
+            <button onclick="updateUser()" class="btn-primary"><i class="fas fa-save"></i> Save Changes</button>
+            <button onclick="closeModal('editUserModal')" class="btn-primary" style="background:#6c757d;">Cancel</button>
+        </div>
+    </div>
+</div>
+
+<!-- VIEW PASSWORD MODAL -->
+<div id="viewPasswordModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeModal('viewPasswordModal')">&times;</span>
+        <h3 style="margin-bottom: 20px;"><i class="fas fa-key"></i> User Password</h3>
+        <div class="password-display">
+            <p><strong>User ID:</strong> <span id="passwordUserId"></span></p>
+            <p><strong>Password:</strong> <span id="passwordValue" style="font-size:24px;font-weight:bold;color:#667eea;"></span></p>
+        </div>
+        <button onclick="copyPassword()" class="btn-primary"><i class="fas fa-copy"></i> Copy Password</button>
+    </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+
+<script>
+// Firebase Configuration
+const firebaseConfig = {
+    apiKey: "AIzaSyC6NlviruSjmmoj_gE6nZkBHdfq69t2PcA",
+    authDomain: "apstore-426b2.firebaseapp.com",
+    databaseURL: "https://apstore-426b2-default-rtdb.firebaseio.com",
+    projectId: "apstore-426b2",
+    storageBucket: "apstore-426b2.appspot.com",
+    messagingSenderId: "689506328225",
+    appId: "1:689506328225:android:ee42613596f2f2c1881ae0"
+};
+
+firebase.initializeApp(firebaseConfig);
+const database = firebase.database();
+
+let allUsersData = [];
+let usersListener = null;
+let transfersListener = null;
+
+function showToast(message, type = 'success') {
+    const existingToast = document.querySelector('.toast-notification');
+    if (existingToast) existingToast.remove();
+    
+    const toast = document.createElement('div');
+    toast.className = 'toast-notification';
+    toast.innerHTML = `<i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i> ${message}`;
+    toast.style.background = type === 'success' ? '#28a745' : '#dc3545';
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 3000);
+}
+
+function toggleSidebar() {
+    document.getElementById('sidebar').classList.toggle('open');
+}
+
+function loginAdmin() {
+    const adminId = document.getElementById('adminId').value;
+    const password = document.getElementById('adminPassword').value;
+    
+    if(adminId === 'admin' && password === 'admin123') {
+        document.getElementById('loginPage').style.display = 'none';
+        document.getElementById('adminDashboard').style.display = 'block';
+        loadAdminDashboard();
+        setupAdminEvents();
+        showToast('Welcome Admin!', 'success');
+    } else {
+        showToast('Invalid Admin Credentials!', 'error');
+    }
+}
+
+function loadAdminDashboard() {
+    loadStats();
+    loadAllTransfers();
+    loadAllUsers();
+    
+    // Real-time listeners
+    if (transfersListener) transfersListener.off();
+    transfersListener = database.ref('Transfer_History');
+    transfersListener.on('value', () => {
+        loadStats();
+        loadAllTransfers();
+    });
+    
+    if (usersListener) usersListener.off();
+    usersListener = database.ref('Users');
+    usersListener.on('value', () => {
+        loadStats();
+        loadAllUsers();
+    });
+}
+
+function loadStats() {
+    database.ref('Users').once('value').then((snapshot) => {
+        document.getElementById('totalUsers').innerText = snapshot.numChildren() || 0;
+    });
+    
+    database.ref('Transfer_History').once('value').then((snapshot) => {
+        let totalVolume = 0;
+        snapshot.forEach((child) => {
+            totalVolume += child.val().amount || 0;
+        });
+        document.getElementById('totalTransactions').innerText = snapshot.numChildren() || 0;
+        document.getElementById('totalVolume').innerHTML = '₹' + totalVolume.toLocaleString();
+        
+        const recent = [];
+        snapshot.forEach((child) => {
+            recent.push({id: child.key, ...child.val()});
+        });
+        recent.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+        
+        let html = '<div class="table-container"><table><thead><tr><th>From</th><th>To</th><th>Amount</th><th>Time</th></tr></thead><tbody>';
+        if(recent.length === 0) {
+            html += '<tr><td colspan="4" style="text-align:center;">No transfers yet</td></tr>';
+        } else {
+            recent.slice(0, 10).forEach(transfer => {
+                html += `<tr>
+                    <td><strong>${transfer.fromUserName || transfer.fromUserId}</strong><br><small>${transfer.fromUserId}</small></td>
+                    <td><strong>${transfer.toUserName || transfer.toUserId}</strong><br><small>${transfer.toUserId}</small></td>
+                    <td style="color:#2ed573;font-weight:bold;">₹${transfer.amount.toLocaleString()}</td>
+                    <td><small>${new Date(transfer.timestamp).toLocaleString()}</small></td>
+                </tr>`;
+            });
+        }
+        html += '</tbody>}</div>';
+        document.getElementById('recentTransfers').innerHTML = html;
+    });
+}
+
+function loadAllTransfers() {
+    database.ref('Transfer_History').once('value').then((snapshot) => {
+        const tbody = document.getElementById('transfersList');
+        tbody.innerHTML = '';
+        if(!snapshot.exists()) {
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">No transfers found</td></tr>';
+            return;
+        }
+        const transfers = [];
+        snapshot.forEach((child) => {
+            transfers.push({id: child.key, ...child.val()});
+        });
+        transfers.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+        transfers.forEach(transfer => {
+            const row = tbody.insertRow();
+            row.insertCell(0).innerHTML = `<strong>${transfer.fromUserName || transfer.fromUserId}</strong><br><small>${transfer.fromUserId}</small>`;
+            row.insertCell(1).innerHTML = `<strong>${transfer.toUserName || transfer.toUserId}</strong><br><small>${transfer.toUserId}</small>`;
+            row.insertCell(2).innerHTML = '<span style="color:#2ed573;font-weight:bold;">₹' + transfer.amount.toLocaleString() + '</span>';
+            row.insertCell(3).innerHTML = '<small>' + new Date(transfer.timestamp).toLocaleString() + '</small>';
+        });
+    });
+}
+
+function loadAllUsers() {
+    database.ref('Users').once('value').then((snapshot) => {
+        allUsersData = [];
+        snapshot.forEach((child) => {
+            allUsersData.push({
+                id: child.key,
+                ...child.val()
+            });
+        });
+        displayUsers(allUsersData);
+    }).catch(error => {
+        console.error("Error loading users:", error);
+        showToast("Error loading users", "error");
+    });
+}
+
+function displayUsers(users) {
+    const tbody = document.getElementById('usersList');
+    tbody.innerHTML = '';
+    
+    if(!users || users.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">No users found. Click "Add New User" to create first user.</td></tr>';
+        return;
+    }
+    
+    users.forEach((user) => {
+        const row = tbody.insertRow();
+        row.insertCell(0).innerHTML = `<strong>${user.id}</strong>`;
+        row.insertCell(1).innerHTML = user.name || '-';
+        row.insertCell(2).innerHTML = user.email || '-';
+        row.insertCell(3).innerHTML = user.phone || '-';
+        row.insertCell(4).innerHTML = '<span style="color:#667eea;font-weight:bold;">₹' + (user.balance || 0).toLocaleString() + '</span>';
+        row.insertCell(5).innerHTML = `
+            <div class="action-btn-group">
+                <button class="view-password-btn" onclick="viewPassword('${user.id}')" title="View Password"><i class="fas fa-key"></i></button>
+                <button class="edit-btn" onclick="editUser('${user.id}')" title="Edit User"><i class="fas fa-edit"></i></button>
+                <button class="delete-btn" onclick="deleteUser('${user.id}')" title="Delete User"><i class="fas fa-trash"></i></button>
+            </div>
+        `;
+    });
+}
+
+function searchUsers() {
+    const searchTerm = document.getElementById('searchUserName').value.toLowerCase().trim();
+    if(searchTerm === '') {
+        showToast('Please enter a name or user ID to search', 'error');
+        return;
+    }
+    const filteredUsers = allUsersData.filter(user => 
+        (user.name && user.name.toLowerCase().includes(searchTerm)) || 
+        user.id.toLowerCase().includes(searchTerm)
+    );
+    displayUsers(filteredUsers);
+    const resultInfo = document.getElementById('searchResultInfo');
+    if(filteredUsers.length > 0) {
+        resultInfo.style.display = 'block';
+        resultInfo.innerHTML = `<i class="fas fa-search"></i> Found ${filteredUsers.length} user(s) matching "${searchTerm}"`;
+        resultInfo.style.background = '#e8f5e9';
+        resultInfo.style.color = '#2e7d32';
+    } else {
+        resultInfo.style.display = 'block';
+        resultInfo.innerHTML = `<i class="fas fa-exclamation-circle"></i> No users found matching "${searchTerm}"`;
+        resultInfo.style.background = '#ffebee';
+        resultInfo.style.color = '#c62828';
+    }
+}
+
+function clearSearch() {
+    document.getElementById('searchUserName').value = '';
+    document.getElementById('searchResultInfo').style.display = 'none';
+    displayUsers(allUsersData);
+}
+
+// ============ ADD USER FUNCTION (No Auto Users) ============
+function addUser() {
+    const userId = document.getElementById('newUserId').value.trim();
+    const name = document.getElementById('newUserName').value.trim();
+    const email = document.getElementById('newUserEmail').value.trim();
+    const phone = document.getElementById('newUserPhone').value.trim();
+    const balance = parseInt(document.getElementById('newUserBalance').value) || 0;
+    const password = document.getElementById('newUserPassword').value;
+    
+    if(!userId) { showToast('Please enter User ID', 'error'); return; }
+    if(!name) { showToast('Please enter Full Name', 'error'); return; }
+    if(!password) { showToast('Please enter Password', 'error'); return; }
+    
+    const addBtn = event.target;
+    addBtn.disabled = true;
+    addBtn.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> Creating...';
+    
+    database.ref('Users/' + userId).once('value')
+        .then((snapshot) => {
+            if(snapshot.exists()) {
+                showToast('User ID already exists!', 'error');
+                addBtn.disabled = false;
+                addBtn.innerHTML = '<i class="fas fa-check"></i> Create User';
+                return Promise.reject('User exists');
+            }
+            
+            const userData = {
+                name: name,
+                email: email || '',
+                phone: phone || '',
+                balance: balance,
+                password: password,
+                createdAt: new Date().toISOString()
+            };
+            
+            return database.ref('Users/' + userId).set(userData);
+        })
+        .then(() => {
+            showToast('✅ User created successfully!', 'success');
+            closeModal('addUserModal');
+            
+            document.getElementById('newUserId').value = '';
+            document.getElementById('newUserName').value = '';
+            document.getElementById('newUserEmail').value = '';
+            document.getElementById('newUserPhone').value = '';
+            document.getElementById('newUserBalance').value = '0';
+            document.getElementById('newUserPassword').value = '';
+            
+            setTimeout(() => {
+                loadAllUsers();
+                loadStats();
+            }, 500);
+        })
+        .catch((error) => {
+            if(error !== 'User exists') {
+                console.error("Error:", error);
+                showToast('Error: ' + (error.message || 'Unknown error'), 'error');
+            }
+        })
+        .finally(() => {
+            addBtn.disabled = false;
+            addBtn.innerHTML = '<i class="fas fa-check"></i> Create User';
+        });
+}
+
+function editUser(userId) {
+    database.ref('Users/' + userId).once('value').then((snapshot) => {
+        if(snapshot.exists()) {
+            const user = snapshot.val();
+            document.getElementById('editUserId').value = userId;
+            document.getElementById('editUserIdDisplay').value = userId;
+            document.getElementById('editUserName').value = user.name || '';
+            document.getElementById('editUserEmail').value = user.email || '';
+            document.getElementById('editUserPhone').value = user.phone || '';
+            document.getElementById('editUserBalance').value = user.balance || 0;
+            document.getElementById('editUserPassword').value = '';
+            document.getElementById('editUserModal').style.display = 'flex';
+        } else {
+            showToast('User not found!', 'error');
+        }
+    });
+}
+
+function updateUser() {
+    const userId = document.getElementById('editUserId').value;
+    const name = document.getElementById('editUserName').value.trim();
+    const email = document.getElementById('editUserEmail').value.trim();
+    const phone = document.getElementById('editUserPhone').value.trim();
+    const balance = parseInt(document.getElementById('editUserBalance').value) || 0;
+    const newPassword = document.getElementById('editUserPassword').value;
+    
+    if(!name) { showToast('Please enter user name', 'error'); return; }
+    
+    const updateBtn = event.target;
+    updateBtn.disabled = true;
+    updateBtn.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> Saving...';
+    
+    const updates = {
+        name: name,
+        email: email || '',
+        phone: phone || '',
+        balance: balance
+    };
+    
+    if(newPassword && newPassword.trim() !== '') {
+        updates.password = newPassword;
+    }
+    
+    database.ref('Users/' + userId).update(updates)
+        .then(() => {
+            showToast('✅ User updated successfully!', 'success');
+            closeModal('editUserModal');
+            loadAllUsers();
+            loadStats();
+        })
+        .catch((error) => {
+            showToast('Error: ' + error.message, 'error');
+        })
+        .finally(() => {
+            updateBtn.disabled = false;
+            updateBtn.innerHTML = '<i class="fas fa-save"></i> Save Changes';
+        });
+}
+
+function viewPassword(userId) {
+    database.ref('Users/' + userId).once('value').then((snapshot) => {
+        if(snapshot.exists()) {
+            const user = snapshot.val();
+            document.getElementById('passwordUserId').innerText = userId;
+            document.getElementById('passwordValue').innerHTML = user.password;
+            document.getElementById('viewPasswordModal').style.display = 'flex';
+        } else {
+            showToast('User not found!', 'error');
+        }
+    });
+}
+
+function copyPassword() {
+    const passwordText = document.getElementById('passwordValue').innerText;
+    navigator.clipboard.writeText(passwordText).then(() => {
+        showToast('✅ Password copied!', 'success');
+    }).catch(() => {
+        showToast('Failed to copy password', 'error');
+    });
+}
+
+function deleteUser(userId) {
+    if(confirm('⚠️ Are you sure you want to delete user: ' + userId + '?\nThis action cannot be undone!')) {
+        database.ref('Users/' + userId).remove()
+            .then(() => {
+                showToast('✅ User deleted successfully', 'success');
+                loadAllUsers();
+                loadStats();
+                if(document.getElementById('searchUserName').value !== '') clearSearch();
+            })
+            .catch((error) => {
+                showToast('Error: ' + error.message, 'error');
+            });
+    }
+}
+
+function showAddUserModal() {
+    document.getElementById('addUserModal').style.display = 'flex';
+}
+
+function closeModal(modalId) {
+    document.getElementById(modalId).style.display = 'none';
+}
+
+function setupAdminEvents() {
+    document.querySelectorAll('#adminDashboard .nav-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            if(btn.classList.contains('logout-btn')) return;
+            const tab = btn.dataset.tab;
+            document.querySelectorAll('#adminDashboard .nav-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            document.querySelectorAll('#adminDashboard .tab-content').forEach(t => t.classList.remove('active'));
+            document.getElementById(tab + 'Tab').classList.add('active');
+            
+            if(tab === 'users') { loadAllUsers(); clearSearch(); }
+            if(tab === 'allTransfers') loadAllTransfers();
+            if(tab === 'overview') loadStats();
+            
+            if(window.innerWidth <= 768) {
+                document.getElementById('sidebar').classList.remove('open');
+            }
+        });
+    });
+    
+    document.getElementById('searchUserName').addEventListener('keypress', function(e) {
+        if(e.key === 'Enter') searchUsers();
+    });
+}
+
+function logout() {
+    if(usersListener) usersListener.off();
+    if(transfersListener) transfersListener.off();
+    document.getElementById('loginPage').style.display = 'flex';
+    document.getElementById('adminDashboard').style.display = 'none';
+    document.getElementById('adminId').value = '';
+    document.getElementById('adminPassword').value = '';
+    showToast('Logged out successfully', 'success');
+}
+
+// ============ NO AUTO USERS - REMOVED initializeSampleData ============
+// Database will be empty initially. Admin will create users manually.
+console.log("Admin Panel Ready - No demo users. Use 'Add New User' to create users.");
+
+// Optional: Display message if database is empty
+function checkAndShowEmptyMessage() {
+    database.ref('Users').once('value').then((snapshot) => {
+        if(!snapshot.exists()) {
+            console.log("No users found. Please add users using 'Add New User' button.");
+        }
+    });
+}
+
+checkAndShowEmptyMessage();
+</script>
+
+</body>
+</html>
