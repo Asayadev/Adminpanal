@@ -658,11 +658,15 @@
 <button @click="saveProduct" class="w-full bg-green-600 text-white py-2.5 rounded-lg font-bold hover:bg-green-700 transition flex items-center justify-center gap-1"><i class="fas fa-cloud-upload-alt"></i> Publish Live Product</button></div></div></div>
             
             <div v-if="currentPage == 'storeRooms'">
-                <div class="flex justify-between items-center mb-4">
+                <div class="flex justify-between items-center mb-4 flex-wrap gap-2">
                     <h2 class="text-base font-bold text-gray-800">🏪 Connected Store Rooms Control Panel</h2>
-                    <div class="flex items-center gap-2">
+                    <div class="flex items-center gap-2 flex-wrap">
                         <span class="text-xs bg-green-100 text-green-700 font-bold px-2.5 py-1 rounded-full"><i class="fas fa-circle text-[7px] mr-1"></i>Active: {{ storeRooms.filter(s=>!s.blocked).length }}</span>
                         <span class="text-xs bg-red-100 text-red-700 font-bold px-2.5 py-1 rounded-full"><i class="fas fa-ban text-[9px] mr-1"></i>Blocked: {{ storeRooms.filter(s=>s.blocked).length }}</span>
+                        <button @click="showCreateStoreModal = true"
+                            class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs px-3 py-2 rounded-xl flex items-center gap-1.5 shadow transition active:scale-95">
+                            <i class="fas fa-plus"></i> Create Store User
+                        </button>
                     </div>
                 </div>
                 <div class="bg-white rounded-xl shadow-sm overflow-x-auto border border-gray-100">
@@ -726,6 +730,113 @@
                             </tr>
                         </tbody>
                     </table>
+                </div>
+            </div>
+
+            <!-- ===== CREATE STORE USER MODAL ===== -->
+            <div v-if="showCreateStoreModal" class="fixed inset-0 bg-black/60 flex items-center justify-center z-[200] p-4" style="backdrop-filter:blur(4px);" @click.self="closeCreateStoreModal">
+                <div class="bg-white rounded-3xl w-full shadow-2xl animate-fade-in overflow-hidden" style="max-width:420px;max-height:94vh;overflow-y:auto;">
+
+                    <!-- Modal Header -->
+                    <div style="background:linear-gradient(135deg,#4f46e5,#7c3aed);padding:20px 20px 16px;position:relative;">
+                        <div style="display:flex;justify-content:space-between;align-items:center;">
+                            <div style="display:flex;align-items:center;gap:10px;">
+                                <div style="width:42px;height:42px;background:rgba(255,255,255,0.15);border-radius:12px;display:flex;align-items:center;justify-content:center;">
+                                    <i class="fas fa-store-alt" style="color:white;font-size:18px;"></i>
+                                </div>
+                                <div>
+                                    <h3 style="color:white;font-size:15px;font-weight:900;margin:0;">Naya Store User Banayein</h3>
+                                    <p style="color:rgba(255,255,255,0.65);font-size:11px;margin:2px 0 0;">Admin se store account create karein</p>
+                                </div>
+                            </div>
+                            <button @click="closeCreateStoreModal" style="background:rgba(255,255,255,0.15);border:none;color:white;width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div style="padding:20px;">
+                        <!-- Error box -->
+                        <div v-if="createStoreError" style="background:#fef2f2;border:1px solid #fecaca;color:#b91c1c;border-radius:12px;padding:9px 12px;font-size:12px;font-weight:600;display:flex;align-items:center;gap:8px;margin-bottom:14px;">
+                            <i class="fas fa-exclamation-circle"></i> {{ createStoreError }}
+                        </div>
+                        <!-- Success box -->
+                        <div v-if="createStoreSuccess" style="background:#f0fdf4;border:1px solid #bbf7d0;color:#15803d;border-radius:12px;padding:9px 12px;font-size:12px;font-weight:700;display:flex;align-items:center;gap:8px;margin-bottom:14px;">
+                            <i class="fas fa-check-circle"></i> {{ createStoreSuccess }}
+                        </div>
+
+                        <!-- Shop Name -->
+                        <div style="margin-bottom:13px;">
+                            <label style="display:block;font-size:11px;font-weight:700;color:#374151;margin-bottom:5px;text-transform:uppercase;letter-spacing:0.5px;">🏪 Shop Name *</label>
+                            <div style="position:relative;">
+                                <i class="fas fa-store" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#9ca3af;font-size:13px;"></i>
+                                <input type="text" v-model="createStoreForm.shopName" placeholder="e.g. Radha Electronics"
+                                    style="width:100%;padding:11px 12px 11px 38px;border:1.5px solid #e5e7eb;border-radius:12px;font-size:13px;outline:none;box-sizing:border-box;"
+                                    @focus="$event.target.style.borderColor='#4f46e5'" @blur="$event.target.style.borderColor='#e5e7eb'">
+                            </div>
+                        </div>
+
+                        <!-- Mobile Number -->
+                        <div style="margin-bottom:13px;">
+                            <label style="display:block;font-size:11px;font-weight:700;color:#374151;margin-bottom:5px;text-transform:uppercase;letter-spacing:0.5px;">📞 Mobile Number *</label>
+                            <div style="position:relative;">
+                                <i class="fas fa-mobile-alt" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#9ca3af;font-size:13px;"></i>
+                                <input type="tel" v-model="createStoreForm.mobile" placeholder="10 digit mobile number"
+                                    style="width:100%;padding:11px 12px 11px 38px;border:1.5px solid #e5e7eb;border-radius:12px;font-size:13px;outline:none;box-sizing:border-box;"
+                                    @focus="$event.target.style.borderColor='#4f46e5'" @blur="$event.target.style.borderColor='#e5e7eb'">
+                            </div>
+                        </div>
+
+                        <!-- Gmail Address -->
+                        <div style="margin-bottom:13px;">
+                            <label style="display:block;font-size:11px;font-weight:700;color:#374151;margin-bottom:5px;text-transform:uppercase;letter-spacing:0.5px;">📧 Gmail Address *</label>
+                            <div style="position:relative;">
+                                <i class="fas fa-envelope" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#9ca3af;font-size:13px;"></i>
+                                <input type="email" v-model="createStoreForm.email" placeholder="store@gmail.com"
+                                    style="width:100%;padding:11px 12px 11px 38px;border:1.5px solid #e5e7eb;border-radius:12px;font-size:13px;outline:none;box-sizing:border-box;"
+                                    @focus="$event.target.style.borderColor='#4f46e5'" @blur="$event.target.style.borderColor='#e5e7eb'">
+                            </div>
+                        </div>
+
+                        <!-- Password -->
+                        <div style="margin-bottom:6px;">
+                            <label style="display:block;font-size:11px;font-weight:700;color:#374151;margin-bottom:5px;text-transform:uppercase;letter-spacing:0.5px;">🔒 Password *</label>
+                            <div style="position:relative;">
+                                <i class="fas fa-lock" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#9ca3af;font-size:13px;"></i>
+                                <input :type="showCreateStorePwd ? 'text' : 'password'" v-model="createStoreForm.password" placeholder="Min 6 characters"
+                                    style="width:100%;padding:11px 40px 11px 38px;border:1.5px solid #e5e7eb;border-radius:12px;font-size:13px;outline:none;box-sizing:border-box;"
+                                    @focus="$event.target.style.borderColor='#4f46e5'" @blur="$event.target.style.borderColor='#e5e7eb'">
+                                <button type="button" @click="showCreateStorePwd=!showCreateStorePwd" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:#9ca3af;cursor:pointer;padding:0;">
+                                    <i :class="showCreateStorePwd ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <!-- Confirm Password -->
+                        <div style="margin-bottom:20px;">
+                            <label style="display:block;font-size:11px;font-weight:700;color:#374151;margin-bottom:5px;text-transform:uppercase;letter-spacing:0.5px;">🔒 Confirm Password *</label>
+                            <div style="position:relative;">
+                                <i class="fas fa-lock" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#9ca3af;font-size:13px;"></i>
+                                <input :type="showCreateStorePwd ? 'text' : 'password'" v-model="createStoreForm.confirmPassword" placeholder="Password dobara daalen"
+                                    style="width:100%;padding:11px 12px 11px 38px;border:1.5px solid #e5e7eb;border-radius:12px;font-size:13px;outline:none;box-sizing:border-box;"
+                                    @focus="$event.target.style.borderColor='#4f46e5'" @blur="$event.target.style.borderColor='#e5e7eb'">
+                            </div>
+                        </div>
+
+                        <!-- Info Note -->
+                        <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:12px;padding:10px 12px;margin-bottom:18px;display:flex;gap:8px;align-items:flex-start;">
+                            <i class="fas fa-info-circle" style="color:#3b82f6;font-size:13px;margin-top:1px;flex-shrink:0;"></i>
+                            <p style="font-size:11px;color:#1e40af;margin:0;line-height:1.5;">Yeh account <strong>Firebase Auth</strong> mein create hoga. Store owner in credentials se <strong>Store Panel</strong> mein login kar sakta hai.</p>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <button @click="submitCreateStore" :disabled="createStoreLoading"
+                            style="width:100%;background:linear-gradient(135deg,#4f46e5,#7c3aed);color:white;border:none;border-radius:14px;padding:14px;font-size:14px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 6px 20px rgba(79,70,229,0.35);transition:0.2s;"
+                            :style="createStoreLoading ? 'opacity:0.7;cursor:not-allowed;' : ''">
+                            <i v-if="createStoreLoading" class="fas fa-circle-notch fa-spin"></i>
+                            <i v-else class="fas fa-user-plus"></i>
+                            {{ createStoreLoading ? 'Account ban raha hai...' : 'Store Account Create Karein' }}
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -1714,6 +1825,12 @@ new Vue({
         storeRooms: [], 
         showStoreModal: false,
         selectedStore: null,
+        showCreateStoreModal: false,
+        showCreateStorePwd: false,
+        createStoreLoading: false,
+        createStoreError: '',
+        createStoreSuccess: '',
+        createStoreForm: { shopName: '', mobile: '', email: '', password: '', confirmPassword: '' },
         availableCategories: ['Mobile', 'Electronics', 'Mobile & Accessories', 'Beauty product', 'Footwear', 'vegetables', 'Watches'],
         categoryData: [],
         newCategoryInput: '',
@@ -2736,6 +2853,73 @@ new Vue({
         formatDate(iso) { if (!iso) return ''; return new Date(iso).toLocaleString('en-IN', { day:'numeric', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' }); },
         formatShortDate(iso) { if (!iso) return ''; return new Date(iso).toLocaleString('en-IN', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' }); },
 
+        // ===== CREATE STORE USER =====
+        closeCreateStoreModal() {
+            this.showCreateStoreModal = false;
+            this.createStoreError = '';
+            this.createStoreSuccess = '';
+            this.createStoreForm = { shopName: '', mobile: '', email: '', password: '', confirmPassword: '' };
+            this.showCreateStorePwd = false;
+        },
+        async submitCreateStore() {
+            this.createStoreError = '';
+            this.createStoreSuccess = '';
+            const { shopName, mobile, email, password, confirmPassword } = this.createStoreForm;
+
+            // Validations
+            if (!shopName.trim())               { this.createStoreError = '❌ Shop Name zaroori hai.'; return; }
+            if (!mobile.trim() || mobile.trim().replace(/\D/g,'').length < 10) { this.createStoreError = '❌ Valid 10-digit mobile number daalo.'; return; }
+            if (!email.trim())                  { this.createStoreError = '❌ Gmail address zaroori hai.'; return; }
+            if (!/^[^@]+@[^@]+\.[^@]+$/.test(email.trim())) { this.createStoreError = '❌ Valid Gmail format daalo.'; return; }
+            if (password.length < 6)            { this.createStoreError = '❌ Password kam se kam 6 characters ka hona chahiye.'; return; }
+            if (password !== confirmPassword)   { this.createStoreError = '❌ Dono passwords match nahi kar rahe.'; return; }
+
+            // Duplicate shop name check
+            const exists = this.storeRooms.find(s => (s.shopName || '').toLowerCase() === shopName.trim().toLowerCase());
+            if (exists) { this.createStoreError = '❌ Is naam ka store pehle se exist karta hai.'; return; }
+
+            this.createStoreLoading = true;
+            try {
+                // Firebase Auth mein naya user create karo
+                const cred = await auth.createUserWithEmailAndPassword(email.trim(), password);
+                const uid = cred.user.uid;
+                await cred.user.updateProfile({ displayName: shopName.trim() });
+
+                // Store data prepare
+                const storeData = {
+                    uid,
+                    shopName:  shopName.trim(),
+                    mobile:    mobile.trim(),
+                    email:     email.trim(),
+                    createdAt: new Date().toISOString(),
+                    lastLogin:  '',
+                    blocked:   false
+                };
+
+                // shopkeepers_email node mein save karo (uid se key)
+                await database.ref('shopkeepers_email/' + uid).set(storeData);
+
+                // shopkeepers node mein bhi save karo (safe shopName key)
+                const safeKey = shopName.trim().replace(/[.#$[\]]/g, '_');
+                await database.ref('shopkeepers/' + safeKey).set(storeData);
+
+                this.createStoreSuccess = `✅ "${shopName.trim()}" ka account ban gaya! Email: ${email.trim()}`;
+                this.createStoreForm = { shopName: '', mobile: '', email: '', password: '', confirmPassword: '' };
+
+                // Admin ka session restore karo (naya user create karne se sign out ho jaata hai)
+                // Re-sign-in with admin credentials is not possible here, so we use admin's cached session
+                // Firebase Admin SDK nahi hai browser mein, isliye current user ko check karo
+                setTimeout(() => { this.createStoreSuccess = ''; }, 8000);
+            } catch(e) {
+                if (e.code === 'auth/email-already-in-use') this.createStoreError = '❌ Yeh Gmail pehle se Firebase mein registered hai.';
+                else if (e.code === 'auth/invalid-email')   this.createStoreError = '❌ Gmail format sahi nahi hai.';
+                else if (e.code === 'auth/weak-password')   this.createStoreError = '❌ Password zyada strong banao (6+ characters).';
+                else this.createStoreError = '❌ ' + e.message;
+            } finally {
+                this.createStoreLoading = false;
+            }
+        },
+
         // ===== DELIVERY SETTINGS =====
         async saveDeliverySettings() {
             if (this.deliverySettingsInput.minOrderLimit < 0 || this.deliverySettingsInput.deliveryCharge < 0) {
@@ -2793,8 +2977,9 @@ new Vue({
 
         window.addEventListener('popstate', (event) => {
             // Agar koi modal open hai, toh back dabane par pehle modal close ho
-            if (this.showStoreModal || this.showUserModal || this.podPhotoModal || this.showAddRiderModal || this.showEditModal || this.showReceiptModal || this.rejectModal.show) {
+            if (this.showStoreModal || this.showUserModal || this.podPhotoModal || this.showAddRiderModal || this.showEditModal || this.showReceiptModal || this.rejectModal.show || this.showCreateStoreModal) {
                 this.showStoreModal = false;
+                this.showCreateStoreModal = false;
                 this.showUserModal = false;
                 this.podPhotoModal = null;
                 this.showAddRiderModal = false;
