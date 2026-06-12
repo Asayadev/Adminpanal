@@ -475,6 +475,102 @@
                         <p class="text-[10px] text-red-300 mt-1">Rider cancelled</p>
                     </div>
                 </div>
+                <!-- ===== TOP SELLING PRODUCTS & TOP SELLERS ANALYTICS ROW ===== -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+
+                    <!-- TOP SELLING PRODUCTS -->
+                    <div class="bg-white rounded-xl shadow-sm p-4 border border-gray-100">
+                        <div class="flex items-center justify-between mb-3">
+                            <h3 class="font-bold text-sm text-gray-800 flex items-center gap-2">
+                                <span class="w-7 h-7 bg-orange-100 rounded-lg flex items-center justify-center">
+                                    <i class="fas fa-fire text-orange-500 text-xs"></i>
+                                </span>
+                                Top Selling Products
+                            </h3>
+                            <span class="text-[10px] bg-orange-50 text-orange-600 font-bold px-2 py-0.5 rounded-full border border-orange-200">By Units Sold</span>
+                        </div>
+                        <div v-if="topSellingProducts.length === 0" class="py-8 text-center text-gray-300">
+                            <i class="fas fa-box-open text-3xl mb-2 block"></i>
+                            <p class="text-xs">Abhi koi order data nahi hai</p>
+                        </div>
+                        <div v-else class="space-y-2">
+                            <div v-for="(item, idx) in topSellingProducts" :key="item.id" class="flex items-center gap-3 p-2 rounded-xl hover:bg-gray-50 transition">
+                                <!-- Rank Badge -->
+                                <div :class="idx === 0 ? 'bg-yellow-400 text-white' : idx === 1 ? 'bg-gray-300 text-white' : idx === 2 ? 'bg-amber-600 text-white' : 'bg-gray-100 text-gray-500'"
+                                     class="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black flex-shrink-0">
+                                    {{ idx + 1 }}
+                                </div>
+                                <!-- Product Image -->
+                                <img :src="getDriveImageUrl(item.image)" class="w-9 h-9 object-contain rounded-lg border border-gray-100 bg-gray-50 flex-shrink-0"
+                                     onerror="this.src='https://placehold.co/80x80?text=P'">
+                                <!-- Info -->
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-[11px] font-bold text-gray-800 truncate">{{ item.name }}</p>
+                                    <p class="text-[10px] text-gray-400">{{ item.category || 'Uncategorized' }}</p>
+                                </div>
+                                <!-- Units + Revenue -->
+                                <div class="text-right flex-shrink-0">
+                                    <p class="text-[11px] font-black text-orange-600">{{ item.unitsSold }} units</p>
+                                    <p class="text-[10px] text-green-600 font-bold">₹{{ item.revenue.toFixed(0) }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TOP PERFORMING SELLERS -->
+                    <div class="bg-white rounded-xl shadow-sm p-4 border border-gray-100">
+                        <div class="flex items-center justify-between mb-3">
+                            <h3 class="font-bold text-sm text-gray-800 flex items-center gap-2">
+                                <span class="w-7 h-7 bg-indigo-100 rounded-lg flex items-center justify-center">
+                                    <i class="fas fa-store text-indigo-500 text-xs"></i>
+                                </span>
+                                Top Performing Sellers
+                            </h3>
+                            <span class="text-[10px] bg-indigo-50 text-indigo-600 font-bold px-2 py-0.5 rounded-full border border-indigo-200">By Revenue</span>
+                        </div>
+                        <div v-if="topSellers.length === 0" class="py-8 text-center text-gray-300">
+                            <i class="fas fa-store-slash text-3xl mb-2 block"></i>
+                            <p class="text-xs">Koi seller data available nahi</p>
+                        </div>
+                        <div v-else class="space-y-2">
+                            <div v-for="(seller, idx) in topSellers" :key="seller.name" class="flex items-center gap-3 p-2 rounded-xl hover:bg-gray-50 transition">
+                                <!-- Rank -->
+                                <div :class="idx === 0 ? 'bg-yellow-400 text-white' : idx === 1 ? 'bg-gray-300 text-white' : idx === 2 ? 'bg-amber-600 text-white' : 'bg-gray-100 text-gray-500'"
+                                     class="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black flex-shrink-0">
+                                    {{ idx + 1 }}
+                                </div>
+                                <!-- Avatar -->
+                                <div class="w-9 h-9 rounded-lg bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center flex-shrink-0">
+                                    <span class="text-white font-black text-sm">{{ (seller.name || 'S')[0].toUpperCase() }}</span>
+                                </div>
+                                <!-- Info -->
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-[11px] font-bold text-gray-800 truncate">{{ seller.name }}</p>
+                                    <div class="flex items-center gap-2 mt-0.5">
+                                        <span class="text-[9px] text-purple-600 font-semibold bg-purple-50 px-1.5 rounded-full">{{ seller.orders }} orders</span>
+                                        <span class="text-[9px] text-orange-600 font-semibold bg-orange-50 px-1.5 rounded-full">{{ seller.units }} units</span>
+                                    </div>
+                                </div>
+                                <!-- Revenue -->
+                                <div class="text-right flex-shrink-0">
+                                    <p class="text-[11px] font-black text-indigo-600">₹{{ seller.revenue.toFixed(0) }}</p>
+                                    <!-- Revenue bar -->
+                                    <div class="w-16 bg-gray-100 rounded-full h-1 mt-1">
+                                        <div class="bg-indigo-400 h-1 rounded-full" :style="{width: seller.barWidth + '%'}"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Total Revenue Footer -->
+                        <div v-if="topSellers.length > 0" class="mt-3 pt-3 border-t border-dashed border-gray-100 flex justify-between items-center">
+                            <span class="text-[10px] text-gray-400 font-semibold">Total Seller Revenue</span>
+                            <span class="text-xs font-black text-green-600">₹{{ topSellers.reduce((s,r) => s + r.revenue, 0).toFixed(0) }}</span>
+                        </div>
+                    </div>
+
+                </div>
+                <!-- ===== END ANALYTICS ROW ===== -->
+
                 <div class="bg-white rounded-xl shadow-sm p-4"><h3 class="font-bold text-sm text-gray-700 mb-3"><i class="fas fa-clock text-blue-500 mr-1"></i> Recent Orders Queue</h3><div v-if="orders.length === 0" class="text-center py-6 text-gray-400 text-xs">No entries generated inside logs yet</div><div v-else class="space-y-2.5"><div v-for="order in orders.slice(0,6)" :key="order.id" class="flex justify-between items-center border-b pb-2.5 text-xs"><div><span class="font-mono font-bold text-blue-600">#{{ order.id.slice(-6) }}</span><span class="text-gray-500 ml-2 font-medium">{{ order.customerName }} ({{ order.paymentMethod || 'COD' }})</span></div><div class="flex items-center gap-3"><span :class="getStatusBadge(order.status)" class="px-2 py-0.5 rounded-full text-[10px] font-bold">{{ getStatusText(order.status).toUpperCase() }}</span><span class="font-black text-gray-800">₹{{ Number(order.total).toFixed(2) }}</span></div></div></div></div>
             </div>
 
@@ -807,7 +903,7 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="px-4 py-2 bg-slate-50 border-t flex flex-wrap gap-1.5"><span v-for="it in order.items" class="bg-white border px-2.5 py-0.5 rounded text-[10px] font-bold text-slate-700">{{ it.name }} <span class="text-blue-600 font-black">x{{ it.quantity }}</span></span></div>
+                        <div class="px-4 py-3 bg-slate-50 border-t"><p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2"><i class="fas fa-box text-slate-400 mr-1"></i> Items &amp; Sellers</p><div class="flex flex-col gap-1.5"><div v-for="it in order.items" :key="it.name" class="bg-white border rounded-lg px-3 py-2 flex items-center justify-between gap-2"><div class="flex-1 min-w-0"><p class="text-[11px] font-bold text-slate-800 truncate">{{ it.name }}</p><p class="text-[10px] text-indigo-600 font-semibold mt-0.5 flex items-center gap-1"><i class="fas fa-store text-[9px]"></i> {{ getSellerForItem(it) }}</p></div><span class="text-blue-600 font-black text-xs bg-blue-50 px-2 py-0.5 rounded-full flex-shrink-0">x{{ it.quantity }}</span></div></div></div>
                         <!-- Rider Assignment -->
                         <div class="px-4 py-3 bg-emerald-50/60 border-t">
                             <p class="text-[10px] font-bold text-gray-500 uppercase mb-2"><i class="fas fa-motorcycle text-emerald-600 mr-1"></i> Assign Delivery Rider</p>
@@ -1448,6 +1544,87 @@
                         </div>
                     </div>
 
+                    <!-- ===== DELIVERY CHARGE SETTINGS CARD ===== -->
+                    <div class="bg-white p-5 rounded-2xl shadow-sm border border-orange-100 space-y-4">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-orange-500 flex items-center justify-center shadow">
+                                <i class="fas fa-truck text-white text-base"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-gray-800 text-base leading-tight">Delivery Charge Rule</h3>
+                                <p class="text-[11px] text-gray-400 mt-0.5">Minimum order limit se kam par delivery charge lagaye</p>
+                            </div>
+                        </div>
+
+                        <!-- Status Badge -->
+                        <div class="flex items-center justify-between bg-orange-50 rounded-2xl px-4 py-3 border border-orange-100">
+                            <div>
+                                <p class="text-xs font-bold text-gray-700">Rule Status</p>
+                                <p v-if="deliverySettings.isActive" class="text-[11px] text-orange-600 font-semibold mt-0.5">
+                                    🔥 Active — ₹{{ deliverySettings.minOrderLimit }} se kam par ₹{{ deliverySettings.deliveryCharge }} charge
+                                </p>
+                                <p v-else class="text-[11px] text-gray-400 mt-0.5">⛔ Band hai — sabka free delivery</p>
+                            </div>
+                            <!-- Toggle Switch -->
+                            <div @click="deliverySettingsInput.isActive = !deliverySettingsInput.isActive" class="cursor-pointer flex items-center gap-2">
+                                <span class="text-[10px] font-bold" :class="deliverySettingsInput.isActive ? 'text-orange-600' : 'text-gray-400'">
+                                    {{ deliverySettingsInput.isActive ? 'ON' : 'OFF' }}
+                                </span>
+                                <div class="relative w-12 h-6 rounded-full transition-colors duration-300 shadow-inner"
+                                    :class="deliverySettingsInput.isActive ? 'bg-orange-500' : 'bg-gray-300'">
+                                    <div class="absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-all duration-300"
+                                        :class="deliverySettingsInput.isActive ? 'left-7' : 'left-1'">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Inputs -->
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-[11px] font-bold text-gray-500 uppercase mb-1.5">
+                                    <i class="fas fa-rupee-sign text-orange-400 mr-1"></i>Min Order Limit (₹)
+                                </label>
+                                <input type="number" v-model.number="deliverySettingsInput.minOrderLimit"
+                                    min="0" placeholder="e.g. 199"
+                                    class="w-full border border-orange-200 px-3 py-2.5 rounded-xl text-sm font-bold outline-none focus:border-orange-400 text-orange-700">
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-bold text-gray-500 uppercase mb-1.5">
+                                    <i class="fas fa-truck text-orange-400 mr-1"></i>Delivery Charge (₹)
+                                </label>
+                                <input type="number" v-model.number="deliverySettingsInput.deliveryCharge"
+                                    min="0" placeholder="e.g. 40"
+                                    class="w-full border border-orange-200 px-3 py-2.5 rounded-xl text-sm font-bold outline-none focus:border-orange-400 text-orange-700">
+                            </div>
+                        </div>
+
+                        <!-- Quick Preset Buttons -->
+                        <div>
+                            <p class="text-[10px] font-bold text-gray-400 uppercase mb-2">⚡ Quick Min-Limit Presets</p>
+                            <div class="flex flex-wrap gap-2">
+                                <button v-for="amt in [99, 149, 199, 299, 499]" :key="amt"
+                                    @click="deliverySettingsInput.minOrderLimit = amt"
+                                    :class="deliverySettingsInput.minOrderLimit === amt ? 'bg-orange-500 text-white border-orange-500' : 'bg-gray-50 text-gray-700 border-gray-200'"
+                                    class="text-xs font-bold py-1.5 px-3 rounded-xl border transition">₹{{ amt }}</button>
+                            </div>
+                        </div>
+
+                        <!-- Save Button -->
+                        <button @click="saveDeliverySettings" :disabled="loading"
+                            class="w-full bg-orange-500 hover:bg-orange-600 disabled:bg-orange-300 text-white py-3 rounded-xl text-sm font-bold transition shadow-md active:scale-95 flex items-center justify-center gap-2">
+                            <i v-if="loading" class="fas fa-circle-notch fa-spin"></i>
+                            <i v-else class="fas fa-save"></i>
+                            Save Delivery Rule
+                        </button>
+
+                        <!-- Info note -->
+                        <p class="text-[10px] text-gray-400 text-center">
+                            <i class="fas fa-info-circle mr-1"></i>
+                            Yeh settings Firebase ke <code class="bg-gray-100 px-1 rounded">app_settings/delivery</code> mein save hongi
+                        </p>
+                    </div>
+
                     <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 space-y-4">
                         <h3 class="font-bold text-gray-800 text-base flex items-center gap-2">
                             <i class="fas fa-bullhorn text-red-500"></i> Quick Live Broadcast (Safe Mode)
@@ -1572,7 +1749,18 @@ new Vue({
         showReceiptModal: false,
         rejectModal: { show: false, order: null, reason: '' },
         globalDiscount: 0,
-        globalDiscountInput: 0
+        globalDiscountInput: 0,
+        // ===== DELIVERY CHARGE SETTINGS =====
+        deliverySettings: {
+            minOrderLimit: 199,
+            deliveryCharge: 40,
+            isActive: true
+        },
+        deliverySettingsInput: {
+            minOrderLimit: 199,
+            deliveryCharge: 40,
+            isActive: true
+        }
     },
     computed: {
         userOrders() { if (!this.selectedUser) return []; const ph = this.selectedUser.phone || this.selectedUser.mobile || ''; const em = this.selectedUser.email || ''; return this.orders.filter(o => (ph && o.customerPhone === ph) || (em && o.customerEmail === em)); },
@@ -1580,7 +1768,62 @@ new Vue({
         filteredUsers() { let list = this.allUsers; if (this.userTypeFilter === 'mobile') list = list.filter(u => u.type === 'mobile'); else if (this.userTypeFilter === 'email') list = list.filter(u => u.type === 'email'); if (this.userSearch) { const s = this.userSearch.toLowerCase(); list = list.filter(u => (u.name && u.name.toLowerCase().includes(s)) || (u.phone && u.phone.includes(s)) || (u.email && u.email.toLowerCase().includes(s))); } return list; },
         filteredProducts() { if (!this.productSearch) return this.products; const s = this.productSearch.toLowerCase(); return this.products.filter(p => p.name.toLowerCase().includes(s) || (p.category && p.category.toLowerCase().includes(s))); },
         filteredOrders() { let filtered = this.orders; if (this.orderStatusFilter === 'cancelled') { filtered = filtered.filter(o => o.status === 'cancelled' || o.status === 'rejected'); } else if (this.orderStatusFilter === 'online_pending') { filtered = filtered.filter(o => o.payment_method === 'Online' && o.status === 'pending'); } else if (this.orderStatusFilter !== 'all') { filtered = filtered.filter(o => o.status === this.orderStatusFilter); } if (this.orderSearch) { const s = this.orderSearch.toLowerCase(); filtered = filtered.filter(o => (o.id && o.id.toLowerCase().includes(s)) || (o.customerName && o.customerName.toLowerCase().includes(s)) || (o.customerPhone && o.customerPhone.includes(s))); } return filtered; },
-        getPageTitle() { const t = { dashboard: 'Dashboard', products: 'Products', addProduct: 'Add Product', storeRooms: 'Store Rooms', banners: 'Banners', categories: 'Categories', users: 'Users', orders: 'Orders', returns: 'Returns', settings: 'Settings', riders: 'Riders', withdrawals: 'Withdrawals' }; return t[this.currentPage] || 'Admin'; }
+        getPageTitle() { const t = { dashboard: 'Dashboard', products: 'Products', addProduct: 'Add Product', storeRooms: 'Store Rooms', banners: 'Banners', categories: 'Categories', users: 'Users', orders: 'Orders', returns: 'Returns', settings: 'Settings', riders: 'Riders', withdrawals: 'Withdrawals' }; return t[this.currentPage] || 'Admin'; },
+
+        // ===== TOP SELLING PRODUCTS (Dashboard Analytics) =====
+        topSellingProducts() {
+            const productMap = {};
+            this.orders.forEach(order => {
+                if (!order.items) return;
+                order.items.forEach(item => {
+                    const key = item.id || item.name;
+                    if (!key) return;
+                    if (!productMap[key]) {
+                        // Find product image/category from products list
+                        const prod = this.products.find(p => p.id === item.id);
+                        productMap[key] = {
+                            id: key,
+                            name: item.name || key,
+                            image: (prod && (prod.image || (prod.images && prod.images[0]))) || '',
+                            category: (prod && prod.category) || '',
+                            unitsSold: 0,
+                            revenue: 0
+                        };
+                    }
+                    productMap[key].unitsSold += Number(item.quantity || 1);
+                    productMap[key].revenue += Number(item.price || 0) * Number(item.quantity || 1);
+                });
+            });
+            return Object.values(productMap)
+                .sort((a, b) => b.unitsSold - a.unitsSold)
+                .slice(0, 7);
+        },
+
+        // ===== TOP PERFORMING SELLERS (Dashboard Analytics) =====
+        topSellers() {
+            const sellerMap = {};
+            this.orders.forEach(order => {
+                if (!order.items) return;
+                // Track which sellers appear in this order (avoid double-counting order per seller)
+                const sellersInOrder = new Set();
+                order.items.forEach(item => {
+                    const sellerName = item.shopkeeperName || item.shopkeeper || item.sellerName || null;
+                    if (!sellerName || sellerName === 'Admin' || sellerName === 'Admin Core' || sellerName === '') return;
+                    if (!sellerMap[sellerName]) {
+                        sellerMap[sellerName] = { name: sellerName, orders: 0, units: 0, revenue: 0 };
+                    }
+                    if (!sellersInOrder.has(sellerName)) {
+                        sellerMap[sellerName].orders += 1;
+                        sellersInOrder.add(sellerName);
+                    }
+                    sellerMap[sellerName].units += Number(item.quantity || 1);
+                    sellerMap[sellerName].revenue += Number(item.price || 0) * Number(item.quantity || 1);
+                });
+            });
+            const sorted = Object.values(sellerMap).sort((a, b) => b.revenue - a.revenue).slice(0, 7);
+            const maxRev = sorted.length > 0 ? sorted[0].revenue : 1;
+            return sorted.map(s => ({ ...s, barWidth: Math.round((s.revenue / maxRev) * 100) }));
+        }
     },
     watch: {
         currentPage(newPage) {
@@ -1979,6 +2222,32 @@ new Vue({
         async deleteUser(user) { if(confirm(`Delete ${user.name} permanently?`)) { this.loading = true; try { const node = user.type === 'email' ? 'users_email' : 'users'; await database.ref(`${node}/${user.id}`).remove(); if (user.type === 'email' && user.uid) { try { await firebase.auth().currentUser; } catch(e2) {} } this.showMessage('User deleted'); await this.loadUsers(); } catch(e) { this.showMessage(e.message); } finally { this.loading = false; } } },
         getStatusBadge(status) { const m = { pending: 'bg-yellow-100 text-yellow-700', confirmed: 'bg-blue-100 text-blue-700', shipped: 'bg-purple-100 text-purple-700', delivered: 'bg-green-100 text-green-700', rejected: 'bg-red-100 text-red-700', cancelled: 'bg-red-100 text-red-700' }; return m[status] || 'bg-gray-100'; },
         getStatusText(status) { const m = { pending: 'Pending', confirmed: 'Confirmed', shipped: 'Shipped', delivered: 'Delivered', rejected: 'Cancelled', cancelled: 'Cancelled' }; return m[status] || status; },
+        getSellerForItem(item) {
+            const resolveStore = (val) => {
+                if (!val) return null;
+                const s = this.storeRooms.find(s => s.shopName === val || s.id === val || s.mobile === val);
+                return s ? s.shopName : val;
+            };
+            // 1. Item mein directly shopkeeper info ho
+            if (item.shopkeeperName) return resolveStore(item.shopkeeperName);
+            if (item.shopkeeperId) return resolveStore(item.shopkeeperId);
+            if (item.shopkeeper && item.shopkeeper !== 'Admin Core') return resolveStore(item.shopkeeper);
+            // 2. Product ID se match karo
+            const byId = item.id ? this.products.find(p => p.id === item.id) : null;
+            if (byId) {
+                if (byId.shopkeeperName) return resolveStore(byId.shopkeeperName);
+                if (byId.shopkeeperId) return resolveStore(byId.shopkeeperId);
+                if (byId.shopkeeper && byId.shopkeeper !== 'Admin Core') return resolveStore(byId.shopkeeper);
+            }
+            // 3. Product name se match karo
+            const byName = this.products.find(p => p.name && p.name.toLowerCase() === (item.name||'').toLowerCase());
+            if (byName) {
+                if (byName.shopkeeperName) return resolveStore(byName.shopkeeperName);
+                if (byName.shopkeeperId) return resolveStore(byName.shopkeeperId);
+                if (byName.shopkeeper && byName.shopkeeper !== 'Admin Core') return resolveStore(byName.shopkeeper);
+            }
+            return 'Admin';
+        },
         getBorderClass(status) { return status === 'pending' ? 'border-yellow-400' : status === 'confirmed' ? 'border-blue-400' : status === 'shipped' ? 'border-purple-400' : status === 'delivered' ? 'border-green-400' : (status === 'cancelled' || status === 'rejected') ? 'border-red-400' : 'border-gray-300'; },
         async loadAllData() { this.loading = true; await Promise.all([this.loadProducts(), this.loadOrders(), this.loadUsers(), this.loadBanners(), this.loadAdminControls(), this.loadReturnRequests(), this.loadRiders(), this.loadStoreRooms(), this.loadWithdrawals()]); this.loading = false; },
         async loadProducts() { const snap = await database.ref('products').once('value'); const d = snap.val(); this.products = d ? Object.keys(d).map(k => ({ id: k, ...d[k] })) : []; },
@@ -2016,6 +2285,7 @@ new Vue({
                 this.globalDiscount = discSnap.val();
                 this.globalDiscountInput = discSnap.val();
             }
+            await this.loadDeliverySettings();
         },
         viewPodPhoto(order) { this.podPhotoModal = order; },
         async loadWithdrawals() {
@@ -2464,7 +2734,39 @@ new Vue({
             reader.readAsDataURL(file);
         },
         formatDate(iso) { if (!iso) return ''; return new Date(iso).toLocaleString('en-IN', { day:'numeric', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' }); },
-        formatShortDate(iso) { if (!iso) return ''; return new Date(iso).toLocaleString('en-IN', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' }); }
+        formatShortDate(iso) { if (!iso) return ''; return new Date(iso).toLocaleString('en-IN', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' }); },
+
+        // ===== DELIVERY SETTINGS =====
+        async saveDeliverySettings() {
+            if (this.deliverySettingsInput.minOrderLimit < 0 || this.deliverySettingsInput.deliveryCharge < 0) {
+                this.showMessage('❌ Negative values allowed nahi hain!'); return;
+            }
+            this.loading = true;
+            try {
+                await database.ref('app_settings/delivery').set({
+                    minOrderLimit: this.deliverySettingsInput.minOrderLimit,
+                    deliveryCharge: this.deliverySettingsInput.deliveryCharge,
+                    isActive: this.deliverySettingsInput.isActive,
+                    updatedAt: new Date().toISOString()
+                });
+                this.deliverySettings = { ...this.deliverySettingsInput };
+                this.showMessage('✅ Delivery Rule save ho gayi!');
+            } catch (err) {
+                this.showMessage('❌ Error: ' + err.message);
+            } finally {
+                this.loading = false;
+            }
+        },
+        async loadDeliverySettings() {
+            try {
+                const snap = await database.ref('app_settings/delivery').once('value');
+                if (snap.exists()) {
+                    const d = snap.val();
+                    this.deliverySettings = { minOrderLimit: d.minOrderLimit ?? 199, deliveryCharge: d.deliveryCharge ?? 40, isActive: d.isActive ?? true };
+                    this.deliverySettingsInput = { ...this.deliverySettings };
+                }
+            } catch (err) { console.log('Delivery settings load error:', err); }
+        },
     },
     async mounted() {
         // Firebase Auth state check — admin session restore
