@@ -211,6 +211,59 @@
                     </div>
                 </div>
 
+                <!-- ===== STORE USER PROFILE (AUDIT) ===== -->
+                <div class="bg-gradient-to-br from-violet-50 to-indigo-50 border border-indigo-100 rounded-2xl p-4">
+                    <h4 class="font-bold text-xs text-indigo-700 mb-3 flex items-center gap-1.5">
+                        <span class="w-6 h-6 bg-indigo-100 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-user-shield text-indigo-500 text-[10px]"></i>
+                        </span>
+                        Store User Profile
+                    </h4>
+                    <div class="grid grid-cols-1 gap-2.5">
+                        <!-- Name -->
+                        <div class="bg-white rounded-xl px-3 py-2.5 flex items-center gap-3 border border-indigo-50 shadow-sm">
+                            <div class="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center flex-shrink-0">
+                                <i class="fas fa-store text-blue-500 text-xs"></i>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wide">Shop Name</p>
+                                <p class="text-xs font-black text-gray-800 truncate">{{ selectedStore && (selectedStore.shopName || '—') }}</p>
+                            </div>
+                        </div>
+                        <!-- Mobile -->
+                        <div class="bg-white rounded-xl px-3 py-2.5 flex items-center gap-3 border border-indigo-50 shadow-sm">
+                            <div class="w-8 h-8 rounded-lg bg-green-100 flex items-center justify-center flex-shrink-0">
+                                <i class="fas fa-phone text-green-500 text-xs"></i>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wide">Mobile Number</p>
+                                <p class="text-xs font-black text-gray-800">{{ selectedStore && (selectedStore.mobile || '—') }}</p>
+                            </div>
+                        </div>
+                        <!-- Gmail -->
+                        <div class="bg-white rounded-xl px-3 py-2.5 flex items-center gap-3 border border-indigo-50 shadow-sm">
+                            <div class="w-8 h-8 rounded-lg bg-red-100 flex items-center justify-center flex-shrink-0">
+                                <i class="fas fa-envelope text-red-500 text-xs"></i>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wide">Gmail Address</p>
+                                <p class="text-xs font-black text-gray-800 truncate">{{ selectedStore && (selectedStore.email || '—') }}</p>
+                            </div>
+                        </div>
+                        <!-- Password -->
+                        <div class="bg-white rounded-xl px-3 py-2.5 flex items-center gap-3 border border-indigo-50 shadow-sm">
+                            <div class="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center flex-shrink-0">
+                                <i class="fas fa-lock text-amber-500 text-xs"></i>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wide">Password</p>
+                                <p class="text-xs font-black text-gray-800 font-mono">{{ selectedStore && selectedStore.password ? selectedStore.password : '(not saved)' }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- ===== END STORE USER PROFILE ===== -->
+
                 <!-- Top Selling Products -->
                 <div v-if="getStoreTopProducts(selectedStore && selectedStore.shopName).length">
                     <h4 class="font-bold text-xs text-gray-700 mb-2 flex items-center gap-1"><i class="fas fa-fire text-orange-400"></i> Top Selling Products</h4>
@@ -475,6 +528,102 @@
                         <p class="text-[10px] text-red-300 mt-1">Rider cancelled</p>
                     </div>
                 </div>
+                <!-- ===== TOP SELLING PRODUCTS & TOP SELLERS ANALYTICS ROW ===== -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+
+                    <!-- TOP SELLING PRODUCTS -->
+                    <div class="bg-white rounded-xl shadow-sm p-4 border border-gray-100">
+                        <div class="flex items-center justify-between mb-3">
+                            <h3 class="font-bold text-sm text-gray-800 flex items-center gap-2">
+                                <span class="w-7 h-7 bg-orange-100 rounded-lg flex items-center justify-center">
+                                    <i class="fas fa-fire text-orange-500 text-xs"></i>
+                                </span>
+                                Top Selling Products
+                            </h3>
+                            <span class="text-[10px] bg-orange-50 text-orange-600 font-bold px-2 py-0.5 rounded-full border border-orange-200">By Units Sold</span>
+                        </div>
+                        <div v-if="topSellingProducts.length === 0" class="py-8 text-center text-gray-300">
+                            <i class="fas fa-box-open text-3xl mb-2 block"></i>
+                            <p class="text-xs">Abhi koi order data nahi hai</p>
+                        </div>
+                        <div v-else class="space-y-2">
+                            <div v-for="(item, idx) in topSellingProducts" :key="item.id" class="flex items-center gap-3 p-2 rounded-xl hover:bg-gray-50 transition">
+                                <!-- Rank Badge -->
+                                <div :class="idx === 0 ? 'bg-yellow-400 text-white' : idx === 1 ? 'bg-gray-300 text-white' : idx === 2 ? 'bg-amber-600 text-white' : 'bg-gray-100 text-gray-500'"
+                                     class="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black flex-shrink-0">
+                                    {{ idx + 1 }}
+                                </div>
+                                <!-- Product Image -->
+                                <img :src="getDriveImageUrl(item.image)" class="w-9 h-9 object-contain rounded-lg border border-gray-100 bg-gray-50 flex-shrink-0"
+                                     onerror="this.src='https://placehold.co/80x80?text=P'">
+                                <!-- Info -->
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-[11px] font-bold text-gray-800 truncate">{{ item.name }}</p>
+                                    <p class="text-[10px] text-gray-400">{{ item.category || 'Uncategorized' }}</p>
+                                </div>
+                                <!-- Units + Revenue -->
+                                <div class="text-right flex-shrink-0">
+                                    <p class="text-[11px] font-black text-orange-600">{{ item.unitsSold }} units</p>
+                                    <p class="text-[10px] text-green-600 font-bold">₹{{ item.revenue.toFixed(0) }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TOP PERFORMING SELLERS -->
+                    <div class="bg-white rounded-xl shadow-sm p-4 border border-gray-100">
+                        <div class="flex items-center justify-between mb-3">
+                            <h3 class="font-bold text-sm text-gray-800 flex items-center gap-2">
+                                <span class="w-7 h-7 bg-indigo-100 rounded-lg flex items-center justify-center">
+                                    <i class="fas fa-store text-indigo-500 text-xs"></i>
+                                </span>
+                                Top Performing Sellers
+                            </h3>
+                            <span class="text-[10px] bg-indigo-50 text-indigo-600 font-bold px-2 py-0.5 rounded-full border border-indigo-200">By Revenue</span>
+                        </div>
+                        <div v-if="topSellers.length === 0" class="py-8 text-center text-gray-300">
+                            <i class="fas fa-store-slash text-3xl mb-2 block"></i>
+                            <p class="text-xs">Koi seller data available nahi</p>
+                        </div>
+                        <div v-else class="space-y-2">
+                            <div v-for="(seller, idx) in topSellers" :key="seller.name" class="flex items-center gap-3 p-2 rounded-xl hover:bg-gray-50 transition">
+                                <!-- Rank -->
+                                <div :class="idx === 0 ? 'bg-yellow-400 text-white' : idx === 1 ? 'bg-gray-300 text-white' : idx === 2 ? 'bg-amber-600 text-white' : 'bg-gray-100 text-gray-500'"
+                                     class="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black flex-shrink-0">
+                                    {{ idx + 1 }}
+                                </div>
+                                <!-- Avatar -->
+                                <div class="w-9 h-9 rounded-lg bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center flex-shrink-0">
+                                    <span class="text-white font-black text-sm">{{ (seller.name || 'S')[0].toUpperCase() }}</span>
+                                </div>
+                                <!-- Info -->
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-[11px] font-bold text-gray-800 truncate">{{ seller.name }}</p>
+                                    <div class="flex items-center gap-2 mt-0.5">
+                                        <span class="text-[9px] text-purple-600 font-semibold bg-purple-50 px-1.5 rounded-full">{{ seller.orders }} orders</span>
+                                        <span class="text-[9px] text-orange-600 font-semibold bg-orange-50 px-1.5 rounded-full">{{ seller.units }} units</span>
+                                    </div>
+                                </div>
+                                <!-- Revenue -->
+                                <div class="text-right flex-shrink-0">
+                                    <p class="text-[11px] font-black text-indigo-600">₹{{ seller.revenue.toFixed(0) }}</p>
+                                    <!-- Revenue bar -->
+                                    <div class="w-16 bg-gray-100 rounded-full h-1 mt-1">
+                                        <div class="bg-indigo-400 h-1 rounded-full" :style="{width: seller.barWidth + '%'}"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Total Revenue Footer -->
+                        <div v-if="topSellers.length > 0" class="mt-3 pt-3 border-t border-dashed border-gray-100 flex justify-between items-center">
+                            <span class="text-[10px] text-gray-400 font-semibold">Total Seller Revenue</span>
+                            <span class="text-xs font-black text-green-600">₹{{ topSellers.reduce((s,r) => s + r.revenue, 0).toFixed(0) }}</span>
+                        </div>
+                    </div>
+
+                </div>
+                <!-- ===== END ANALYTICS ROW ===== -->
+
                 <div class="bg-white rounded-xl shadow-sm p-4"><h3 class="font-bold text-sm text-gray-700 mb-3"><i class="fas fa-clock text-blue-500 mr-1"></i> Recent Orders Queue</h3><div v-if="orders.length === 0" class="text-center py-6 text-gray-400 text-xs">No entries generated inside logs yet</div><div v-else class="space-y-2.5"><div v-for="order in orders.slice(0,6)" :key="order.id" class="flex justify-between items-center border-b pb-2.5 text-xs"><div><span class="font-mono font-bold text-blue-600">#{{ order.id.slice(-6) }}</span><span class="text-gray-500 ml-2 font-medium">{{ order.customerName }} ({{ order.paymentMethod || 'COD' }})</span></div><div class="flex items-center gap-3"><span :class="getStatusBadge(order.status)" class="px-2 py-0.5 rounded-full text-[10px] font-bold">{{ getStatusText(order.status).toUpperCase() }}</span><span class="font-black text-gray-800">₹{{ Number(order.total).toFixed(2) }}</span></div></div></div></div>
             </div>
 
@@ -562,11 +711,15 @@
 <button @click="saveProduct" class="w-full bg-green-600 text-white py-2.5 rounded-lg font-bold hover:bg-green-700 transition flex items-center justify-center gap-1"><i class="fas fa-cloud-upload-alt"></i> Publish Live Product</button></div></div></div>
             
             <div v-if="currentPage == 'storeRooms'">
-                <div class="flex justify-between items-center mb-4">
+                <div class="flex justify-between items-center mb-4 flex-wrap gap-2">
                     <h2 class="text-base font-bold text-gray-800">🏪 Connected Store Rooms Control Panel</h2>
-                    <div class="flex items-center gap-2">
+                    <div class="flex items-center gap-2 flex-wrap">
                         <span class="text-xs bg-green-100 text-green-700 font-bold px-2.5 py-1 rounded-full"><i class="fas fa-circle text-[7px] mr-1"></i>Active: {{ storeRooms.filter(s=>!s.blocked).length }}</span>
                         <span class="text-xs bg-red-100 text-red-700 font-bold px-2.5 py-1 rounded-full"><i class="fas fa-ban text-[9px] mr-1"></i>Blocked: {{ storeRooms.filter(s=>s.blocked).length }}</span>
+                        <button @click="showCreateStoreModal = true"
+                            class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs px-3 py-2 rounded-xl flex items-center gap-1.5 shadow transition active:scale-95">
+                            <i class="fas fa-plus"></i> Create Store User
+                        </button>
                     </div>
                 </div>
                 <div class="bg-white rounded-xl shadow-sm overflow-x-auto border border-gray-100">
@@ -630,6 +783,113 @@
                             </tr>
                         </tbody>
                     </table>
+                </div>
+            </div>
+
+            <!-- ===== CREATE STORE USER MODAL ===== -->
+            <div v-if="showCreateStoreModal" class="fixed inset-0 bg-black/60 flex items-center justify-center z-[200] p-4" style="backdrop-filter:blur(4px);" @click.self="closeCreateStoreModal">
+                <div class="bg-white rounded-3xl w-full shadow-2xl animate-fade-in overflow-hidden" style="max-width:420px;max-height:94vh;overflow-y:auto;">
+
+                    <!-- Modal Header -->
+                    <div style="background:linear-gradient(135deg,#4f46e5,#7c3aed);padding:20px 20px 16px;position:relative;">
+                        <div style="display:flex;justify-content:space-between;align-items:center;">
+                            <div style="display:flex;align-items:center;gap:10px;">
+                                <div style="width:42px;height:42px;background:rgba(255,255,255,0.15);border-radius:12px;display:flex;align-items:center;justify-content:center;">
+                                    <i class="fas fa-store-alt" style="color:white;font-size:18px;"></i>
+                                </div>
+                                <div>
+                                    <h3 style="color:white;font-size:15px;font-weight:900;margin:0;">Naya Store User Banayein</h3>
+                                    <p style="color:rgba(255,255,255,0.65);font-size:11px;margin:2px 0 0;">Admin se store account create karein</p>
+                                </div>
+                            </div>
+                            <button @click="closeCreateStoreModal" style="background:rgba(255,255,255,0.15);border:none;color:white;width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div style="padding:20px;">
+                        <!-- Error box -->
+                        <div v-if="createStoreError" style="background:#fef2f2;border:1px solid #fecaca;color:#b91c1c;border-radius:12px;padding:9px 12px;font-size:12px;font-weight:600;display:flex;align-items:center;gap:8px;margin-bottom:14px;">
+                            <i class="fas fa-exclamation-circle"></i> {{ createStoreError }}
+                        </div>
+                        <!-- Success box -->
+                        <div v-if="createStoreSuccess" style="background:#f0fdf4;border:1px solid #bbf7d0;color:#15803d;border-radius:12px;padding:9px 12px;font-size:12px;font-weight:700;display:flex;align-items:center;gap:8px;margin-bottom:14px;">
+                            <i class="fas fa-check-circle"></i> {{ createStoreSuccess }}
+                        </div>
+
+                        <!-- Shop Name -->
+                        <div style="margin-bottom:13px;">
+                            <label style="display:block;font-size:11px;font-weight:700;color:#374151;margin-bottom:5px;text-transform:uppercase;letter-spacing:0.5px;">🏪 Shop Name *</label>
+                            <div style="position:relative;">
+                                <i class="fas fa-store" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#9ca3af;font-size:13px;"></i>
+                                <input type="text" v-model="createStoreForm.shopName" placeholder="e.g. Radha Electronics"
+                                    style="width:100%;padding:11px 12px 11px 38px;border:1.5px solid #e5e7eb;border-radius:12px;font-size:13px;outline:none;box-sizing:border-box;"
+                                    @focus="$event.target.style.borderColor='#4f46e5'" @blur="$event.target.style.borderColor='#e5e7eb'">
+                            </div>
+                        </div>
+
+                        <!-- Mobile Number -->
+                        <div style="margin-bottom:13px;">
+                            <label style="display:block;font-size:11px;font-weight:700;color:#374151;margin-bottom:5px;text-transform:uppercase;letter-spacing:0.5px;">📞 Mobile Number *</label>
+                            <div style="position:relative;">
+                                <i class="fas fa-mobile-alt" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#9ca3af;font-size:13px;"></i>
+                                <input type="tel" v-model="createStoreForm.mobile" placeholder="10 digit mobile number"
+                                    style="width:100%;padding:11px 12px 11px 38px;border:1.5px solid #e5e7eb;border-radius:12px;font-size:13px;outline:none;box-sizing:border-box;"
+                                    @focus="$event.target.style.borderColor='#4f46e5'" @blur="$event.target.style.borderColor='#e5e7eb'">
+                            </div>
+                        </div>
+
+                        <!-- Gmail Address -->
+                        <div style="margin-bottom:13px;">
+                            <label style="display:block;font-size:11px;font-weight:700;color:#374151;margin-bottom:5px;text-transform:uppercase;letter-spacing:0.5px;">📧 Gmail Address *</label>
+                            <div style="position:relative;">
+                                <i class="fas fa-envelope" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#9ca3af;font-size:13px;"></i>
+                                <input type="email" v-model="createStoreForm.email" placeholder="store@gmail.com"
+                                    style="width:100%;padding:11px 12px 11px 38px;border:1.5px solid #e5e7eb;border-radius:12px;font-size:13px;outline:none;box-sizing:border-box;"
+                                    @focus="$event.target.style.borderColor='#4f46e5'" @blur="$event.target.style.borderColor='#e5e7eb'">
+                            </div>
+                        </div>
+
+                        <!-- Password -->
+                        <div style="margin-bottom:6px;">
+                            <label style="display:block;font-size:11px;font-weight:700;color:#374151;margin-bottom:5px;text-transform:uppercase;letter-spacing:0.5px;">🔒 Password *</label>
+                            <div style="position:relative;">
+                                <i class="fas fa-lock" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#9ca3af;font-size:13px;"></i>
+                                <input :type="showCreateStorePwd ? 'text' : 'password'" v-model="createStoreForm.password" placeholder="Min 6 characters"
+                                    style="width:100%;padding:11px 40px 11px 38px;border:1.5px solid #e5e7eb;border-radius:12px;font-size:13px;outline:none;box-sizing:border-box;"
+                                    @focus="$event.target.style.borderColor='#4f46e5'" @blur="$event.target.style.borderColor='#e5e7eb'">
+                                <button type="button" @click="showCreateStorePwd=!showCreateStorePwd" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:#9ca3af;cursor:pointer;padding:0;">
+                                    <i :class="showCreateStorePwd ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <!-- Confirm Password -->
+                        <div style="margin-bottom:20px;">
+                            <label style="display:block;font-size:11px;font-weight:700;color:#374151;margin-bottom:5px;text-transform:uppercase;letter-spacing:0.5px;">🔒 Confirm Password *</label>
+                            <div style="position:relative;">
+                                <i class="fas fa-lock" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#9ca3af;font-size:13px;"></i>
+                                <input :type="showCreateStorePwd ? 'text' : 'password'" v-model="createStoreForm.confirmPassword" placeholder="Password dobara daalen"
+                                    style="width:100%;padding:11px 12px 11px 38px;border:1.5px solid #e5e7eb;border-radius:12px;font-size:13px;outline:none;box-sizing:border-box;"
+                                    @focus="$event.target.style.borderColor='#4f46e5'" @blur="$event.target.style.borderColor='#e5e7eb'">
+                            </div>
+                        </div>
+
+                        <!-- Info Note -->
+                        <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:12px;padding:10px 12px;margin-bottom:18px;display:flex;gap:8px;align-items:flex-start;">
+                            <i class="fas fa-info-circle" style="color:#3b82f6;font-size:13px;margin-top:1px;flex-shrink:0;"></i>
+                            <p style="font-size:11px;color:#1e40af;margin:0;line-height:1.5;">Yeh account <strong>Firebase Auth</strong> mein create hoga. Store owner in credentials se <strong>Store Panel</strong> mein login kar sakta hai.</p>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <button @click="submitCreateStore" :disabled="createStoreLoading"
+                            style="width:100%;background:linear-gradient(135deg,#4f46e5,#7c3aed);color:white;border:none;border-radius:14px;padding:14px;font-size:14px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 6px 20px rgba(79,70,229,0.35);transition:0.2s;"
+                            :style="createStoreLoading ? 'opacity:0.7;cursor:not-allowed;' : ''">
+                            <i v-if="createStoreLoading" class="fas fa-circle-notch fa-spin"></i>
+                            <i v-else class="fas fa-user-plus"></i>
+                            {{ createStoreLoading ? 'Account ban raha hai...' : 'Store Account Create Karein' }}
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -1618,6 +1878,12 @@ new Vue({
         storeRooms: [], 
         showStoreModal: false,
         selectedStore: null,
+        showCreateStoreModal: false,
+        showCreateStorePwd: false,
+        createStoreLoading: false,
+        createStoreError: '',
+        createStoreSuccess: '',
+        createStoreForm: { shopName: '', mobile: '', email: '', password: '', confirmPassword: '' },
         availableCategories: ['Mobile', 'Electronics', 'Mobile & Accessories', 'Beauty product', 'Footwear', 'vegetables', 'Watches'],
         categoryData: [],
         newCategoryInput: '',
@@ -1672,7 +1938,62 @@ new Vue({
         filteredUsers() { let list = this.allUsers; if (this.userTypeFilter === 'mobile') list = list.filter(u => u.type === 'mobile'); else if (this.userTypeFilter === 'email') list = list.filter(u => u.type === 'email'); if (this.userSearch) { const s = this.userSearch.toLowerCase(); list = list.filter(u => (u.name && u.name.toLowerCase().includes(s)) || (u.phone && u.phone.includes(s)) || (u.email && u.email.toLowerCase().includes(s))); } return list; },
         filteredProducts() { if (!this.productSearch) return this.products; const s = this.productSearch.toLowerCase(); return this.products.filter(p => p.name.toLowerCase().includes(s) || (p.category && p.category.toLowerCase().includes(s))); },
         filteredOrders() { let filtered = this.orders; if (this.orderStatusFilter === 'cancelled') { filtered = filtered.filter(o => o.status === 'cancelled' || o.status === 'rejected'); } else if (this.orderStatusFilter === 'online_pending') { filtered = filtered.filter(o => o.payment_method === 'Online' && o.status === 'pending'); } else if (this.orderStatusFilter !== 'all') { filtered = filtered.filter(o => o.status === this.orderStatusFilter); } if (this.orderSearch) { const s = this.orderSearch.toLowerCase(); filtered = filtered.filter(o => (o.id && o.id.toLowerCase().includes(s)) || (o.customerName && o.customerName.toLowerCase().includes(s)) || (o.customerPhone && o.customerPhone.includes(s))); } return filtered; },
-        getPageTitle() { const t = { dashboard: 'Dashboard', products: 'Products', addProduct: 'Add Product', storeRooms: 'Store Rooms', banners: 'Banners', categories: 'Categories', users: 'Users', orders: 'Orders', returns: 'Returns', settings: 'Settings', riders: 'Riders', withdrawals: 'Withdrawals' }; return t[this.currentPage] || 'Admin'; }
+        getPageTitle() { const t = { dashboard: 'Dashboard', products: 'Products', addProduct: 'Add Product', storeRooms: 'Store Rooms', banners: 'Banners', categories: 'Categories', users: 'Users', orders: 'Orders', returns: 'Returns', settings: 'Settings', riders: 'Riders', withdrawals: 'Withdrawals' }; return t[this.currentPage] || 'Admin'; },
+
+        // ===== TOP SELLING PRODUCTS (Dashboard Analytics) =====
+        topSellingProducts() {
+            const productMap = {};
+            this.orders.forEach(order => {
+                if (!order.items) return;
+                order.items.forEach(item => {
+                    const key = item.id || item.name;
+                    if (!key) return;
+                    if (!productMap[key]) {
+                        // Find product image/category from products list
+                        const prod = this.products.find(p => p.id === item.id);
+                        productMap[key] = {
+                            id: key,
+                            name: item.name || key,
+                            image: (prod && (prod.image || (prod.images && prod.images[0]))) || '',
+                            category: (prod && prod.category) || '',
+                            unitsSold: 0,
+                            revenue: 0
+                        };
+                    }
+                    productMap[key].unitsSold += Number(item.quantity || 1);
+                    productMap[key].revenue += Number(item.price || 0) * Number(item.quantity || 1);
+                });
+            });
+            return Object.values(productMap)
+                .sort((a, b) => b.unitsSold - a.unitsSold)
+                .slice(0, 7);
+        },
+
+        // ===== TOP PERFORMING SELLERS (Dashboard Analytics) =====
+        topSellers() {
+            const sellerMap = {};
+            this.orders.forEach(order => {
+                if (!order.items) return;
+                // Track which sellers appear in this order (avoid double-counting order per seller)
+                const sellersInOrder = new Set();
+                order.items.forEach(item => {
+                    const sellerName = item.shopkeeperName || item.shopkeeper || item.sellerName || null;
+                    if (!sellerName || sellerName === 'Admin' || sellerName === 'Admin Core' || sellerName === '') return;
+                    if (!sellerMap[sellerName]) {
+                        sellerMap[sellerName] = { name: sellerName, orders: 0, units: 0, revenue: 0 };
+                    }
+                    if (!sellersInOrder.has(sellerName)) {
+                        sellerMap[sellerName].orders += 1;
+                        sellersInOrder.add(sellerName);
+                    }
+                    sellerMap[sellerName].units += Number(item.quantity || 1);
+                    sellerMap[sellerName].revenue += Number(item.price || 0) * Number(item.quantity || 1);
+                });
+            });
+            const sorted = Object.values(sellerMap).sort((a, b) => b.revenue - a.revenue).slice(0, 7);
+            const maxRev = sorted.length > 0 ? sorted[0].revenue : 1;
+            return sorted.map(s => ({ ...s, barWidth: Math.round((s.revenue / maxRev) * 100) }));
+        }
     },
     watch: {
         currentPage(newPage) {
@@ -1692,7 +2013,45 @@ new Vue({
             this.adminLoginError = '';
             this.adminLoginLoading = true;
             auth.signInWithEmailAndPassword(this.adminLoginForm.email.trim(), this.adminLoginForm.password)
-                .then(async () => {
+                .then(async (userCredential) => {
+                    const user = userCredential.user;
+                    const uid = user.uid;
+
+                    // ===== ADMIN ROLE CHECK =====
+                    // Firebase Database mein user ka role check karo
+                    let isAdmin = false;
+
+                    // Check 1: users_email node mein role check karo
+                    const emailSnap = await database.ref('users_email/' + uid).once('value');
+                    if (emailSnap.exists()) {
+                        const userData = emailSnap.val();
+                        if (userData.role === 'admin') isAdmin = true;
+                    }
+
+                    // Check 2: admins node mein UID check karo (agar pehle nahi mila)
+                    if (!isAdmin) {
+                        const adminSnap = await database.ref('admins/' + uid).once('value');
+                        if (adminSnap.exists()) isAdmin = true;
+                    }
+
+                    // Check 3: users node mein role check karo
+                    if (!isAdmin) {
+                        const userSnap = await database.ref('users/' + uid).once('value');
+                        if (userSnap.exists()) {
+                            const userData = userSnap.val();
+                            if (userData.role === 'admin') isAdmin = true;
+                        }
+                    }
+
+                    if (!isAdmin) {
+                        // Normal user hai — logout karo aur error dikhao
+                        auth.signOut().catch(() => {});
+                        this.adminLoginLoading = false;
+                        this.adminLoginError = '🚫 You are not an admin! Sirf Admin yahan login kar sakta hai.';
+                        return;
+                    }
+
+                    // Admin confirmed — dashboard kholo
                     this.adminLoginLoading = false;
                     this.adminLoggedIn = true;
                     localStorage.setItem('pk_admin_session', '1');
@@ -2585,6 +2944,74 @@ new Vue({
         formatDate(iso) { if (!iso) return ''; return new Date(iso).toLocaleString('en-IN', { day:'numeric', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' }); },
         formatShortDate(iso) { if (!iso) return ''; return new Date(iso).toLocaleString('en-IN', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' }); },
 
+        // ===== CREATE STORE USER =====
+        closeCreateStoreModal() {
+            this.showCreateStoreModal = false;
+            this.createStoreError = '';
+            this.createStoreSuccess = '';
+            this.createStoreForm = { shopName: '', mobile: '', email: '', password: '', confirmPassword: '' };
+            this.showCreateStorePwd = false;
+        },
+        async submitCreateStore() {
+            this.createStoreError = '';
+            this.createStoreSuccess = '';
+            const { shopName, mobile, email, password, confirmPassword } = this.createStoreForm;
+
+            // Validations
+            if (!shopName.trim())               { this.createStoreError = '❌ Shop Name zaroori hai.'; return; }
+            if (!mobile.trim() || mobile.trim().replace(/\D/g,'').length < 10) { this.createStoreError = '❌ Valid 10-digit mobile number daalo.'; return; }
+            if (!email.trim())                  { this.createStoreError = '❌ Gmail address zaroori hai.'; return; }
+            if (!/^[^@]+@[^@]+\.[^@]+$/.test(email.trim())) { this.createStoreError = '❌ Valid Gmail format daalo.'; return; }
+            if (password.length < 6)            { this.createStoreError = '❌ Password kam se kam 6 characters ka hona chahiye.'; return; }
+            if (password !== confirmPassword)   { this.createStoreError = '❌ Dono passwords match nahi kar rahe.'; return; }
+
+            // Duplicate shop name check
+            const exists = this.storeRooms.find(s => (s.shopName || '').toLowerCase() === shopName.trim().toLowerCase());
+            if (exists) { this.createStoreError = '❌ Is naam ka store pehle se exist karta hai.'; return; }
+
+            this.createStoreLoading = true;
+            try {
+                // Firebase Auth mein naya user create karo
+                const cred = await auth.createUserWithEmailAndPassword(email.trim(), password);
+                const uid = cred.user.uid;
+                await cred.user.updateProfile({ displayName: shopName.trim() });
+
+                // Store data prepare
+                const storeData = {
+                    uid,
+                    shopName:  shopName.trim(),
+                    mobile:    mobile.trim(),
+                    email:     email.trim(),
+                    password:  password,
+                    createdAt: new Date().toISOString(),
+                    lastLogin:  '',
+                    blocked:   false
+                };
+
+                // shopkeepers_email node mein save karo (uid se key)
+                await database.ref('shopkeepers_email/' + uid).set(storeData);
+
+                // shopkeepers node mein bhi save karo (safe shopName key)
+                const safeKey = shopName.trim().replace(/[.#$[\]]/g, '_');
+                await database.ref('shopkeepers/' + safeKey).set(storeData);
+
+                this.createStoreSuccess = `✅ "${shopName.trim()}" ka account ban gaya! Email: ${email.trim()}`;
+                this.createStoreForm = { shopName: '', mobile: '', email: '', password: '', confirmPassword: '' };
+
+                // Admin ka session restore karo (naya user create karne se sign out ho jaata hai)
+                // Re-sign-in with admin credentials is not possible here, so we use admin's cached session
+                // Firebase Admin SDK nahi hai browser mein, isliye current user ko check karo
+                setTimeout(() => { this.createStoreSuccess = ''; }, 8000);
+            } catch(e) {
+                if (e.code === 'auth/email-already-in-use') this.createStoreError = '❌ Yeh Gmail pehle se Firebase mein registered hai.';
+                else if (e.code === 'auth/invalid-email')   this.createStoreError = '❌ Gmail format sahi nahi hai.';
+                else if (e.code === 'auth/weak-password')   this.createStoreError = '❌ Password zyada strong banao (6+ characters).';
+                else this.createStoreError = '❌ ' + e.message;
+            } finally {
+                this.createStoreLoading = false;
+            }
+        },
+
         // ===== DELIVERY SETTINGS =====
         async saveDeliverySettings() {
             if (this.deliverySettingsInput.minOrderLimit < 0 || this.deliverySettingsInput.deliveryCharge < 0) {
@@ -2642,8 +3069,9 @@ new Vue({
 
         window.addEventListener('popstate', (event) => {
             // Agar koi modal open hai, toh back dabane par pehle modal close ho
-            if (this.showStoreModal || this.showUserModal || this.podPhotoModal || this.showAddRiderModal || this.showEditModal || this.showReceiptModal || this.rejectModal.show) {
+            if (this.showStoreModal || this.showUserModal || this.podPhotoModal || this.showAddRiderModal || this.showEditModal || this.showReceiptModal || this.rejectModal.show || this.showCreateStoreModal) {
                 this.showStoreModal = false;
+                this.showCreateStoreModal = false;
                 this.showUserModal = false;
                 this.podPhotoModal = null;
                 this.showAddRiderModal = false;
