@@ -2098,22 +2098,7 @@ new Vue({
             return 'Admin';
         },
         getBorderClass(status) { return status === 'pending' ? 'border-yellow-400' : status === 'confirmed' ? 'border-blue-400' : status === 'shipped' ? 'border-purple-400' : status === 'delivered' ? 'border-green-400' : (status === 'cancelled' || status === 'rejected') ? 'border-red-400' : 'border-gray-300'; },
-        async loadAllData() {
-            this.loading = true;
-            const timeout = setTimeout(() => { this.loading = false; }, 8000);
-            const safe = async (fn, name) => { try { await fn(); } catch(e) { console.warn(name + ' failed:', e.message); } };
-            await safe(() => this.loadProducts(),       'products');
-            await safe(() => this.loadOrders(),         'orders');
-            await safe(() => this.loadUsers(),          'users');
-            await safe(() => this.loadBanners(),        'banners');
-            await safe(() => this.loadAdminControls(),  'adminControls');
-            await safe(() => this.loadReturnRequests(), 'returns');
-            await safe(() => this.loadRiders(),         'riders');
-            await safe(() => this.loadStoreRooms(),     'storeRooms');
-            await safe(() => this.loadWithdrawals(),    'withdrawals');
-            clearTimeout(timeout);
-            this.loading = false;
-        },
+        async loadAllData() { this.loading = true; await Promise.all([this.loadProducts(), this.loadOrders(), this.loadUsers(), this.loadBanners(), this.loadAdminControls(), this.loadReturnRequests(), this.loadRiders(), this.loadStoreRooms(), this.loadWithdrawals()]); this.loading = false; },
         async loadProducts() { const snap = await database.ref('products').once('value'); const d = snap.val(); this.products = d ? Object.keys(d).map(k => ({ id: k, ...d[k] })) : []; },
         async loadOrders() { const snap = await database.ref('orders').once('value'); const d = snap.val(); this.orders = d ? Object.keys(d).map(k => ({ id: k, ...d[k] })).reverse() : []; },
         async loadUsers() { const [snap1, snap2] = await Promise.all([database.ref('users').once('value'), database.ref('users_email').once('value')]); const d1 = snap1.val(); const d2 = snap2.val(); this.users = d1 ? Object.keys(d1).map(k => ({ id: k, type: 'mobile', ...d1[k] })) : []; this.emailUsers = d2 ? Object.keys(d2).map(k => ({ id: k, type: 'email', ...d2[k] })) : []; },
