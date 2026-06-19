@@ -279,6 +279,35 @@
                     </div>
                 </div>
 
+                <!-- Block / Unblock Action -->
+                <div class="rounded-2xl overflow-hidden border"
+                     :class="selectedStore && selectedStore.blocked ? 'border-red-200 bg-red-50' : 'border-orange-200 bg-orange-50'">
+                    <div class="px-4 py-3 flex items-center justify-between gap-3">
+                        <div class="flex items-center gap-2.5">
+                            <div class="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+                                 :class="selectedStore && selectedStore.blocked ? 'bg-red-100' : 'bg-orange-100'">
+                                <i class="fas text-lg" :class="selectedStore && selectedStore.blocked ? 'fa-ban text-red-500' : 'fa-shield-alt text-orange-500'"></i>
+                            </div>
+                            <div>
+                                <p class="text-xs font-black" :class="selectedStore && selectedStore.blocked ? 'text-red-700' : 'text-orange-700'">
+                                    {{ selectedStore && selectedStore.blocked ? '🚫 Store is Currently Blocked' : '✅ Store is Active' }}
+                                </p>
+                                <p class="text-[10px]" :class="selectedStore && selectedStore.blocked ? 'text-red-400' : 'text-orange-400'">
+                                    {{ selectedStore && selectedStore.blocked ? 'Shopkeeper cannot login or access panel.' : 'Click to block this store immediately.' }}
+                                </p>
+                            </div>
+                        </div>
+                        <button @click="toggleBlockStore(selectedStore)"
+                                class="flex-shrink-0 font-black text-xs px-4 py-2 rounded-xl transition active:scale-95 shadow-sm flex items-center gap-1.5"
+                                :class="selectedStore && selectedStore.blocked
+                                    ? 'bg-green-500 hover:bg-green-600 text-white shadow-green-200'
+                                    : 'bg-red-500 hover:bg-red-600 text-white shadow-red-200'">
+                            <i class="fas" :class="selectedStore && selectedStore.blocked ? 'fa-unlock' : 'fa-ban'"></i>
+                            {{ selectedStore && selectedStore.blocked ? 'Unblock' : 'Block Store' }}
+                        </button>
+                    </div>
+                </div>
+
                 <!-- Order History -->
                 <div>
                     <h4 class="font-bold text-xs text-gray-700 mb-2 flex items-center gap-1"><i class="fas fa-history text-indigo-400"></i> Recent Orders</h4>
@@ -1071,20 +1100,26 @@
                         <!-- Rider Assignment -->
                         <div class="px-4 py-3 bg-emerald-50/60 border-t">
                             <p class="text-[10px] font-bold text-gray-500 uppercase mb-2"><i class="fas fa-motorcycle text-emerald-600 mr-1"></i> Assign Delivery Rider</p>
-                            <div class="flex gap-2 items-center">
-                                <select v-model="order.assignedRider" class="flex-1 border border-emerald-200 rounded-lg px-3 py-2 text-xs bg-white font-semibold outline-none focus:border-emerald-500">
-                                    <option value="">-- Select Rider --</option>
+                            <div class="flex flex-col gap-2">
+                                <select v-model="order.assignedRider" class="w-full border border-emerald-200 rounded-xl px-3 py-2.5 text-xs bg-white font-semibold outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100">
+                                    <option value="">🏍️ Select Rider...</option>
                                     <option v-for="r in riders" :key="r.id" :value="r.id">🏍️ {{ r.name }} ({{ r.phone }})</option>
                                 </select>
-                                <button @click="assignRiderToOrder(order)" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-3 py-2 rounded-lg text-xs transition flex items-center gap-1 whitespace-nowrap shadow-sm">
-                                    <i class="fas fa-check"></i> Assign
+                                <button @click="assignRiderToOrder(order)" class="w-full bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-black py-2.5 rounded-xl text-xs transition flex items-center justify-center gap-2 shadow-md shadow-emerald-200">
+                                    <i class="fas fa-motorcycle"></i> Assign Delivery Rider
                                 </button>
                             </div>
-                            <div v-if="order.assignedRiderName" class="mt-2 flex items-center gap-2 bg-emerald-100 px-3 py-1.5 rounded-lg">
-                                <i class="fas fa-motorcycle text-emerald-600 text-xs"></i>
-                                <span class="text-xs font-bold text-emerald-700">{{ order.assignedRiderName }}</span>
-                                <span class="text-[10px] text-emerald-500">{{ order.assignedRiderPhone }}</span>
-                                <button @click="removeRiderFromOrder(order)" class="ml-auto text-red-400 hover:text-red-600 text-[10px] font-bold"><i class="fas fa-times"></i> Remove</button>
+                            <div v-if="order.assignedRiderName" class="mt-2 flex items-center gap-2 bg-emerald-100 px-3 py-2 rounded-xl">
+                                <div class="w-7 h-7 bg-emerald-500 rounded-full flex items-center justify-center flex-shrink-0">
+                                    <i class="fas fa-motorcycle text-white" style="font-size:10px;"></i>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-xs font-black text-emerald-700 truncate">{{ order.assignedRiderName }}</p>
+                                    <p class="text-[10px] text-emerald-500">{{ order.assignedRiderPhone }}</p>
+                                </div>
+                                <button @click="removeRiderFromOrder(order)" class="flex-shrink-0 bg-red-100 hover:bg-red-200 text-red-500 hover:text-red-700 text-[10px] font-bold px-2 py-1 rounded-lg transition flex items-center gap-1">
+                                    <i class="fas fa-times"></i> Remove
+                                </button>
                             </div>
                         </div>
                         <div class="px-4 py-3 bg-white border-t flex justify-end">
@@ -2315,8 +2350,17 @@ new Vue({
             if (!confirm(`Are you sure you want to ${action} "${store.shopName}"? ${isBlocked ? 'They will not be able to login.' : 'They will regain access.'}`)) return;
             this.loading = true;
             try {
+                // Write to primary shopkeepers node (phone-login users watch this)
                 await database.ref(`shopkeepers/${store.id}`).update({ blocked: isBlocked });
+                // Also write to shopkeepers_email node if uid exists (email-login users watch this)
+                if (store.uid) {
+                    await database.ref(`shopkeepers_email/${store.uid}`).update({ blocked: isBlocked });
+                }
                 this.showMessage(isBlocked ? `🚫 ${store.shopName} blocked!` : `✅ ${store.shopName} unblocked!`);
+                // Reflect in modal if open
+                if (this.selectedStore && this.selectedStore.id === store.id) {
+                    this.selectedStore = { ...this.selectedStore, blocked: isBlocked };
+                }
                 await this.loadStoreRooms();
             } catch(e) { this.showMessage('Error: ' + e.message); }
             finally { this.loading = false; }
