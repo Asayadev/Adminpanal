@@ -2995,12 +2995,12 @@ new Vue({
                 const safeKey = shopName.trim().replace(/[.#$[\]]/g, '_');
                 await database.ref('shopkeepers/' + safeKey).set(storeData);
 
+                // createUserWithEmailAndPassword ke baad Firebase naye user ke session mein chala jaata hai
+                // Admin ka session restore karo
+                await auth.signInWithEmailAndPassword(this.adminLoginForm.email, this.adminLoginForm.password);
+
                 this.createStoreSuccess = `✅ "${shopName.trim()}" ka account ban gaya! Email: ${email.trim()}`;
                 this.createStoreForm = { shopName: '', mobile: '', email: '', password: '', confirmPassword: '' };
-
-                // Admin ka session restore karo (naya user create karne se sign out ho jaata hai)
-                // Re-sign-in with admin credentials is not possible here, so we use admin's cached session
-                // Firebase Admin SDK nahi hai browser mein, isliye current user ko check karo
                 setTimeout(() => { this.createStoreSuccess = ''; }, 8000);
             } catch(e) {
                 if (e.code === 'auth/email-already-in-use') this.createStoreError = '❌ Yeh Gmail pehle se Firebase mein registered hai.';
