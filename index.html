@@ -2345,11 +2345,12 @@ new Vue({
 
         getStoreTopProducts(shopName) {
             if (!shopName) return [];
-            const shopProductIds = new Set(
-                this.products
-                    .filter(p => p.shopkeeper === shopName || p.shopkeeperName === shopName || p.shopkeeperId === shopName)
-                    .map(p => p.id)
+            const shopProducts = this.products.filter(p =>
+                p.shopkeeper === shopName || p.shopkeeperName === shopName || p.shopkeeperId === shopName
             );
+            const shopProductIds  = new Set(shopProducts.map(p => p.id));
+            // Only count products that still exist in catalog (deleted products ko exclude karo)
+            const shopProductNames = new Set(shopProducts.map(p => (p.name || '').toLowerCase().trim()));
             const map = {};
             this.orders.forEach(order => {
                 if (!order.items) return;
@@ -2362,7 +2363,10 @@ new Vue({
                     }
                 });
             });
-            return Object.values(map).sort((a, b) => b.revenue - a.revenue).slice(0, 5);
+            return Object.values(map)
+                .filter(item => shopProductNames.has((item.name || '').toLowerCase().trim()))
+                .sort((a, b) => b.revenue - a.revenue)
+                .slice(0, 5);
         },
         openStoreModal(store) {
             this.selectedStore = store;
