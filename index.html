@@ -32,7 +32,7 @@
         @media (max-width: 768px) {
             .sidebar { position: fixed; left: -280px; transition: left 0.3s ease; z-index: 50; width: 260px; height: 100vh; overflow-y: auto; background: white; }
             .sidebar.open { left: 0; }
-            .main-content { width: 100%; padding: 12px; }
+            .main-content { width: 100%; padding: 0; }
             .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
             .toast { white-space: normal; text-align: center; width: 85%; bottom: 75px; font-size: 11px; }
             .bottom-nav { display: flex; position: fixed; bottom: 0; left: 0; right: 0; background: white; justify-content: space-around; padding: 8px 12px; border-top: 1px solid #e5e7eb; z-index: 40; }
@@ -528,7 +528,7 @@
             </div>
         </aside>
 
-        <main class="flex-1 main-content main-padding p-6">
+        <main class="flex-1 main-content main-padding p-0">
             <div class="md:hidden flex items-center justify-between mb-3 bg-white p-2 rounded-xl shadow-sm sticky top-0 z-30"><button @click="mobileMenuOpen = !mobileMenuOpen" class="text-gray-600 text-xl"><i class="fas fa-bars"></i></button><h2 class="font-bold text-gray-800 text-sm">{{ getPageTitle }}</h2><div class="w-6"></div></div>
             
             <div v-if="currentPage == 'dashboard'">
@@ -950,28 +950,55 @@
                     <div>
                         <label class="block text-xs font-bold text-gray-500 mb-2 uppercase tracking-wide">Active Categories ({{ categoryData.length }})</label>
                         <div class="space-y-2">
-                            <div v-for="(cat, idx) in categoryData" :key="idx" class="flex items-center gap-3 bg-white border rounded-xl p-2.5 shadow-sm">
-                                <!-- Image or icon -->
-                                <div class="w-10 h-10 rounded-lg bg-gray-50 border flex items-center justify-center overflow-hidden shrink-0">
-                                    <img v-if="cat.image" :src="cat.image" class="w-9 h-9 object-contain" onerror="this.style.display='none'">
-                                    <i v-if="!cat.image" class="fas fa-folder text-amber-400 text-base"></i>
+
+                            <!-- Normal view row -->
+                            <template v-for="(cat, idx) in categoryData" :key="idx">
+                                <div v-if="editingCatIdx !== idx" class="flex items-center gap-3 bg-white border rounded-xl p-2.5 shadow-sm">
+                                    <div class="w-10 h-10 rounded-lg bg-gray-50 border flex items-center justify-center overflow-hidden shrink-0">
+                                        <img v-if="cat.image" :src="cat.image" class="w-9 h-9 object-contain" onerror="this.style.display='none'">
+                                        <i v-if="!cat.image" class="fas fa-folder text-amber-400 text-base"></i>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <p class="text-xs font-bold text-gray-800 truncate">{{ cat.name }}</p>
+                                        <p v-if="cat.image" class="text-[10px] text-gray-400 truncate">{{ cat.image }}</p>
+                                        <p v-else class="text-[10px] text-gray-300 italic">No image set</p>
+                                    </div>
+                                    <div class="flex items-center gap-1">
+                                        <button @click="startEditCategory(idx)" class="text-blue-500 hover:text-blue-700 p-1.5 rounded-lg bg-blue-50 text-[10px] font-bold" title="Edit category">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button @click="deleteCategory(idx)" class="text-red-500 hover:text-red-700 p-1.5 rounded-lg bg-red-50 text-[10px]" title="Delete category">
+                                            <i class="fas fa-trash-alt"></i>
+                                        </button>
+                                    </div>
                                 </div>
-                                <div class="flex-1 min-w-0">
-                                    <p class="text-xs font-bold text-gray-800 truncate">{{ cat.name }}</p>
-                                    <p v-if="cat.image" class="text-[10px] text-gray-400 truncate">{{ cat.image }}</p>
-                                    <p v-else class="text-[10px] text-gray-300 italic">No image set</p>
+
+                                <!-- Edit mode row -->
+                                <div v-else class="bg-blue-50 border-2 border-blue-300 rounded-xl p-3 space-y-2 shadow-sm">
+                                    <p class="text-[10px] font-black text-blue-700 uppercase tracking-wide"><i class="fas fa-edit mr-1"></i> Edit Category</p>
+                                    <div>
+                                        <label class="block text-[10px] font-semibold text-gray-600 mb-1">Category Name *</label>
+                                        <input type="text" v-model="editCatName" class="w-full border px-2.5 py-1.5 rounded-lg text-xs outline-none focus:border-blue-400" placeholder="Category name">
+                                    </div>
+                                    <div>
+                                        <label class="block text-[10px] font-semibold text-gray-600 mb-1">Image URL <span class="text-gray-400 font-normal">(optional)</span></label>
+                                        <input type="text" v-model="editCatImage" class="w-full border px-2.5 py-1.5 rounded-lg text-xs outline-none focus:border-blue-400" placeholder="Paste image link">
+                                    </div>
+                                    <div v-if="editCatImage" class="flex items-center gap-2 bg-white border rounded-lg p-1.5">
+                                        <img :src="editCatImage" class="w-10 h-10 object-contain rounded border bg-gray-50" onerror="this.src='https://placehold.co/40x40?text=Err'">
+                                        <span class="text-[9px] text-gray-400 truncate flex-1">{{ editCatImage }}</span>
+                                    </div>
+                                    <div class="flex gap-2">
+                                        <button @click="saveCategoryEdit(idx)" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-1.5 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1">
+                                            <i class="fas fa-check"></i> Save
+                                        </button>
+                                        <button @click="cancelCategoryEdit()" class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 py-1.5 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1">
+                                            <i class="fas fa-times"></i> Cancel
+                                        </button>
+                                    </div>
                                 </div>
-                                <!-- Edit image inline -->
-                                <div class="flex items-center gap-1">
-                                    <input type="text" :placeholder="'Image URL'" v-model="cat.image" @change="syncCategoriesToFirebase()" class="border rounded-lg px-2 py-1 text-[10px] w-28 outline-none focus:border-blue-400 hidden-edit" style="display:none" :id="'imgEdit_'+idx">
-                                    <button @click="toggleImageEdit(idx)" class="text-blue-500 hover:text-blue-700 p-1.5 rounded-lg bg-blue-50 text-[10px] font-bold" title="Edit image URL">
-                                        <i class="fas fa-image"></i>
-                                    </button>
-                                    <button @click="deleteCategory(idx)" class="text-red-500 hover:text-red-700 p-1.5 rounded-lg bg-red-50 text-[10px]" title="Delete category">
-                                        <i class="fas fa-trash-alt"></i>
-                                    </button>
-                                </div>
-                            </div>
+                            </template>
+
                             <div v-if="categoryData.length === 0" class="text-center py-6 text-gray-400 text-xs border rounded-xl border-dashed">No categories added yet.</div>
                         </div>
                     </div>
@@ -1921,6 +1948,7 @@ new Vue({
         createStoreForm: { shopName: '', mobile: '', email: '', password: '', confirmPassword: '' },
         availableCategories: ['Mobile', 'Electronics', 'Mobile & Accessories', 'Beauty product', 'Footwear', 'vegetables', 'Watches'],
         categoryData: [],
+        editingCatIdx: null, editCatName: '', editCatImage: '',
         newCategoryInput: '',
         newCategoryImage: '',
         adminPaymentLink: '',
@@ -2695,9 +2723,24 @@ new Vue({
                 await this.syncCategoriesToFirebase();
             }
         },
-        toggleImageEdit(idx) {
-            const el = document.getElementById('imgEdit_' + idx);
-            if (el) { el.style.display = el.style.display === 'none' ? 'block' : 'none'; if(el.style.display === 'none') this.syncCategoriesToFirebase(); }
+        startEditCategory(idx) {
+            this.editingCatIdx = idx;
+            this.editCatName = this.categoryData[idx].name;
+            this.editCatImage = this.categoryData[idx].image || '';
+        },
+        cancelCategoryEdit() {
+            this.editingCatIdx = null; this.editCatName = ''; this.editCatImage = '';
+        },
+        async saveCategoryEdit(idx) {
+            const name = this.editCatName.trim();
+            if (!name) { this.showMessage('Category name required!'); return; }
+            const oldName = this.categoryData[idx].name;
+            this.categoryData[idx].name = name;
+            this.categoryData[idx].image = this.editCatImage.trim();
+            this.availableCategories = this.categoryData.map(c => c.name);
+            this.editingCatIdx = null; this.editCatName = ''; this.editCatImage = '';
+            await this.syncCategoriesToFirebase();
+            this.showMessage('✅ Category updated!');
         },
         async syncCategoriesToFirebase() {
             this.loading = true;
