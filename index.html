@@ -364,6 +364,29 @@
                         <p v-if="selectedUser && selectedUser.createdAt" class="text-gray-400"><i class="fas fa-calendar text-gray-400 w-4"></i> Joined: {{ new Date(selectedUser.createdAt).toLocaleDateString('en-IN') }}</p>
                     </div>
                 </div>
+                <!-- Cashback Update Section -->
+                <div class="mb-4 bg-amber-50 border border-amber-200 rounded-2xl p-4">
+                    <div class="flex items-center gap-2 mb-3">
+                        <i class="fas fa-coins text-amber-500 text-base"></i>
+                        <p class="font-bold text-sm text-amber-800">Cashback Balance</p>
+                        <span class="ml-auto bg-amber-500 text-white font-black text-sm px-3 py-0.5 rounded-full">₹{{ selectedUserCashback.toFixed(2) }}</span>
+                    </div>
+                    <div class="flex gap-2">
+                        <div class="relative flex-1">
+                            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-amber-500 font-bold text-xs">₹</span>
+                            <input type="number" v-model="cashbackInput" placeholder="Enter amount" min="0" step="0.01"
+                                class="w-full pl-7 pr-3 py-2.5 border border-amber-300 rounded-xl text-sm font-semibold outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-200 bg-white">
+                        </div>
+                        <button @click="updateCashback" :disabled="cashbackLoading || cashbackInput === ''"
+                            class="bg-amber-500 hover:bg-amber-600 disabled:bg-amber-300 text-white px-4 py-2.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition whitespace-nowrap">
+                            <i v-if="cashbackLoading" class="fas fa-circle-notch fa-spin"></i>
+                            <i v-else class="fas fa-save"></i>
+                            {{ cashbackLoading ? 'Saving...' : 'Set Cashback' }}
+                        </button>
+                    </div>
+                    <p class="text-[10px] text-amber-600 mt-2 flex items-center gap-1"><i class="fas fa-info-circle"></i> This will set the user's cashback balance to the entered amount.</p>
+                </div>
+
                 <h4 class="font-semibold text-sm mb-2">📦 Orders History List ({{ userOrders.length }})</h4>
                 <div v-if="userOrders.length === 0" class="text-center py-6 text-gray-400 text-sm"><i class="fas fa-box-open text-3xl mb-2 opacity-50"></i><p>No orders placed yet.</p></div>
                 <div v-else class="space-y-3">
@@ -1928,6 +1951,9 @@ new Vue({
         mobileMenuOpen: false,
         showUserModal: false,
         selectedUser: null,
+        selectedUserCashback: 0,
+        cashbackInput: '',
+        cashbackLoading: false,
         products: [],
         orders: [],
         users: [],
@@ -2497,8 +2523,39 @@ new Vue({
         
         escapeHtml(text) { if (!text) return ''; return String(text).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;"); },
         
-        viewUserOrders(user) { this.selectedUser = user; this.showUserModal = true; },
-        closeUserModal() { this.showUserModal = false; this.selectedUser = null; },
+        async viewUserOrders(user) {
+            this.selectedUser = user;
+            this.showUserModal = true;
+            this.cashbackInput = '';
+            this.selectedUserCashback = 0;
+            try {
+                const node = user.type === 'email' ? 'users_email' : 'users';
+                const key  = user.type === 'email' ? user.uid || user.id : user.phone || user.id;
+                const snap = await database.ref(`${node}/${key}`).once('value');
+                if (snap.exists()) {
+                    this.selectedUserCashback = Number(snap.val().cashback) || 0;
+                }
+            } catch(e) { /* ignore */ }
+        },
+        closeUserModal() { this.showUserModal = false; this.selectedUser = null; this.selectedUserCashback = 0; this.cashbackInput = ''; },
+        async updateCashback() {
+            if (!this.selectedUser || this.cashbackInput === '') return;
+            const amount = parseFloat(this.cashbackInput);
+            if (isNaN(amount) || amount < 0) { this.showMessage('Valid amount daalo'); return; }
+            this.cashbackLoading = true;
+            try {
+                const node = this.selectedUser.type === 'email' ? 'users_email' : 'users';
+                const key  = this.selectedUser.type === 'email' ? this.selectedUser.uid || this.selectedUser.id : this.selectedUser.phone || this.selectedUser.id;
+                await database.ref(`${node}/${key}`).update({ cashback: amount });
+                this.selectedUserCashback = amount;
+                this.cashbackInput = '';
+                this.showMessage(`Cashback ₹${amount.toFixed(2)} set kar diya!`);
+            } catch(e) {
+                this.showMessage('Error: ' + e.message);
+            } finally {
+                this.cashbackLoading = false;
+            }
+        },
         async deleteUser(user) { if(confirm(`Delete ${user.name} permanently?`)) { this.loading = true; try { const node = user.type === 'email' ? 'users_email' : 'users'; await database.ref(`${node}/${user.id}`).remove(); if (user.type === 'email' && user.uid) { try { await firebase.auth().currentUser; } catch(e2) {} } this.showMessage('User deleted'); await this.loadUsers(); } catch(e) { this.showMessage(e.message); } finally { this.loading = false; } } },
         getStatusBadge(status) { const m = { pending: 'bg-yellow-100 text-yellow-700', confirmed: 'bg-blue-100 text-blue-700', shipped: 'bg-purple-100 text-purple-700', delivered: 'bg-green-100 text-green-700', rejected: 'bg-red-100 text-red-700', cancelled: 'bg-red-100 text-red-700' }; return m[status] || 'bg-gray-100'; },
         getStatusText(status) { const m = { pending: 'Pending', confirmed: 'Confirmed', shipped: 'Shipped', delivered: 'Delivered', rejected: 'Cancelled', cancelled: 'Cancelled' }; return m[status] || status; },
