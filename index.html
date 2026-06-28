@@ -2891,9 +2891,23 @@ new Vue({
                         if (earnAmt > 0) {
                             const phone = order.customerPhone;
                             const uid   = order.uid;
-                            const cashbackPath = phone
-                                ? `users/${phone}/cashback`
-                                : (uid ? `users_email/${uid}/cashback` : null);
+
+                            // Detect correct path: phone users → users/<phone>, email users → users_email/<uid>
+                            let cashbackPath = null;
+                            if (phone) {
+                                const profileSnap = await database.ref(`users/${phone}`).once('value');
+                                if (profileSnap.exists()) {
+                                    cashbackPath = `users/${phone}/cashback`;
+                                }
+                            }
+                            if (!cashbackPath && uid) {
+                                cashbackPath = `users_email/${uid}/cashback`;
+                            }
+                            if (!cashbackPath && phone) {
+                                // Last fallback: phone path even if profile not found
+                                cashbackPath = `users/${phone}/cashback`;
+                            }
+
                             if (cashbackPath) {
                                 const userSnap = await database.ref(cashbackPath).once('value');
                                 const newBal = Number(userSnap.val() || 0) + earnAmt;
