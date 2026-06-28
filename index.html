@@ -331,6 +331,13 @@
                                     <span class="font-bold text-gray-800">Rs.{{ Number(item.price * item.quantity).toFixed(2) }}</span>
                                 </div>
                             </div>
+                            <div class="flex items-center justify-between mt-2 pt-1.5 border-t">
+                                <span class="text-gray-500 font-medium">Net Payable</span>
+                                <div class="flex items-center gap-1.5">
+                                    <span v-if="Number(order.cashbackUsed) > 0" class="inline-flex items-center gap-1 bg-green-100 text-green-700 font-bold px-1.5 py-0.5 rounded-full text-[9px]"><i class="fas fa-wallet text-[8px]"></i> -₹{{ Number(order.cashbackUsed).toFixed(2) }} CB</span>
+                                    <span class="font-black text-blue-600">₹{{ Number(order.total).toFixed(2) }}</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -369,13 +376,23 @@
                 <div v-else class="space-y-3">
                     <div v-for="order in userOrders" :key="order.id" class="border rounded-xl p-3 bg-white shadow-sm">
                         <div class="flex justify-between items-center flex-wrap gap-2">
-                            <span class="font-mono text-xs font-bold text-blue-600">#{{ order.id.slice(-6) }}</span>
+                            <div class="flex items-center gap-2">
+                                <span class="font-mono text-xs font-bold text-blue-600">#{{ order.id.slice(-6) }}</span>
+                                <span v-if="Number(order.cashbackUsed) > 0" class="inline-flex items-center gap-1 bg-green-100 text-green-700 font-bold px-1.5 py-0.5 rounded-full text-[9px]"><i class="fas fa-wallet text-[8px]"></i> CB Used</span>
+                            </div>
                             <span :class="getStatusBadge(order.status)" class="text-[10px] px-2 py-0.5 rounded-full font-bold">{{ getStatusText(order.status) }}</span>
                         </div>
                         <div class="text-[10px] text-gray-400 mt-1">Payment: <span class="font-bold text-slate-700">{{ order.paymentMethod || 'COD' }}</span></div>
                         <div class="text-[10px] text-gray-500">{{ formatDate(order.date) }}</div>
                         <div class="flex flex-wrap gap-1 mt-2"><span v-for="item in order.items" class="bg-gray-100 px-2 py-0.5 rounded text-[10px]">{{ item.name }} x{{ item.quantity }}</span></div>
-                        <div class="flex justify-between items-center mt-2 pt-1 border-t"><span class="text-xs text-gray-500 font-medium">Bill Total</span><span class="font-bold text-blue-600">₹{{ Number(order.total).toFixed(2) }}</span></div>
+                        <div v-if="Number(order.cashbackUsed) > 0" class="mt-2 bg-green-50 border border-green-100 rounded-lg px-2.5 py-1.5 text-[10px] space-y-0.5">
+                            <div class="flex justify-between text-gray-500"><span>Subtotal</span><span class="font-bold">₹{{ Number(order.itemTotal || order.total).toFixed(2) }}</span></div>
+                            <div class="flex justify-between text-green-700 font-bold"><span class="flex items-center gap-1"><i class="fas fa-wallet text-[9px]"></i> Cashback Applied</span><span>-₹{{ Number(order.cashbackUsed).toFixed(2) }}</span></div>
+                        </div>
+                        <div class="flex justify-between items-center mt-2 pt-1 border-t">
+                            <span class="text-xs text-gray-500 font-medium">{{ Number(order.cashbackUsed) > 0 ? 'Net Collected' : 'Bill Total' }}</span>
+                            <span class="font-bold text-blue-600">₹{{ Number(order.total).toFixed(2) }}</span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -662,7 +679,7 @@
                 <div class="bg-white rounded-xl shadow-sm overflow-x-auto border border-gray-100"><table class="w-full text-xs"><thead class="bg-gray-50 border-b border-gray-100 text-gray-500 font-semibold"><tr><th class="p-3 text-left">Product Details</th><th class="p-3 text-left">Category</th><th class="p-3 text-left">Pricing (₹)</th><th class="p-3 text-left">Stock Status</th><th class="p-3 text-center">Actions</th></tr></thead><tbody><tr v-for="p in filteredProducts" :key="p.id" class="border-b border-gray-50 hover:bg-gray-50/50 transition"><td class="p-3 flex items-center gap-3"><img :src="getDriveImageUrl(p.image || (p.images ? p.images[0] : ''))" class="w-10 h-10 object-contain rounded bg-gray-50 border" onerror="this.src='https://placehold.co/80x80?text=No+Img'"><div><p class="font-bold text-gray-800">{{ p.name }}</p><span v-if="p.badge" class="bg-orange-100 text-orange-600 font-semibold px-1.5 py-0.5 rounded text-[9px] mt-0.5 inline-block">{{ p.badge }}</span></div></td><td class="p-3 text-gray-600">{{ p.category || 'Uncategorized' }}</td><td class="p-3"><p class="font-bold text-blue-600">₹{{ Number(p.price).toFixed(2) }}</p><p v-if="p.originalPrice" class="line-through text-gray-400 text-[10px]">₹{{ Number(p.originalPrice).toFixed(2) }}</p></td><td class="p-3"><button @click.stop="toggleStockStatus(p)" :class="(p.stockStatus === 'In stock' || !p.stockStatus) ? 'text-green-700 bg-green-50 border-green-300 hover:bg-green-100' : 'text-red-700 bg-red-50 border-red-300 hover:bg-red-100'" class="font-bold px-2.5 py-1 rounded-lg text-[10px] border cursor-pointer transition-all flex items-center gap-1 whitespace-nowrap"><i :class="(p.stockStatus === 'In stock' || !p.stockStatus) ? 'fas fa-check-circle' : 'fas fa-times-circle'" class="text-[9px]"></i>{{ p.stockStatus || 'In stock' }}<i class="fas fa-exchange-alt text-[8px] opacity-50 ml-0.5"></i></button></td><td class="p-3 text-center space-x-2 whitespace-nowrap"><button @click="openEditModal(p)" class="text-blue-500 hover:text-blue-700 bg-blue-50 p-1.5 rounded-md transition"><i class="fas fa-edit"></i></button><button @click="deleteProduct(p.id)" class="text-red-500 hover:text-red-700 bg-red-50 p-1.5 rounded-md transition"><i class="fas fa-trash-alt"></i></button></td></tr><tr v-if="filteredProducts.length === 0"><td colspan="5" class="p-8 text-center text-gray-400 font-medium">No Products Available matching search</td></tr></tbody></table></div>
             </div>
 
-            <div v-if="currentPage == 'addProduct'"><div class="max-w-md mx-auto bg-white p-5 rounded-xl shadow-md"><h2 class="text-base font-bold mb-4 text-gray-800"><i class="fas fa-plus-circle text-green-500 mr-1"></i> Add New Product</h2><div class="space-y-3.5 text-xs"><div><label class="block font-bold text-gray-700 mb-1">Product Title *</label><input type="text" v-model="form.name" placeholder="E.g. iPhone 15 Pro" class="w-full border p-2 rounded-lg text-xs outline-none"></div><div class="grid grid-cols-2 gap-3"><div><label class="block font-bold text-gray-700 mb-1">Selling Price (₹) *</label><input type="number" v-model="form.price" placeholder="80" class="w-full border p-2 rounded-lg text-xs font-bold text-blue-600"></div><div><label class="block font-bold text-gray-400 mb-1">Original Price (M.R.P) ₹</label><input type="number" v-model="form.originalPrice" placeholder="100" class="w-full border p-2 rounded-lg text-xs"></div></div><div class="grid grid-cols-2 gap-3"><div><label class="block font-bold text-gray-700 mb-1">Category *</label><select v-model="form.category" class="w-full border p-2 rounded-lg text-xs bg-white"><option value="" disabled>Select Category</option><option v-for="cat in availableCategories" :key="cat" :value="cat">{{ cat }}</option></select></div><div><label class="block font-bold text-gray-700 mb-1">Stock Status</label><select v-model="form.stockStatus" class="w-full border p-2 rounded-lg text-xs bg-white"><option value="In stock">In Stock ✅</option><option value="Out of stock">Out of Stock ❌</option></select></div></div><div><label class="block font-bold text-gray-700 mb-1">Top Badge (Optional)</label><input type="text" v-model="form.badge" placeholder="Trending, Bestseller, New" class="w-full border p-2 rounded-lg text-xs"></div><div style="background:#f8fafc;padding:15px;border:1px dashed #cbd5e1;border-radius:12px;">
+            <div v-if="currentPage == 'addProduct'"><div class="max-w-md mx-auto bg-white p-5 rounded-xl shadow-md"><h2 class="text-base font-bold mb-4 text-gray-800"><i class="fas fa-plus-circle text-green-500 mr-1"></i> Add New Product</h2><div class="space-y-3.5 text-xs"><div><label class="block font-bold text-gray-700 mb-1">Product Title *</label><input type="text" v-model="form.name" placeholder="E.g. iPhone 15 Pro" class="w-full border p-2 rounded-lg text-xs outline-none"></div><div class="grid grid-cols-2 gap-3"><div><label class="block font-bold text-gray-700 mb-1">Selling Price (₹) *</label><input type="number" v-model="form.price" placeholder="80" class="w-full border p-2 rounded-lg text-xs font-bold text-blue-600"></div><div><label class="block font-bold text-gray-400 mb-1">Original Price (M.R.P) ₹</label><input type="number" v-model="form.originalPrice" placeholder="100" class="w-full border p-2 rounded-lg text-xs"></div></div><div class="grid grid-cols-2 gap-3"><div><label class="block font-bold text-gray-700 mb-1">Category *</label><select v-model="form.category" class="w-full border p-2 rounded-lg text-xs bg-white"><option value="" disabled>Select Category</option><option v-for="cat in availableCategories" :key="cat" :value="cat">{{ cat }}</option></select></div><div><label class="block font-bold text-gray-700 mb-1">Stock Status</label><select v-model="form.stockStatus" class="w-full border p-2 rounded-lg text-xs bg-white"><option value="In stock">In Stock ✅</option><option value="Out of stock">Out of Stock ❌</option></select></div></div><div><label class="block font-bold text-gray-700 mb-1">Top Badge (Optional)</label><input type="text" v-model="form.badge" placeholder="Trending, Bestseller, New" class="w-full border p-2 rounded-lg text-xs"></div><div style="background:#f0fdf4;padding:12px;border:1.5px dashed #86efac;border-radius:12px;"><label style="display:block;font-weight:800;color:#166534;margin-bottom:6px;font-size:11px;"><i class="fas fa-wallet mr-1"></i> Cashback Reward (₹) — Optional</label><input type="number" v-model="form.cashback" min="0" placeholder="e.g. 20 (0 = no cashback)" style="width:100%;border:1px solid #86efac;padding:7px 10px;border-radius:8px;font-size:12px;font-weight:700;color:#15803d;outline:none;background:white;"><p style="font-size:10px;color:#4ade80;margin-top:4px;">Yeh amount customer ke wallet me automatically add hoga jab order deliver ho jayega</p></div><div style="background:#f8fafc;padding:15px;border:1px dashed #cbd5e1;border-radius:12px;">
     <label style="display:block;font-weight:700;color:#334155;margin-bottom:10px;">📸 Product Images — Google Drive Upload (Slider ke liye)</label>
 
     <!-- Each image slot -->
@@ -737,7 +754,7 @@
     </div>
     <p style="font-size:10px;color:#94a3b8;margin-top:5px;">Customer ko product detail me size chart dikhega</p>
 </div>
-<button @click="saveProduct" class="w-full bg-green-600 text-white py-2.5 rounded-lg font-bold hover:bg-green-700 transition flex items-center justify-center gap-1"><i class="fas fa-cloud-upload-alt"></i> Publish Live Product</button></div></div></div>
+<button @click="saveProduct" class="w-full bg-green-600 text-white py-3 rounded-xl font-bold hover:bg-green-700 active:scale-95 transition flex items-center justify-center gap-2 shadow-md shadow-green-200 mt-2 mb-6"><i class="fas fa-cloud-upload-alt"></i> Publish Live Product</button></div></div></div>
             
             <div v-if="currentPage == 'storeRooms'">
                 <div class="flex justify-between items-center mb-4 flex-wrap gap-2">
@@ -1031,7 +1048,7 @@
                 </div>
                 <div class="space-y-4">
                     <div v-for="order in filteredOrders" :key="order.id" class="bg-white rounded-xl shadow-sm overflow-hidden border-l-4 order-card" :class="getBorderClass(order.status)">
-                        <div class="bg-slate-50 px-4 py-2.5 border-b flex justify-between items-center flex-wrap gap-2 text-xs"><div><span class="font-mono font-black text-gray-800">ORDER #{{ order.id.slice(-6).toUpperCase() }}</span><span class="text-gray-400 ml-2 font-medium">{{ formatShortDate(order.date) }}</span></div><div class="flex items-center gap-3"><select v-model="order.status" @change="updateOrderStatus(order)" class="border rounded-full px-3 py-1 text-xs bg-white font-bold cursor-pointer"><option value="pending">⏳ Pending</option><option value="confirmed">✅ Confirmed</option><option value="shipped">📦 Shipped</option><option value="delivered">🏠 Delivered</option><option value="cancelled">❌ Cancelled</option><option value="rejected">❌ Rejected</option></select><span class="font-black text-blue-700 text-sm">₹{{ Number(order.total).toFixed(2) }}</span></div></div>
+                        <div class="bg-slate-50 px-4 py-2.5 border-b flex justify-between items-center flex-wrap gap-2 text-xs"><div><span class="font-mono font-black text-gray-800">ORDER #{{ order.id.slice(-6).toUpperCase() }}</span><span class="text-gray-400 ml-2 font-medium">{{ formatShortDate(order.date) }}</span><span v-if="Number(order.cashbackUsed) > 0" class="ml-2 inline-flex items-center gap-1 bg-green-100 text-green-700 font-bold px-2 py-0.5 rounded-full text-[10px]"><i class="fas fa-wallet text-[9px]"></i> ₹{{ Number(order.cashbackUsed).toFixed(2) }} Cashback</span></div><div class="flex items-center gap-3"><select v-model="order.status" @change="updateOrderStatus(order)" class="border rounded-full px-3 py-1 text-xs bg-white font-bold cursor-pointer"><option value="pending">⏳ Pending</option><option value="confirmed">✅ Confirmed</option><option value="shipped">📦 Shipped</option><option value="delivered">🏠 Delivered</option><option value="cancelled">❌ Cancelled</option><option value="rejected">❌ Rejected</option></select><span class="font-black text-blue-700 text-sm">₹{{ Number(order.total).toFixed(2) }}</span></div></div>
                         <div class="p-4 grid grid-cols-3 gap-3 text-xs border-b"><div class="bg-blue-50/50 p-2.5 rounded-lg"><p class="text-[10px] text-gray-400 font-semibold">Customer Name</p><p class="font-bold text-gray-800">{{ order.customerName }}</p></div><div class="bg-green-50/50 p-2.5 rounded-lg"><p class="text-[10px] text-gray-400 font-semibold">Mobile Number</p><p class="font-bold text-gray-800">{{ order.customerPhone }}</p></div><div class="bg-amber-50/50 p-2.5 rounded-lg"><p class="text-[10px] text-gray-400 font-semibold">Payment</p>
                                 <div class="flex items-center gap-1 mt-0.5">
                                     <span :class="order.payment_method === 'Online' ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700'" class="text-[10px] font-black px-2 py-0.5 rounded-full">
@@ -1101,6 +1118,34 @@
                             </div>
                         </div>
                         <div class="p-3 px-4 bg-slate-50/30 text-xs"><p class="text-gray-500 font-medium mb-1"><i class="fas fa-map-marker-alt text-red-500"></i> Address:</p><p class="font-semibold text-gray-700 bg-white p-2 border rounded-lg">{{ order.customerAddress }}</p></div>
+
+                        <!-- ===== BILLING BREAKDOWN ===== -->
+                        <div class="px-4 py-3 bg-white border-t text-xs">
+                            <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2"><i class="fas fa-receipt text-gray-400 mr-1"></i> Bill Breakdown</p>
+                            <div class="bg-gray-50 border border-gray-100 rounded-xl overflow-hidden">
+                                <div class="flex justify-between items-center px-3 py-2 border-b border-gray-100">
+                                    <span class="text-gray-500 font-semibold">Item Subtotal</span>
+                                    <span class="font-bold text-gray-800">₹{{ Number(order.itemTotal || order.total).toFixed(2) }}</span>
+                                </div>
+                                <div v-if="Number(order.deliveryCharge) > 0" class="flex justify-between items-center px-3 py-2 border-b border-gray-100">
+                                    <span class="text-amber-600 font-semibold flex items-center gap-1"><i class="fas fa-motorcycle text-[10px]"></i> Delivery Charge</span>
+                                    <span class="font-bold text-amber-700">+₹{{ Number(order.deliveryCharge).toFixed(2) }}</span>
+                                </div>
+                                <div v-if="Number(order.cashbackUsed) > 0" class="flex justify-between items-center px-3 py-2 border-b border-gray-100 bg-green-50">
+                                    <span class="text-green-700 font-bold flex items-center gap-1.5">
+                                        <span class="inline-flex items-center gap-1 bg-green-100 text-green-700 px-2 py-0.5 rounded-full text-[10px] font-black"><i class="fas fa-wallet text-[9px]"></i> Cashback Applied</span>
+                                    </span>
+                                    <span class="font-black text-green-700">-₹{{ Number(order.cashbackUsed).toFixed(2) }}</span>
+                                </div>
+                                <div class="flex justify-between items-center px-3 py-2.5" :class="Number(order.cashbackUsed) > 0 ? 'bg-blue-50' : 'bg-gray-50'">
+                                    <span class="font-black text-gray-800 flex items-center gap-1.5">
+                                        <i class="fas fa-hand-holding-usd text-blue-500 text-[11px]"></i>
+                                        Net Amount to Collect
+                                    </span>
+                                    <span class="font-black text-base text-blue-700">₹{{ Number(order.total).toFixed(2) }}</span>
+                                </div>
+                            </div>
+                        </div>
                         <!-- Cancel Reason Block -->
                         <div v-if="order.status === 'cancelled' || order.status === 'rejected'" class="px-4 py-3 bg-red-50 border-t border-red-200 text-xs">
                             <p class="text-[10px] font-extrabold text-red-600 uppercase tracking-wide mb-1.5"><i class="fas fa-times-circle mr-1"></i> Cancellation Details</p>
@@ -1959,7 +2004,7 @@ new Vue({
         productSearch: '',
         orderSearch: '',
         orderStatusFilter: 'all',
-        form: { name: '', price: '', originalPrice: '', images: [''], description: '', category: '', badge: '', stockStatus: 'In stock', sizeChartImage: '', sizes: [] },
+        form: { name: '', price: '', originalPrice: '', images: [''], description: '', category: '', badge: '', stockStatus: 'In stock', sizeChartImage: '', sizes: [], cashback: 0 },
         newSizeInput: '',
         bannerForm: { url: '' },
         riderForm: { name: '', phone: '', email: '', password: '' },
@@ -2703,7 +2748,7 @@ new Vue({
             } catch(e) { this.showMessage('Error: ' + e.message); }
             finally { this.loading = false; }
         },
-        async saveProduct() { if (!this.form.name || !this.form.price || !this.form.category) { this.showMessage('Product Title, Category & Price are required!'); return; } let filteredImages = this.form.images.filter(url => url.trim() !== ''); if (filteredImages.length === 0) filteredImages = ['https://placehold.co/400x300?text=Product']; const productPayload = { name: this.form.name, price: parseFloat(this.form.price), originalPrice: this.form.originalPrice ? parseFloat(this.form.originalPrice) : null, image: filteredImages[0], images: filteredImages, description: this.form.description || '', category: this.form.category, badge: this.form.badge || '', stockStatus: this.form.stockStatus, shopkeeper: 'Admin Core', sizeChartImage: this.form.sizeChartImage || '', sizes: this.form.sizes && this.form.sizes.length ? this.form.sizes : [] }; this.loading = true; try { await database.ref('products').push(productPayload); this.showMessage('✅ Product Published Successfully!'); this.form = { name: '', price: '', originalPrice: '', images: [''], description: '', category: '', badge: '', stockStatus: 'In stock', sizeChartImage: '', sizes: [] }; this.newSizeInput = ''; await this.loadProducts(); this.changePage('products'); } catch(e) { this.showMessage('Error: ' + e.message); } finally { this.loading = false; } },
+        async saveProduct() { if (!this.form.name || !this.form.price || !this.form.category) { this.showMessage('Product Title, Category & Price are required!'); return; } let filteredImages = this.form.images.filter(url => url.trim() !== ''); if (filteredImages.length === 0) filteredImages = ['https://placehold.co/400x300?text=Product']; const productPayload = { name: this.form.name, price: parseFloat(this.form.price), originalPrice: this.form.originalPrice ? parseFloat(this.form.originalPrice) : null, image: filteredImages[0], images: filteredImages, description: this.form.description || '', category: this.form.category, badge: this.form.badge || '', stockStatus: this.form.stockStatus, shopkeeper: 'Admin Core', sizeChartImage: this.form.sizeChartImage || '', sizes: this.form.sizes && this.form.sizes.length ? this.form.sizes : [], cashback: this.form.cashback ? parseFloat(this.form.cashback) : 0 }; this.loading = true; try { await database.ref('products').push(productPayload); this.showMessage('✅ Product Published Successfully!'); this.form = { name: '', price: '', originalPrice: '', images: [''], description: '', category: '', badge: '', stockStatus: 'In stock', sizeChartImage: '', sizes: [], cashback: 0 }; this.newSizeInput = ''; await this.loadProducts(); this.changePage('products'); } catch(e) { this.showMessage('Error: ' + e.message); } finally { this.loading = false; } },
         async deleteProduct(id) { if (confirm('Delete product permanently?')) { await database.ref(`products/${id}`).remove(); await this.loadProducts(); this.showMessage('Product removed'); } },
         async addNewCategory() {
             const val = this.newCategoryInput.trim();
@@ -2817,7 +2862,51 @@ new Vue({
                 this.showMessage(val > 0 ? `✅ ${val}% discount sabhi products par apply ho gaya!` : '✅ Global discount hata diya gaya.');
             } catch(e) { this.showMessage('Error: ' + e.message); }
         },
-        async updateOrderStatus(order) { try { await database.ref(`orders/${order.id}`).update({ status: order.status, lastUpdated: new Date().toISOString() }); this.showMessage(`Status: ${this.getStatusText(order.status)}`); } catch(e) { this.showMessage(e.message); } },
+        async updateOrderStatus(order) {
+            try {
+                await database.ref(`orders/${order.id}`).update({ status: order.status, lastUpdated: new Date().toISOString() });
+                this.showMessage(`Status: ${this.getStatusText(order.status)}`);
+
+                // ===== AUTO CASHBACK CREDIT ON DELIVERY =====
+                if (order.status === 'delivered' && !order.cashbackCredited) {
+                    try {
+                        let earnAmt = Number(order.totalCashbackEarnable || 0);
+
+                        // Fallback 1: sum cashback from items stored in order
+                        if (earnAmt === 0 && order.items && order.items.length) {
+                            earnAmt = order.items.reduce((s, it) => s + Number(it.cashback || 0) * Number(it.quantity || 1), 0);
+                        }
+
+                        // Fallback 2: look up each product in Firebase and sum cashback
+                        if (earnAmt === 0 && order.items && order.items.length) {
+                            const productSnaps = await Promise.all(
+                                order.items.map(it => database.ref('products/' + it.id).once('value'))
+                            );
+                            earnAmt = productSnaps.reduce((s, snap, i) => {
+                                const cb = snap.exists() ? Number(snap.val().cashback || 0) : 0;
+                                return s + cb * Number(order.items[i].quantity || 1);
+                            }, 0);
+                        }
+
+                        if (earnAmt > 0) {
+                            const phone = order.customerPhone;
+                            const uid   = order.uid;
+                            const cashbackPath = phone
+                                ? `users/${phone}/cashback`
+                                : (uid ? `users_email/${uid}/cashback` : null);
+                            if (cashbackPath) {
+                                const userSnap = await database.ref(cashbackPath).once('value');
+                                const newBal = Number(userSnap.val() || 0) + earnAmt;
+                                await database.ref(cashbackPath).set(newBal);
+                                await database.ref(`orders/${order.id}`).update({ cashbackCredited: true, totalCashbackEarnable: earnAmt });
+                                order.cashbackCredited = true;
+                                this.showMessage(`✅ ₹${earnAmt.toFixed(2)} Cashback credited to ${phone || uid}'s wallet!`);
+                            }
+                        }
+                    } catch(ce) { console.log('Cashback credit error:', ce); }
+                }
+            } catch(e) { this.showMessage(e.message); }
+        },
         async approveOnlineOrder(order) {
             try {
                 await database.ref(`orders/${order.id}`).update({
