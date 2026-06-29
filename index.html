@@ -2626,27 +2626,36 @@ new Vue({
                 const newBal = Number(snap.val() || 0) + amt;
                 await database.ref(cashbackPath).set(newBal);
 
-                // Note bhi save karo reward history mein
-                await database.ref(`reward_history`).push({
-                    userId: user.id,
-                    userName: user.name || '',
-                    userPhone: user.phone || '',
-                    userEmail: user.email || '',
-                    amount: amt,
-                    note: this.rewardNote || '',
-                    newBalance: newBal,
-                    addedAt: new Date().toISOString(),
-                    addedBy: 'admin'
-                });
+                // reward_history alag try-catch mein — fail ho toh cashback block na ho
+                try {
+                    await database.ref(`reward_history`).push({
+                        userId: user.id,
+                        userName: user.name || '',
+                        userPhone: user.phone || '',
+                        userEmail: user.email || '',
+                        amount: amt,
+                        note: this.rewardNote || '',
+                        newBalance: newBal,
+                        addedAt: new Date().toISOString(),
+                        addedBy: 'admin'
+                    });
+                } catch(histErr) {
+                    // history save na ho toh bhi cashback already credit ho chuka hai
+                    console.warn('Reward history save nahi hua:', histErr.message);
+                }
 
-                // Local user object update karo taaki current balance dikhaye
+                // Local user object update karo
                 this.rewardUser = { ...this.rewardUser, cashback: newBal };
 
                 this.showMessage(`✅ ₹${amt.toFixed(2)} reward ${user.name || user.phone}'s wallet me add ho gaya! New Balance: ₹${newBal.toFixed(2)}`);
                 await this.loadUsers();
                 this.closeRewardModal();
             } catch(e) {
-                this.showMessage('Error: ' + e.message);
+                if (e.code === 'PERMISSION_DENIED' || (e.message && e.message.includes('PERMISSION_DENIED'))) {
+                    this.showMessage('❌ Permission denied! Firebase Rules check karo ya admin node mein apna UID add karo.');
+                } else {
+                    this.showMessage('Error: ' + e.message);
+                }
             } finally {
                 this.rewardLoading = false;
             }
