@@ -399,6 +399,45 @@
         </div>
     </div>
 
+    <!-- ===== REWARD MODAL ===== -->
+    <div v-if="showRewardModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" @click.self="closeRewardModal">
+        <div class="bg-white rounded-2xl w-full max-w-sm p-5 shadow-xl">
+            <div class="flex justify-between items-center border-b pb-3 mb-4">
+                <h3 class="font-bold text-sm text-gray-800"><i class="fas fa-gift text-green-500 mr-2"></i> Reward Points Dena</h3>
+                <button @click="closeRewardModal" class="text-gray-400 hover:text-gray-600"><i class="fas fa-times"></i></button>
+            </div>
+            <div v-if="rewardUser" class="mb-4 p-3 rounded-xl bg-green-50 border border-green-100 flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full flex items-center justify-center text-white font-black"
+                    :style="rewardUser.type==='mobile' ? 'background:linear-gradient(135deg,#3b82f6,#6366f1)' : 'background:linear-gradient(135deg,#ec4899,#f97316)'">
+                    {{ rewardUser.name ? rewardUser.name[0].toUpperCase() : '?' }}
+                </div>
+                <div>
+                    <p class="font-black text-gray-800 text-sm">{{ rewardUser.name }}</p>
+                    <p class="text-xs text-gray-500">{{ rewardUser.phone || rewardUser.email }}</p>
+                    <p class="text-[11px] font-bold text-green-600 mt-0.5"><i class="fas fa-wallet mr-1"></i> Current Wallet: ₹{{ Number(rewardUser.cashback || 0).toFixed(2) }}</p>
+                </div>
+            </div>
+            <div class="space-y-3 text-xs">
+                <div>
+                    <label class="block font-bold text-gray-700 mb-1.5">Reward Amount (₹) *</label>
+                    <input type="number" v-model="rewardAmount" min="1" placeholder="e.g. 50" class="w-full border-2 border-green-300 p-3 rounded-xl text-sm font-bold text-green-700 outline-none focus:border-green-500" @keyup.enter="giveReward">
+                </div>
+                <div>
+                    <label class="block font-bold text-gray-700 mb-1.5">Note (Optional)</label>
+                    <input type="text" v-model="rewardNote" placeholder="e.g. Loyalty bonus, Diwali offer..." class="w-full border p-2.5 rounded-xl outline-none focus:border-green-400 text-xs">
+                </div>
+                <div class="flex gap-2 pt-1">
+                    <button @click="closeRewardModal" class="flex-1 bg-gray-100 text-gray-600 py-2.5 rounded-xl font-bold text-xs">Cancel</button>
+                    <button @click="giveReward" :disabled="rewardLoading || !rewardAmount" class="flex-1 bg-green-600 hover:bg-green-700 disabled:bg-green-300 text-white py-2.5 rounded-xl font-bold text-xs flex items-center justify-center gap-1">
+                        <i v-if="rewardLoading" class="fas fa-circle-notch fa-spin"></i>
+                        <i v-else class="fas fa-gift"></i>
+                        {{ rewardLoading ? 'Adding...' : 'Add to Wallet' }}
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- POD Photo Lightbox Modal -->
     <div v-if="podPhotoModal" class="fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-4" @click.self="podPhotoModal = null">
         <div class="w-full max-w-lg animate-fade-in">
@@ -470,6 +509,12 @@
                 <div><label class="block font-bold text-gray-700 mb-1">Product Title</label><input type="text" v-model="editForm.name" class="w-full border p-2.5 rounded-lg outline-none" placeholder="Product name"></div>
                 <div class="grid grid-cols-2 gap-3"><div><label class="block font-bold text-gray-700 mb-1">Selling Price (₹) *</label><input type="number" v-model="editForm.price" class="w-full border p-2.5 rounded-lg text-blue-600 font-bold outline-none"></div><div><label class="block font-bold text-gray-500 mb-1">Original Price (M.R.P) ₹</label><input type="number" v-model="editForm.originalPrice" class="w-full border p-2.5 rounded-lg outline-none"></div></div>
                 <div class="grid grid-cols-2 gap-3"><div><label class="block font-bold text-gray-700 mb-1">Stock Status</label><select v-model="editForm.stockStatus" class="w-full border p-2.5 rounded-lg bg-white outline-none"><option value="In stock">In Stock ✅</option><option value="Out of stock">Out of Stock ❌</option><option value="Currently unavailable">Currently Unavailable ⏳</option></select></div><div><label class="block font-bold text-gray-700 mb-1">Top Badge</label><input type="text" v-model="editForm.badge" placeholder="Trending, Bestseller, New" class="w-full border p-2.5 rounded-lg outline-none"></div></div>
+                <!-- Cashback Edit -->
+                <div style="background:#f0fdf4;padding:12px;border:1.5px dashed #86efac;border-radius:12px;">
+                    <label style="display:block;font-weight:800;color:#166534;margin-bottom:6px;font-size:11px;"><i class="fas fa-wallet mr-1"></i> Cashback Reward (₹)</label>
+                    <input type="number" v-model="editForm.cashback" min="0" placeholder="e.g. 20 (0 = no cashback)" style="width:100%;border:1px solid #86efac;padding:7px 10px;border-radius:8px;font-size:12px;font-weight:700;color:#15803d;outline:none;background:white;box-sizing:border-box;">
+                    <p style="font-size:10px;color:#4ade80;margin-top:4px;">Delivery pe customer wallet me automatically add hoga</p>
+                </div>
                 <!-- Size Options Manager (Edit) -->
                 <div style="background:#fdf4ff;padding:14px;border:1px dashed #d8b4fe;border-radius:12px;">
                     <label style="display:block;font-weight:700;color:#6b21a8;margin-bottom:8px;font-size:12px;"><i class="fas fa-tshirt mr-1"></i> Product Sizes / माप</label>
@@ -754,7 +799,7 @@
     </div>
     <p style="font-size:10px;color:#94a3b8;margin-top:5px;">Customer ko product detail me size chart dikhega</p>
 </div>
-<button @click="saveProduct" class="w-full bg-green-600 text-white py-3 rounded-xl font-bold hover:bg-green-700 active:scale-95 transition flex items-center justify-center gap-2 shadow-md shadow-green-200 mt-2 mb-6"><i class="fas fa-cloud-upload-alt"></i> Publish Live Product</button></div></div></div>
+<button @click="saveProduct" class="w-full bg-green-600 text-white py-3 rounded-xl font-bold hover:bg-green-700 active:scale-95 transition flex items-center justify-center gap-2 shadow-md shadow-green-200 mt-2" style="margin-bottom:80px;position:relative;z-index:10;"><i class="fas fa-cloud-upload-alt"></i> Publish Live Product</button></div></div></div>
             
             <div v-if="currentPage == 'storeRooms'">
                 <div class="flex justify-between items-center mb-4 flex-wrap gap-2">
@@ -1507,6 +1552,7 @@
                                     <td class="p-3 text-center">
                                         <div class="flex items-center justify-center gap-3">
                                             <button @click="viewUserOrders(user)" class="text-blue-500 hover:text-blue-700" title="View Orders"><i class="fas fa-eye"></i></button>
+                                            <button @click="openRewardModal(user)" class="text-green-500 hover:text-green-700" title="Give Reward"><i class="fas fa-gift"></i></button>
                                             <button @click="deleteUser(user)" class="text-red-400 hover:text-red-600" title="Delete"><i class="fas fa-trash-alt"></i></button>
                                         </div>
                                     </td>
@@ -1551,7 +1597,8 @@
                             <p v-if="user.createdAt" class="text-gray-400"><i class="fas fa-calendar-alt w-4"></i> {{ new Date(user.createdAt).toLocaleDateString('en-IN') }}</p>
                         </div>
                         <div class="flex gap-2 mt-2.5 pt-2.5 border-t">
-                            <button @click="viewUserOrders(user)" class="flex-1 bg-blue-50 text-blue-600 font-bold py-1.5 rounded-lg text-xs"><i class="fas fa-eye mr-1"></i> View Orders</button>
+                            <button @click="viewUserOrders(user)" class="flex-1 bg-blue-50 text-blue-600 font-bold py-1.5 rounded-lg text-xs"><i class="fas fa-eye mr-1"></i> Orders</button>
+                            <button @click="openRewardModal(user)" class="flex-1 bg-green-50 text-green-600 font-bold py-1.5 rounded-lg text-xs"><i class="fas fa-gift mr-1"></i> Reward</button>
                             <button @click="deleteUser(user)" class="bg-red-50 text-red-500 font-bold px-3 py-1.5 rounded-lg text-xs"><i class="fas fa-trash-alt"></i></button>
                         </div>
                     </div>
@@ -1972,6 +2019,11 @@ new Vue({
         uploadingIdx: -1,
         mobileMenuOpen: false,
         showUserModal: false,
+        showRewardModal: false,
+        rewardUser: null,
+        rewardAmount: '',
+        rewardNote: '',
+        rewardLoading: false,
         selectedUser: null,
         products: [],
         orders: [],
@@ -2014,7 +2066,7 @@ new Vue({
         editingRiderId: null,
         showEditModal: false,
         currentEditId: null,
-        editForm: { name: '', price: '', originalPrice: '', stockStatus: 'In stock', badge: '', sizeChartImage: '', sizes: [] },
+        editForm: { name: '', price: '', originalPrice: '', stockStatus: 'In stock', badge: '', sizeChartImage: '', sizes: [], cashback: 0 },
         editNewSizeInput: '',
         sizeChartUploading: false,
         editSizeChartUploading: false,
@@ -2247,11 +2299,11 @@ new Vue({
         
         openEditModal(product) {
             this.currentEditId = product.id;
-            this.editForm = { name: product.name || '', price: product.price || '', originalPrice: product.originalPrice || '', stockStatus: product.stockStatus || 'In stock', badge: product.badge || '', sizeChartImage: product.sizeChartImage || '', sizes: Array.isArray(product.sizes) ? [...product.sizes] : [] };
+            this.editForm = { name: product.name || '', price: product.price || '', originalPrice: product.originalPrice || '', stockStatus: product.stockStatus || 'In stock', badge: product.badge || '', sizeChartImage: product.sizeChartImage || '', sizes: Array.isArray(product.sizes) ? [...product.sizes] : [], cashback: product.cashback || 0 };
             this.editNewSizeInput = '';
             this.showEditModal = true;
         },
-        closeEditModal() { this.showEditModal = false; this.currentEditId = null; this.editForm = { name: '', price: '', originalPrice: '', stockStatus: 'In stock', badge: '', sizeChartImage: '', sizes: [] }; this.editNewSizeInput = ''; this.editSizeChartUploading = false; },
+        closeEditModal() { this.showEditModal = false; this.currentEditId = null; this.editForm = { name: '', price: '', originalPrice: '', stockStatus: 'In stock', badge: '', sizeChartImage: '', sizes: [], cashback: 0 }; this.editNewSizeInput = ''; this.editSizeChartUploading = false; },
         addSizeToForm(type) {
             const input = type === 'add' ? this.newSizeInput.trim().toUpperCase() : this.editNewSizeInput.trim().toUpperCase();
             if (!input) return;
@@ -2273,7 +2325,7 @@ new Vue({
             if (!this.editForm.price && this.editForm.price !== 0) { this.showMessage('Selling Price is required!'); return; }
             this.loading = true;
             try {
-                await database.ref(`products/${this.currentEditId}`).update({ name: this.editForm.name.trim(), price: parseFloat(this.editForm.price), originalPrice: this.editForm.originalPrice ? parseFloat(this.editForm.originalPrice) : null, stockStatus: this.editForm.stockStatus, badge: this.editForm.badge || '', sizeChartImage: this.editForm.sizeChartImage || '', sizes: this.editForm.sizes && this.editForm.sizes.length ? this.editForm.sizes : [] });
+                await database.ref(`products/${this.currentEditId}`).update({ name: this.editForm.name.trim(), price: parseFloat(this.editForm.price), originalPrice: this.editForm.originalPrice ? parseFloat(this.editForm.originalPrice) : null, stockStatus: this.editForm.stockStatus, badge: this.editForm.badge || '', sizeChartImage: this.editForm.sizeChartImage || '', sizes: this.editForm.sizes && this.editForm.sizes.length ? this.editForm.sizes : [], cashback: this.editForm.cashback ? parseFloat(this.editForm.cashback) : 0 });
                 this.showMessage('✅ Product Updated Successfully!');
                 this.closeEditModal();
                 await this.loadProducts();
@@ -2544,6 +2596,61 @@ new Vue({
         
         viewUserOrders(user) { this.selectedUser = user; this.showUserModal = true; },
         closeUserModal() { this.showUserModal = false; this.selectedUser = null; },
+
+        openRewardModal(user) {
+            this.rewardUser = user;
+            this.rewardAmount = '';
+            this.rewardNote = '';
+            this.showRewardModal = true;
+        },
+        closeRewardModal() { this.showRewardModal = false; this.rewardUser = null; this.rewardAmount = ''; this.rewardNote = ''; },
+
+        async giveReward() {
+            const amt = parseFloat(this.rewardAmount);
+            if (!amt || amt <= 0) { this.showMessage('Reward amount sahi daalo!'); return; }
+            if (!this.rewardUser) return;
+            this.rewardLoading = true;
+            try {
+                const user = this.rewardUser;
+                let cashbackPath = null;
+
+                if (user.type === 'mobile' && user.id) {
+                    cashbackPath = `users/${user.id}/cashback`;
+                } else if (user.type === 'email' && user.id) {
+                    cashbackPath = `users_email/${user.id}/cashback`;
+                }
+
+                if (!cashbackPath) { this.showMessage('User path nahi mila!'); return; }
+
+                const snap = await database.ref(cashbackPath).once('value');
+                const newBal = Number(snap.val() || 0) + amt;
+                await database.ref(cashbackPath).set(newBal);
+
+                // Note bhi save karo reward history mein
+                await database.ref(`reward_history`).push({
+                    userId: user.id,
+                    userName: user.name || '',
+                    userPhone: user.phone || '',
+                    userEmail: user.email || '',
+                    amount: amt,
+                    note: this.rewardNote || '',
+                    newBalance: newBal,
+                    addedAt: new Date().toISOString(),
+                    addedBy: 'admin'
+                });
+
+                // Local user object update karo taaki current balance dikhaye
+                this.rewardUser = { ...this.rewardUser, cashback: newBal };
+
+                this.showMessage(`✅ ₹${amt.toFixed(2)} reward ${user.name || user.phone}'s wallet me add ho gaya! New Balance: ₹${newBal.toFixed(2)}`);
+                await this.loadUsers();
+                this.closeRewardModal();
+            } catch(e) {
+                this.showMessage('Error: ' + e.message);
+            } finally {
+                this.rewardLoading = false;
+            }
+        },
         async deleteUser(user) { if(confirm(`Delete ${user.name} permanently?`)) { this.loading = true; try { const node = user.type === 'email' ? 'users_email' : 'users'; await database.ref(`${node}/${user.id}`).remove(); if (user.type === 'email' && user.uid) { try { await firebase.auth().currentUser; } catch(e2) {} } this.showMessage('User deleted'); await this.loadUsers(); } catch(e) { this.showMessage(e.message); } finally { this.loading = false; } } },
         getStatusBadge(status) { const m = { pending: 'bg-yellow-100 text-yellow-700', confirmed: 'bg-blue-100 text-blue-700', shipped: 'bg-purple-100 text-purple-700', delivered: 'bg-green-100 text-green-700', rejected: 'bg-red-100 text-red-700', cancelled: 'bg-red-100 text-red-700' }; return m[status] || 'bg-gray-100'; },
         getStatusText(status) { const m = { pending: 'Pending', confirmed: 'Confirmed', shipped: 'Shipped', delivered: 'Delivered', rejected: 'Cancelled', cancelled: 'Cancelled' }; return m[status] || status; },
