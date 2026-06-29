@@ -2745,11 +2745,22 @@ new Vue({
             finally { this.loading = false; }
         },
         async rejectWithdrawal(req) {
-            if (!confirm(`Reject withdrawal request of ₹${req.amount} for ${req.riderName}?`)) return;
+            if (!confirm(`Reject withdrawal request of ₹${req.amount} for ${req.riderName}?\n\nRider ko ₹${req.amount} refund mil jayega.`)) return;
             this.loading = true;
             try {
-                await database.ref(`withdrawal_requests/${req.id}`).update({ status: 'rejected', rejectedAt: new Date().toISOString() });
-                this.showMessage(`❌ Request rejected for ${req.riderName}`);
+                // 1. Request ka status 'rejected' karo
+                await database.ref(`withdrawal_requests/${req.id}`).update({
+                    status: 'rejected',
+                    rejectedAt: new Date().toISOString()
+                });
+
+                // 2. Rider ko uska paisa wapas (Refund) karo balance wallet mein
+                const riderBalanceRef = database.ref(`riders/${req.riderId}/balance`);
+                const snapshot = await riderBalanceRef.once('value');
+                const currentBalance = Number(snapshot.val() || 0);
+                await riderBalanceRef.set(currentBalance + Number(req.amount));
+
+                this.showMessage(`❌ Request rejected — ₹${req.amount} refund ${req.riderName} ke wallet mein wapas ho gaya`);
                 await this.loadWithdrawals();
             } catch(e) { this.showMessage('Error: ' + e.message); }
             finally { this.loading = false; }
