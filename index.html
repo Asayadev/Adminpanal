@@ -459,6 +459,146 @@
         </div>
     </div>
 
+    <!-- ==================== PAYOUT MODAL ==================== -->
+    <div v-if="showPayoutModal" class="fixed inset-0 bg-black/60 flex items-center justify-center z-[120] p-3" @click.self="showPayoutModal = false">
+        <div class="bg-white rounded-2xl w-full max-w-sm shadow-2xl animate-fade-in" style="max-height:92vh;overflow-y:auto;">
+            <!-- Header -->
+            <div class="sticky top-0 bg-gradient-to-r from-yellow-500 to-amber-500 text-white p-4 rounded-t-2xl flex justify-between items-start z-10">
+                <div>
+                    <p class="text-[10px] font-bold opacity-80 uppercase tracking-widest">Monthly Payout</p>
+                    <h3 class="font-black text-base mt-0.5">{{ payoutModalRider && payoutModalRider.name }}</h3>
+                    <p class="text-[11px] opacity-70 mt-0.5">📞 {{ payoutModalRider && payoutModalRider.phone }}</p>
+                </div>
+                <button @click="showPayoutModal = false" class="text-white/70 hover:text-white text-lg"><i class="fas fa-times"></i></button>
+            </div>
+
+            <div class="p-4 space-y-4">
+                <!-- Month Picker -->
+                <div>
+                    <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1.5"><i class="fas fa-calendar-alt text-yellow-500 mr-1"></i>Month</label>
+                    <input type="month" v-model="payoutMonthSel" @change="loadPayoutForRider" class="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm font-bold text-gray-700 outline-none focus:border-yellow-500 bg-gray-50">
+                </div>
+
+                <!-- Attendance Section -->
+                <div class="bg-blue-50 border border-blue-100 rounded-2xl p-3 space-y-3">
+                    <p class="text-[10px] font-black text-blue-600 uppercase tracking-wider"><i class="fas fa-calendar-check mr-1"></i>Attendance</p>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block text-[10px] font-bold text-gray-500 mb-1">📅 Working Days</label>
+                            <input type="number" v-model="payoutForm.workingDays" min="0" max="31" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm font-bold outline-none focus:border-blue-400 bg-white">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-gray-500 mb-1">✅ Paid Days</label>
+                            <input type="number" v-model="payoutForm.paidDays" min="0" max="31" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm font-bold outline-none focus:border-blue-400 bg-white">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-gray-500 mb-1">❌ Absent Days</label>
+                            <input type="number" v-model="payoutForm.absentDays" min="0" max="31" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm font-bold outline-none focus:border-blue-400 bg-white">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-gray-500 mb-1">⏱️ Overtime (hrs)</label>
+                            <input type="number" v-model="payoutForm.overtimeHours" min="0" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm font-bold outline-none focus:border-blue-400 bg-white">
+                        </div>
+                        <div class="col-span-2">
+                            <label class="block text-[10px] font-bold text-gray-500 mb-1">⏱️ Overtime Rate (₹/hr)</label>
+                            <div class="relative">
+                                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-xs">₹</span>
+                                <input type="number" v-model="payoutForm.overtimeRate" min="0" class="w-full pl-7 border border-gray-200 rounded-xl px-3 py-2 text-sm font-bold outline-none focus:border-blue-400 bg-white">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Earnings Section -->
+                <div class="bg-emerald-50 border border-emerald-100 rounded-2xl p-3 space-y-3">
+                    <p class="text-[10px] font-black text-emerald-600 uppercase tracking-wider"><i class="fas fa-rupee-sign mr-1"></i>Salary & Earnings</p>
+                    <div>
+                        <label class="block text-[10px] font-bold text-gray-500 mb-1">💼 Base Salary (₹)</label>
+                        <div class="relative">
+                            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-xs">₹</span>
+                            <input type="number" v-model="payoutForm.baseSalary" min="0" class="w-full pl-7 border border-gray-200 rounded-xl px-3 py-2 text-sm font-bold outline-none focus:border-emerald-400 bg-white">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-gray-500 mb-1">🎁 Incentives / Bonus (₹)</label>
+                        <div class="relative">
+                            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-xs">₹</span>
+                            <input type="number" v-model="payoutForm.incentives" min="0" class="w-full pl-7 border border-gray-200 rounded-xl px-3 py-2 text-sm font-bold outline-none focus:border-emerald-400 bg-white">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Deductions Section -->
+                <div class="bg-red-50 border border-red-100 rounded-2xl p-3 space-y-3">
+                    <p class="text-[10px] font-black text-red-500 uppercase tracking-wider"><i class="fas fa-minus-circle mr-1"></i>Deductions</p>
+                    <div>
+                        <label class="block text-[10px] font-bold text-gray-500 mb-1">⚠️ Penalty / Fine (₹)</label>
+                        <div class="relative">
+                            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-xs">₹</span>
+                            <input type="number" v-model="payoutForm.deductions" min="0" class="w-full pl-7 border border-gray-200 rounded-xl px-3 py-2 text-sm font-bold outline-none focus:border-red-400 bg-white">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-gray-500 mb-1">💸 Advance Taken (₹)</label>
+                        <div class="relative">
+                            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-xs">₹</span>
+                            <input type="number" v-model="payoutForm.advances" min="0" class="w-full pl-7 border border-gray-200 rounded-xl px-3 py-2 text-sm font-bold outline-none focus:border-red-400 bg-white">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Status & Note -->
+                <div class="space-y-3">
+                    <div>
+                        <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1.5">Payment Status</label>
+                        <div class="flex gap-2">
+                            <button @click="payoutForm.status = 'pending'" :class="payoutForm.status === 'pending' ? 'bg-yellow-500 text-white border-yellow-500' : 'bg-white text-gray-500 border-gray-200'" class="flex-1 border rounded-xl py-2 text-xs font-bold transition">⏳ Pending</button>
+                            <button @click="payoutForm.status = 'paid'; if(!payoutForm.paidOn) payoutForm.paidOn = new Date().toISOString().slice(0,10)" :class="payoutForm.status === 'paid' ? 'bg-green-500 text-white border-green-500' : 'bg-white text-gray-500 border-gray-200'" class="flex-1 border rounded-xl py-2 text-xs font-bold transition">✅ Paid</button>
+                        </div>
+                    </div>
+                    <div v-if="payoutForm.status === 'paid'">
+                        <label class="block text-[10px] font-bold text-gray-500 mb-1">📅 Paid On Date</label>
+                        <input type="date" v-model="payoutForm.paidOn" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm font-bold outline-none focus:border-green-400 bg-gray-50">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-gray-500 mb-1">📝 Admin Note (optional)</label>
+                        <textarea v-model="payoutForm.adminNote" rows="2" placeholder="e.g. Bonus for good performance..." class="w-full border border-gray-200 rounded-xl px-3 py-2 text-xs font-semibold outline-none focus:border-yellow-400 bg-gray-50 resize-none"></textarea>
+                    </div>
+                </div>
+
+                <!-- Live Preview -->
+                <div class="bg-slate-800 text-white rounded-2xl p-4">
+                    <p class="text-[10px] opacity-50 uppercase font-bold tracking-widest mb-2">In-Hand Preview</p>
+                    <div class="grid grid-cols-3 gap-2 text-center text-xs mb-3">
+                        <div class="bg-white/10 rounded-xl py-2">
+                            <p class="font-black text-emerald-400 text-sm">₹{{ ((Number(payoutForm.baseSalary)||0) + (Number(payoutForm.incentives)||0) + (Number(payoutForm.overtimeHours)||0)*(Number(payoutForm.overtimeRate)||0)).toLocaleString('en-IN') }}</p>
+                            <p class="text-[9px] opacity-40 mt-0.5">Gross</p>
+                        </div>
+                        <div class="bg-white/10 rounded-xl py-2">
+                            <p class="font-black text-red-400 text-sm">-₹{{ ((Number(payoutForm.deductions)||0) + (Number(payoutForm.advances)||0) + (payoutForm.workingDays ? Math.round((Number(payoutForm.baseSalary)||0)/(Number(payoutForm.workingDays)||26))*(Number(payoutForm.absentDays)||0) : 0)).toLocaleString('en-IN') }}</p>
+                            <p class="text-[9px] opacity-40 mt-0.5">Deductions</p>
+                        </div>
+                        <div class="bg-white/10 rounded-xl py-2">
+                            <p class="font-black text-yellow-400 text-sm">₹{{ Math.max(0, ((Number(payoutForm.baseSalary)||0) + (Number(payoutForm.incentives)||0) + (Number(payoutForm.overtimeHours)||0)*(Number(payoutForm.overtimeRate)||0)) - ((Number(payoutForm.deductions)||0) + (Number(payoutForm.advances)||0) + (payoutForm.workingDays ? Math.round((Number(payoutForm.baseSalary)||0)/(Number(payoutForm.workingDays)||26))*(Number(payoutForm.absentDays)||0) : 0))).toLocaleString('en-IN') }}</p>
+                            <p class="text-[9px] opacity-40 mt-0.5">In Hand</p>
+                        </div>
+                    </div>
+                    <p class="text-[9px] opacity-40 text-center">* Delivery earnings auto-calculate hoti hain rider ke panel mein</p>
+                </div>
+
+                <!-- Save Button -->
+                <div class="flex gap-2">
+                    <button @click="showPayoutModal = false" class="flex-1 bg-gray-100 text-gray-600 py-3 rounded-xl font-bold text-sm">Cancel</button>
+                    <button @click="savePayoutData" :disabled="payoutSaving || !payoutMonthSel" class="flex-2 flex-grow-[2] bg-yellow-500 hover:bg-yellow-600 disabled:bg-yellow-300 text-white py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition shadow">
+                        <i v-if="payoutSaving" class="fas fa-circle-notch fa-spin text-xs"></i>
+                        <i v-else class="fas fa-save text-xs"></i>
+                        {{ payoutSaving ? 'Saving...' : 'Save Payout' }}
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div v-if="showAddRiderModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" @click.self="cancelRiderEdit">
         <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-xl animate-fade-in">
             <div class="flex justify-between items-center border-b pb-3 mb-4">
@@ -1350,6 +1490,7 @@
                                     </div>
                                     <div class="flex flex-col gap-1">
                                         <button @click="startRiderEdit(rider)" class="bg-blue-50 text-blue-600 px-2 py-1 rounded-lg border border-blue-200 text-[10px] font-bold hover:bg-blue-100 transition"><i class="fas fa-edit"></i></button>
+                                        <button @click="openPayoutModal(rider)" class="bg-yellow-50 text-yellow-600 px-2 py-1 rounded-lg border border-yellow-200 text-[10px] font-bold hover:bg-yellow-100 transition" title="Manage Payout"><i class="fas fa-file-invoice-dollar"></i></button>
                                         <button @click="deleteRider(rider.id)" class="bg-red-50 text-red-600 px-2 py-1 rounded-lg border border-red-200 text-[10px] font-bold hover:bg-red-100 transition"><i class="fas fa-trash-alt"></i></button>
                                     </div>
                                 </div>
@@ -2087,6 +2228,11 @@ new Vue({
         withdrawals: [],
         receiptModalUrl: '',
         showReceiptModal: false,
+        showPayoutModal: false,
+        payoutModalRider: null,
+        payoutMonthSel: '',
+        payoutSaving: false,
+        payoutForm: { workingDays: 26, paidDays: 26, absentDays: 0, overtimeHours: 0, overtimeRate: 0, baseSalary: 0, incentives: 0, deductions: 0, advances: 0, status: 'pending', paidOn: '', adminNote: '' },
         rejectModal: { show: false, order: null, reason: '' },
         globalDiscount: 0,
         globalDiscountInput: 0,
@@ -3258,6 +3404,67 @@ new Vue({
         startRiderEdit(rider) { this.isEditingRider = true; this.editingRiderId = rider.id; this.riderForm = { name: rider.name, phone: rider.phone || '', email: rider.email || '', password: rider.password || '' }; this.showAddRiderModal = true; },
         cancelRiderEdit() { this.isEditingRider = false; this.editingRiderId = null; this.riderForm = { name: '', phone: '', email: '', password: '' }; this.showAddRiderModal = false; },
         async deleteRider(id) { if (confirm('Delete rider?')) { this.loading = true; try { await database.ref(`riders/${id}`).remove(); this.showMessage('Rider removed'); if (this.editingRiderId === id) this.cancelRiderEdit(); await this.loadRiders(); } catch(e) { this.showMessage(e.message); } finally { this.loading = false; } } },
+
+        openPayoutModal(rider) {
+            this.payoutModalRider = rider;
+            const now = new Date();
+            this.payoutMonthSel = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+            this.payoutForm = { workingDays: 26, paidDays: 26, absentDays: 0, overtimeHours: 0, overtimeRate: 0, baseSalary: 0, incentives: 0, deductions: 0, advances: 0, status: 'pending', paidOn: '', adminNote: '' };
+            this.loadPayoutForRider();
+            this.showPayoutModal = true;
+        },
+        async loadPayoutForRider() {
+            if (!this.payoutModalRider || !this.payoutMonthSel) return;
+            try {
+                const snap = await database.ref(`riders/${this.payoutModalRider.id}/payouts/${this.payoutMonthSel}`).once('value');
+                if (snap.exists()) {
+                    const d = snap.val();
+                    this.payoutForm = {
+                        workingDays: d.workingDays ?? 26,
+                        paidDays:    d.paidDays    ?? 26,
+                        absentDays:  d.absentDays  ?? 0,
+                        overtimeHours: d.overtimeHours ?? 0,
+                        overtimeRate:  d.overtimeRate  ?? 0,
+                        baseSalary:  d.baseSalary  ?? 0,
+                        incentives:  d.incentives  ?? 0,
+                        deductions:  d.deductions  ?? 0,
+                        advances:    d.advances    ?? 0,
+                        status:      d.status      || 'pending',
+                        paidOn:      d.paidOn      || '',
+                        adminNote:   d.adminNote   || ''
+                    };
+                } else {
+                    this.payoutForm = { workingDays: 26, paidDays: 26, absentDays: 0, overtimeHours: 0, overtimeRate: 0, baseSalary: 0, incentives: 0, deductions: 0, advances: 0, status: 'pending', paidOn: '', adminNote: '' };
+                }
+            } catch(e) {}
+        },
+        async savePayoutData() {
+            if (!this.payoutModalRider || !this.payoutMonthSel) { this.showMessage('Month select karein'); return; }
+            this.payoutSaving = true;
+            try {
+                const f = this.payoutForm;
+                const payload = {
+                    workingDays:   Number(f.workingDays)   || 0,
+                    paidDays:      Number(f.paidDays)      || 0,
+                    absentDays:    Number(f.absentDays)    || 0,
+                    overtimeHours: Number(f.overtimeHours) || 0,
+                    overtimeRate:  Number(f.overtimeRate)  || 0,
+                    baseSalary:    Number(f.baseSalary)    || 0,
+                    incentives:    Number(f.incentives)    || 0,
+                    deductions:    Number(f.deductions)    || 0,
+                    advances:      Number(f.advances)      || 0,
+                    status:        f.status || 'pending',
+                    paidOn:        f.status === 'paid' ? (f.paidOn || new Date().toISOString().slice(0,10)) : '',
+                    adminNote:     f.adminNote || '',
+                    updatedAt:     new Date().toISOString(),
+                    updatedBy:     'admin'
+                };
+                await database.ref(`riders/${this.payoutModalRider.id}/payouts/${this.payoutMonthSel}`).set(payload);
+                this.showMessage(`✅ ${this.payoutModalRider.name} — ${this.payoutMonthSel} payout saved!`);
+                this.showPayoutModal = false;
+            } catch(e) { this.showMessage('❌ Error: ' + e.message); }
+            finally { this.payoutSaving = false; }
+        },
         getRiderDeliveredOrders(riderPhone) {
             if (!this.orders) return [];
             return this.orders.filter(order => 
