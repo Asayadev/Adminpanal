@@ -403,7 +403,7 @@
     <div v-if="showRewardModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" @click.self="closeRewardModal">
         <div class="bg-white rounded-2xl w-full max-w-sm p-5 shadow-xl">
             <div class="flex justify-between items-center border-b pb-3 mb-4">
-                <h3 class="font-bold text-sm text-gray-800"><i class="fas fa-gift text-green-500 mr-2"></i> Reward Points Dena</h3>
+                <h3 class="font-bold text-sm text-gray-800"><i class="fas fa-gift text-green-500 mr-2"></i> Wallet &amp; Reward Points</h3>
                 <button @click="closeRewardModal" class="text-gray-400 hover:text-gray-600"><i class="fas fa-times"></i></button>
             </div>
             <div v-if="rewardUser" class="mb-4 p-3 rounded-xl bg-green-50 border border-green-100 flex items-center gap-3">
@@ -414,25 +414,44 @@
                 <div>
                     <p class="font-black text-gray-800 text-sm">{{ rewardUser.name }}</p>
                     <p class="text-xs text-gray-500">{{ rewardUser.phone || rewardUser.email }}</p>
-                    <p class="text-[11px] font-bold text-green-600 mt-0.5"><i class="fas fa-wallet mr-1"></i> Current Wallet: ₹{{ Number(rewardUser.cashback || 0).toFixed(2) }}</p>
+                    <p class="text-[11px] font-bold text-green-600 mt-0.5"><i class="fas fa-wallet mr-1"></i> Wallet: ₹{{ Number(rewardUser.cashback || 0).toFixed(2) }}</p>
+                    <p class="text-[11px] font-bold text-amber-700 mt-0.5"><i class="fas fa-star mr-1"></i> Reward Points: {{ Number(rewardUser.rewards || 0) }}</p>
                 </div>
             </div>
             <div class="space-y-3 text-xs">
                 <div>
-                    <label class="block font-bold text-gray-700 mb-1.5">Reward Amount (₹) *</label>
-                    <input type="number" v-model="rewardAmount" min="1" placeholder="e.g. 50" class="w-full border-2 border-green-300 p-3 rounded-xl text-sm font-bold text-green-700 outline-none focus:border-green-500" @keyup.enter="giveReward">
+                    <label class="block font-bold text-gray-700 mb-1.5">Add to Wallet (₹)</label>
+                    <div class="flex gap-2">
+                        <input type="number" v-model="rewardAmount" min="0.01" step="0.01" placeholder="e.g. 50" class="min-w-0 flex-1 border-2 border-green-300 p-3 rounded-xl text-sm font-bold text-green-700 outline-none focus:border-green-500" @keyup.enter="giveReward">
+                        <button @click="giveReward" :disabled="rewardLoading || !rewardAmount" class="shrink-0 bg-green-600 hover:bg-green-700 disabled:bg-green-300 text-white px-3 rounded-xl font-bold text-xs flex items-center justify-center gap-1">
+                            <i v-if="rewardLoading" class="fas fa-circle-notch fa-spin"></i>
+                            <i v-else class="fas fa-wallet"></i>
+                            {{ rewardLoading ? 'Adding...' : 'Add ₹' }}
+                        </button>
+                    </div>
+                </div>
+                <div class="rounded-xl border border-amber-200 bg-amber-50 p-3">
+                    <div class="flex items-center justify-between mb-2">
+                        <label class="font-black text-amber-900"><i class="fas fa-star text-amber-500 mr-1"></i> Adjust Reward Points</label>
+                        <span class="font-black text-amber-800">{{ Number(rewardUser && rewardUser.rewards || 0) }} pts</span>
+                    </div>
+                    <input type="number" v-model="rewardPointsAmount" min="1" step="1" inputmode="numeric" placeholder="Whole points, e.g. 50" class="w-full border border-amber-300 bg-white p-2.5 rounded-lg text-sm font-bold text-amber-800 outline-none focus:border-amber-500">
+                    <div class="flex gap-2 mt-2">
+                        <button @click="adjustRewardPoints('add')" :disabled="rewardPointsLoading || !rewardPointsAmount" class="flex-1 bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-white py-2.5 rounded-lg font-black text-xs">
+                            <i class="fas fa-plus mr-1"></i>{{ rewardPointsLoading ? 'Saving...' : 'Increase Points' }}
+                        </button>
+                        <button @click="adjustRewardPoints('deduct')" :disabled="rewardPointsLoading || !rewardPointsAmount" class="flex-1 bg-red-500 hover:bg-red-600 disabled:opacity-50 text-white py-2.5 rounded-lg font-black text-xs">
+                            <i class="fas fa-minus mr-1"></i>{{ rewardPointsLoading ? 'Saving...' : 'Decrease Points' }}
+                        </button>
+                    </div>
+                    <p class="text-[10px] text-amber-800 mt-1.5">Points are whole numbers; balance cannot go below zero.</p>
                 </div>
                 <div>
-                    <label class="block font-bold text-gray-700 mb-1.5">Note (Optional)</label>
-                    <input type="text" v-model="rewardNote" placeholder="e.g. Loyalty bonus, Diwali offer..." class="w-full border p-2.5 rounded-xl outline-none focus:border-green-400 text-xs">
+                    <label class="block font-bold text-gray-700 mb-1.5">Transaction Note (Optional)</label>
+                    <input type="text" v-model="rewardNote" maxlength="300" placeholder="e.g. Loyalty bonus, correction..." class="w-full border p-2.5 rounded-xl outline-none focus:border-green-400 text-xs">
                 </div>
                 <div class="flex gap-2 pt-1">
                     <button @click="closeRewardModal" class="flex-1 bg-gray-100 text-gray-600 py-2.5 rounded-xl font-bold text-xs">Cancel</button>
-                    <button @click="giveReward" :disabled="rewardLoading || !rewardAmount" class="flex-1 bg-green-600 hover:bg-green-700 disabled:bg-green-300 text-white py-2.5 rounded-xl font-bold text-xs flex items-center justify-center gap-1">
-                        <i v-if="rewardLoading" class="fas fa-circle-notch fa-spin"></i>
-                        <i v-else class="fas fa-gift"></i>
-                        {{ rewardLoading ? 'Adding...' : 'Add to Wallet' }}
-                    </button>
                 </div>
             </div>
         </div>
@@ -721,6 +740,7 @@
                     <button @click="changePage('storeRooms')" :class="{'nav-active': currentPage=='storeRooms'}" class="w-full text-left px-3 py-2 rounded-lg flex items-center gap-2 text-sm font-medium"><i class="fas fa-warehouse w-4 text-blue-600"></i> Store Rooms</button>
                     <button @click="changePage('banners')" :class="{'nav-active': currentPage=='banners'}" class="w-full text-left px-3 py-2 rounded-lg flex items-center gap-2 text-sm font-medium"><i class="fas fa-images w-4"></i> Banners</button>
                     <button @click="changePage('categories')" :class="{'nav-active': currentPage=='categories'}" class="w-full text-left px-3 py-2 rounded-lg flex items-center gap-2 text-sm font-medium"><i class="fas fa-tags w-4"></i> Categories</button>
+                    <button @click="changePage('vipMembership')" :class="{'nav-active': currentPage=='vipMembership'}" class="w-full text-left px-3 py-2 rounded-lg flex items-center gap-2 text-sm font-medium"><i class="fas fa-crown w-4 text-amber-500"></i> VIP Membership<span v-if="pendingVipRequests.length" class="ml-auto rounded-full bg-amber-100 px-2 py-0.5 text-[9px] font-black text-amber-800">{{ pendingVipRequests.length }}</span></button>
                     <button @click="changePage('orders')" :class="{'nav-active': currentPage=='orders'}" class="w-full text-left px-3 py-2 rounded-lg flex items-center gap-2 text-sm font-medium"><i class="fas fa-truck-loading w-4"></i> Orders</button>
                     <button @click="changePage('riders')" :class="{'nav-active': currentPage=='riders'}" class="w-full text-left px-3 py-2 rounded-lg flex items-center gap-2 text-sm font-medium"><i class="fas fa-motorcycle w-4 text-emerald-500"></i> Delivery Boys</button>
                     <button @click="changePage('returns')" :class="{'nav-active': currentPage=='returns'}" class="w-full text-left px-3 py-2 rounded-lg flex items-center gap-2 text-sm font-medium relative"><i class="fas fa-exchange-alt w-4 text-red-500"></i> Returns<span v-if="returns.length" class="absolute right-2 top-2.5 bg-red-500 text-white text-[9px] px-1.5 py-0.5 rounded-full font-bold">{{ returns.length }}</span></button>
@@ -866,6 +886,93 @@
                 <!-- ===== END ANALYTICS ROW ===== -->
 
                 <div class="bg-white rounded-xl shadow-sm p-4"><h3 class="font-bold text-sm text-gray-700 mb-3"><i class="fas fa-clock text-blue-500 mr-1"></i> Recent Orders Queue</h3><div v-if="orders.length === 0" class="text-center py-6 text-gray-400 text-xs">No entries generated inside logs yet</div><div v-else class="space-y-2.5"><div v-for="order in orders.slice(0,6)" :key="order.id" class="flex justify-between items-center border-b pb-2.5 text-xs"><div><span class="font-mono font-bold text-blue-600">#{{ order.id.slice(-6) }}</span><span class="text-gray-500 ml-2 font-medium">{{ order.customerName }} ({{ order.paymentMethod || 'COD' }})</span></div><div class="flex items-center gap-3"><span :class="getStatusBadge(order.status)" class="px-2 py-0.5 rounded-full text-[10px] font-bold">{{ getStatusText(order.status).toUpperCase() }}</span><span class="font-black text-gray-800">₹{{ Number(order.total).toFixed(2) }}</span></div></div></div></div>
+            </div>
+
+            <div v-if="currentPage == 'vipMembership'" class="space-y-5">
+                <div class="bg-gradient-to-r from-amber-500 to-yellow-400 rounded-2xl p-5 text-white shadow">
+                    <div class="flex flex-wrap items-center justify-between gap-3">
+                        <div>
+                            <h2 class="text-xl font-black"><i class="fas fa-crown mr-2"></i>VIP Membership</h2>
+                            <p class="text-xs text-amber-50 mt-1">Manage plans, verify paid requests, and control customer memberships.</p>
+                        </div>
+                        <div class="flex flex-wrap gap-2">
+                            <button @click="openVipPlanModal()" class="bg-white text-amber-700 px-3 py-2 rounded-xl text-xs font-black shadow"><i class="fas fa-plus mr-1"></i>Create New Plan</button>
+                            <button @click="openManualVipModal()" class="bg-amber-900/20 border border-white/40 text-white px-3 py-2 rounded-xl text-xs font-black"><i class="fas fa-user-plus mr-1"></i>Manual Activate VIP</button>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3 mt-4 max-w-sm">
+                        <div class="bg-white/15 rounded-xl p-3"><p class="text-[10px] font-bold text-amber-50">Plans</p><p class="text-2xl font-black">{{ membershipPlans.length }}</p></div>
+                        <div class="bg-white/15 rounded-xl p-3"><p class="text-[10px] font-bold text-amber-50">VIP Profiles</p><p class="text-2xl font-black">{{ vipMembers.length }}</p></div>
+                    </div>
+                </div>
+
+                <section class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                    <div class="flex items-center justify-between gap-2 p-4 border-b">
+                        <div><h3 class="font-black text-gray-800 text-sm">Membership Plans</h3><p class="text-[10px] text-gray-400 mt-0.5">Plans are shared with the customer panel in real time.</p></div>
+                        <button @click="openVipPlanModal()" class="md:hidden bg-amber-500 text-white px-3 py-2 rounded-lg text-[10px] font-bold"><i class="fas fa-plus mr-1"></i>Add</button>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-xs min-w-[650px]">
+                            <thead class="bg-gray-50 text-gray-500"><tr><th class="p-3 text-left">Plan</th><th class="p-3 text-left">Price</th><th class="p-3 text-left">Duration</th><th class="p-3 text-left">Discount</th><th class="p-3 text-left">Perks</th><th class="p-3 text-right">Actions</th></tr></thead>
+                            <tbody>
+                                <tr v-for="plan in membershipPlans" :key="plan.id" class="border-t">
+                                    <td class="p-3 font-bold text-gray-800">{{ plan.name }}</td>
+                                    <td class="p-3 font-black text-amber-700">₹{{ Number(plan.price).toFixed(2) }}</td>
+                                    <td class="p-3">{{ plan.durationDays }} days</td>
+                                    <td class="p-3">{{ plan.discount }}%</td>
+                                    <td class="p-3"><span v-if="plan.freeDelivery" class="text-green-700 bg-green-50 px-2 py-1 rounded-full font-bold">Free delivery</span><span v-else class="text-gray-400">—</span></td>
+                                    <td class="p-3 text-right whitespace-nowrap">
+                                        <button @click="openVipPlanModal(plan)" class="text-blue-600 bg-blue-50 hover:bg-blue-100 px-2.5 py-1.5 rounded-lg font-bold mr-1"><i class="fas fa-edit"></i> Edit</button>
+                                        <button @click="deleteVipPlan(plan)" class="text-red-600 bg-red-50 hover:bg-red-100 px-2.5 py-1.5 rounded-lg font-bold"><i class="fas fa-trash-alt"></i></button>
+                                    </td>
+                                </tr>
+                                <tr v-if="!membershipPlans.length"><td colspan="6" class="p-8 text-center text-gray-400">No plans yet. Create the first VIP plan to make it available in the customer panel.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <section class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                    <div class="p-4 border-b"><h3 class="font-black text-gray-800 text-sm">VIP Members</h3><p class="text-[10px] text-gray-400 mt-0.5">Live membership status from customer profiles.</p></div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-xs min-w-[720px]">
+                            <thead class="bg-gray-50 text-gray-500"><tr><th class="p-3 text-left">Customer</th><th class="p-3 text-left">Phone / Email</th><th class="p-3 text-left">Plan</th><th class="p-3 text-left">Discount</th><th class="p-3 text-left">Expiry Date</th><th class="p-3 text-left">Status</th><th class="p-3 text-right">Action</th></tr></thead>
+                            <tbody>
+                                <tr v-for="member in vipMembers" :key="member.type + member.id" class="border-t">
+                                    <td class="p-3 font-bold text-gray-800">{{ member.name || 'Customer' }}</td>
+                                    <td class="p-3 text-gray-500">{{ member.phone || member.email || '—' }}</td>
+                                    <td class="p-3 font-semibold">{{ member.membership.planName || 'VIP Plan' }}</td>
+                                    <td class="p-3">{{ Number(member.membership.discountPercent || 0) }}%</td>
+                                    <td class="p-3">{{ formatVipExpiry(member.membership.expiryDate) }}</td>
+                                    <td class="p-3"><span :class="vipMemberStatus(member.membership) === 'ACTIVE' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'" class="px-2 py-1 rounded-full text-[9px] font-black">{{ vipMemberStatus(member.membership) }}</span></td>
+                                    <td class="p-3 text-right"><button @click="cancelVipMembership(member)" class="bg-red-50 text-red-600 hover:bg-red-100 px-2.5 py-1.5 rounded-lg font-bold"><i class="fas fa-ban mr-1"></i>Cancel VIP</button></td>
+                                </tr>
+                                <tr v-if="!vipMembers.length"><td colspan="7" class="p-8 text-center text-gray-400">No VIP memberships found.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <section class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                    <div class="p-4 border-b"><h3 class="font-black text-gray-800 text-sm">Pending VIP Purchases</h3><p class="text-[10px] text-gray-400 mt-0.5">Verify the UPI receipt and transaction ID before activating a plan.</p></div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-xs min-w-[760px]">
+                            <thead class="bg-gray-50 text-gray-500"><tr><th class="p-3 text-left">Customer</th><th class="p-3 text-left">Plan</th><th class="p-3 text-left">Amount</th><th class="p-3 text-left">UTR</th><th class="p-3 text-left">Receipt</th><th class="p-3 text-left">Requested</th><th class="p-3 text-right">Review</th></tr></thead>
+                            <tbody>
+                                <tr v-for="request in pendingVipRequests" :key="request.id" class="border-t">
+                                    <td class="p-3"><p class="font-bold">{{ request.customerName || 'Customer' }}</p><p class="text-[10px] text-gray-400">{{ request.customerPhone || request.customerEmail || '—' }}</p></td>
+                                    <td class="p-3 font-semibold">{{ request.planName }}</td>
+                                    <td class="p-3 font-black text-amber-700">₹{{ Number(request.amount || 0).toFixed(2) }}</td>
+                                    <td class="p-3 font-mono">{{ request.utrId }}</td>
+                                    <td class="p-3"><a v-if="request.receiptUrl" :href="request.receiptUrl" target="_blank" rel="noopener noreferrer" class="text-blue-600 underline font-bold">View receipt</a><span v-else class="text-gray-400">No receipt</span></td>
+                                    <td class="p-3">{{ formatVipExpiry(request.requestedAt) }}</td>
+                                    <td class="p-3 text-right whitespace-nowrap"><button @click="approveVipRequest(request)" class="bg-green-600 text-white px-2.5 py-1.5 rounded-lg font-bold mr-1"><i class="fas fa-check mr-1"></i>Approve &amp; Activate</button><button @click="rejectVipRequest(request)" class="bg-red-50 text-red-600 px-2.5 py-1.5 rounded-lg font-bold">Reject</button></td>
+                                </tr>
+                                <tr v-if="!pendingVipRequests.length"><td colspan="7" class="p-8 text-center text-gray-400">No pending VIP purchase requests.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
             </div>
 
             <div v-if="currentPage == 'products'">
@@ -2130,6 +2237,7 @@
         <div class="bottom-nav">
             <button @click="changePage('dashboard')" :class="{'active': currentPage=='dashboard'}" class="bottom-nav-item"><i class="fas fa-chart-line"></i><span>Home</span></button>
             <button @click="changePage('products')" :class="{'active': currentPage=='products'}" class="bottom-nav-item"><i class="fas fa-boxes"></i><span>Products</span></button>
+            <button @click="changePage('vipMembership')" :class="{'active': currentPage=='vipMembership'}" class="bottom-nav-item relative"><i class="fas fa-crown text-amber-500"></i><span>VIP</span><span v-if="pendingVipRequests.length" class="absolute top-0 right-1 rounded-full bg-red-500 px-1.5 text-[8px] font-black leading-4 text-white">{{ pendingVipRequests.length }}</span></button>
             <button @click="changePage('riders')" :class="{'active': currentPage=='riders'}" class="bottom-nav-item"><i class="fas fa-motorcycle text-emerald-500"></i><span>Riders</span></button>
             <button @click="changePage('orders')" :class="{'active': currentPage=='orders'}" class="bottom-nav-item"><i class="fas fa-truck"></i><span>Orders</span></button>
             <button @click="changePage('withdrawals')" :class="{'active': currentPage=='withdrawals'}" class="bottom-nav-item relative">
@@ -2137,6 +2245,34 @@
                 <span>Withdraw</span>
                 <span v-if="withdrawals.filter(w=>w.status==='pending').length" class="absolute -top-1 right-1 bg-indigo-500 text-white text-[8px] w-4 h-4 rounded-full flex items-center justify-center font-bold">{{ withdrawals.filter(w=>w.status==='pending').length }}</span>
             </button>
+        </div>
+        <div v-if="showVipPlanModal" class="fixed inset-0 z-[100] bg-black/60 flex items-center justify-center p-4" @click.self="showVipPlanModal = false">
+            <form @submit.prevent="saveVipPlan" class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-5 space-y-4">
+                <div class="flex items-center justify-between">
+                    <div><h3 class="font-black text-gray-800">{{ editingVipPlanId ? 'Edit VIP Plan' : 'Create New Plan' }}</h3><p class="text-[10px] text-gray-400 mt-1">Changes are saved to Firebase and appear in the customer panel.</p></div>
+                    <button type="button" @click="showVipPlanModal = false" class="text-gray-400 hover:text-gray-700 p-2"><i class="fas fa-times"></i></button>
+                </div>
+                <label class="block text-xs font-bold text-gray-600">Plan Title<input v-model.trim="vipPlanDraft.name" required maxlength="80" class="mt-1 w-full border rounded-xl p-3 text-sm outline-none focus:border-amber-400" placeholder="VIP Pass"></label>
+                <div class="grid grid-cols-2 gap-3">
+                    <label class="text-xs font-bold text-gray-600">Price (₹)<input v-model.number="vipPlanDraft.price" type="number" min="0.01" step="0.01" required class="mt-1 w-full border rounded-xl p-3 text-sm"></label>
+                    <label class="text-xs font-bold text-gray-600">Duration (Days)<input v-model.number="vipPlanDraft.durationDays" type="number" min="1" step="1" required class="mt-1 w-full border rounded-xl p-3 text-sm"></label>
+                </div>
+                <label class="block text-xs font-bold text-gray-600">Discount (%)<input v-model.number="vipPlanDraft.discount" type="number" min="0" max="100" step="0.01" required class="mt-1 w-full border rounded-xl p-3 text-sm"></label>
+                <label class="flex items-center gap-2 rounded-xl bg-amber-50 p-3 text-sm font-bold text-amber-900"><input v-model="vipPlanDraft.freeDelivery" type="checkbox" class="accent-amber-500 w-4 h-4"> Free delivery during membership</label>
+                <button type="submit" :disabled="loading" class="w-full bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-white rounded-xl p-3 font-black">{{ loading ? 'Saving…' : 'Save VIP Plan' }}</button>
+            </form>
+        </div>
+        <div v-if="showManualVipModal" class="fixed inset-0 z-[100] bg-black/60 flex items-center justify-center p-4" @click.self="showManualVipModal = false">
+            <form @submit.prevent="activateVipManually" class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-5 space-y-4">
+                <div class="flex items-center justify-between">
+                    <div><h3 class="font-black text-gray-800">Manual Activate VIP</h3><p class="text-[10px] text-gray-400 mt-1">Activate an existing customer by their registered phone or email.</p></div>
+                    <button type="button" @click="showManualVipModal = false" class="text-gray-400 hover:text-gray-700 p-2"><i class="fas fa-times"></i></button>
+                </div>
+                <label class="block text-xs font-bold text-gray-600">Customer Phone or Email<input v-model.trim="vipManualTarget" required class="mt-1 w-full border rounded-xl p-3 text-sm" placeholder="9876543210 or name@example.com"></label>
+                <label class="block text-xs font-bold text-gray-600">Membership Plan<select v-model="vipManualPlanId" required class="mt-1 w-full border rounded-xl p-3 text-sm"><option value="" disabled>Select a plan</option><option v-for="plan in membershipPlans" :key="plan.id" :value="plan.id">{{ plan.name }} — ₹{{ Number(plan.price).toFixed(2) }}</option></select></label>
+                <p v-if="!membershipPlans.length" class="text-xs text-red-600">Create a VIP plan before activating membership.</p>
+                <button type="submit" :disabled="loading || !membershipPlans.length" class="w-full bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-white rounded-xl p-3 font-black">{{ loading ? 'Activating…' : 'Activate VIP' }}</button>
+            </form>
         </div>
     </div>
 </div>
@@ -2175,11 +2311,23 @@ new Vue({
         rewardAmount: '',
         rewardNote: '',
         rewardLoading: false,
+        rewardPointsAmount: '',
+        rewardPointsLoading: false,
         selectedUser: null,
         products: [],
         orders: [],
         users: [],
         emailUsers: [],
+        membershipPlans: [],
+        vipMembershipRequests: [],
+        _vipAdminPlanRef: null,
+        _vipAdminRequestsRef: null,
+        showVipPlanModal: false,
+        editingVipPlanId: null,
+        vipPlanDraft: { name: 'VIP Pass', price: 199, durationDays: 30, discount: 10, freeDelivery: true },
+        showManualVipModal: false,
+        vipManualTarget: '',
+        vipManualPlanId: '',
         userSearch: '',
         userTypeFilter: 'all',
         banners: [],
@@ -2251,10 +2399,16 @@ new Vue({
     computed: {
         userOrders() { if (!this.selectedUser) return []; const ph = this.selectedUser.phone || this.selectedUser.mobile || ''; const em = this.selectedUser.email || ''; return this.orders.filter(o => (ph && o.customerPhone === ph) || (em && o.customerEmail === em)); },
         allUsers() { return [...this.users, ...this.emailUsers]; },
+        vipMembers() {
+            return this.allUsers.filter(user => user.membership && typeof user.membership === 'object');
+        },
+        pendingVipRequests() {
+            return this.vipMembershipRequests.filter(request => request.status === 'pending');
+        },
         filteredUsers() { let list = this.allUsers; if (this.userTypeFilter === 'mobile') list = list.filter(u => u.type === 'mobile'); else if (this.userTypeFilter === 'email') list = list.filter(u => u.type === 'email'); if (this.userSearch) { const s = this.userSearch.toLowerCase(); list = list.filter(u => (u.name && u.name.toLowerCase().includes(s)) || (u.phone && u.phone.includes(s)) || (u.email && u.email.toLowerCase().includes(s))); } return list; },
         filteredProducts() { if (!this.productSearch) return this.products; const s = this.productSearch.toLowerCase(); return this.products.filter(p => p.name.toLowerCase().includes(s) || (p.category && p.category.toLowerCase().includes(s))); },
         filteredOrders() { let filtered = this.orders; if (this.orderStatusFilter === 'cancelled') { filtered = filtered.filter(o => o.status === 'cancelled' || o.status === 'rejected'); } else if (this.orderStatusFilter === 'online_pending') { filtered = filtered.filter(o => o.payment_method === 'Online' && o.status === 'pending'); } else if (this.orderStatusFilter !== 'all') { filtered = filtered.filter(o => o.status === this.orderStatusFilter); } if (this.orderSearch) { const s = this.orderSearch.toLowerCase(); filtered = filtered.filter(o => (o.id && o.id.toLowerCase().includes(s)) || (o.customerName && o.customerName.toLowerCase().includes(s)) || (o.customerPhone && o.customerPhone.includes(s))); } return filtered; },
-        getPageTitle() { const t = { dashboard: 'Dashboard', products: 'Products', addProduct: 'Add Product', storeRooms: 'Store Rooms', banners: 'Banners', categories: 'Categories', users: 'Users', orders: 'Orders', returns: 'Returns', settings: 'Settings', riders: 'Riders', withdrawals: 'Withdrawals' }; return t[this.currentPage] || 'Admin'; },
+        getPageTitle() { const t = { dashboard: 'Dashboard', products: 'Products', addProduct: 'Add Product', storeRooms: 'Store Rooms', banners: 'Banners', categories: 'Categories', users: 'Users', vipMembership: 'VIP Membership', orders: 'Orders', returns: 'Returns', settings: 'Settings', riders: 'Riders', withdrawals: 'Withdrawals' }; return t[this.currentPage] || 'Admin'; },
 
         // ===== TOP SELLING PRODUCTS (Dashboard Analytics) =====
         topSellingProducts() {
@@ -2375,6 +2529,7 @@ new Vue({
                     database.ref('products').on('value', () => this.loadProducts());
                     database.ref('orders').on('value', () => this.loadOrders());
                     database.ref('users').on('value', () => this.loadUsers()); database.ref('users_email').on('value', () => this.loadUsers());
+                    this.attachVipAdminListeners();
                     database.ref('banners').on('value', () => this.loadBanners());
                     database.ref('return_requests').on('value', () => this.loadReturnRequests());
                     database.ref('riders').on('value', () => this.loadRiders());
@@ -2394,6 +2549,7 @@ new Vue({
         },
         handleAdminLogout() {
             if (confirm('Admin logout karna chahte hain?')) {
+                this.stopVipAdminListeners();
                 auth.signOut().catch(() => {});
                 localStorage.removeItem('pk_admin_session');
                 this.adminLoggedIn = false;
@@ -2765,9 +2921,10 @@ new Vue({
             this.rewardUser = user;
             this.rewardAmount = '';
             this.rewardNote = '';
+            this.rewardPointsAmount = '';
             this.showRewardModal = true;
         },
-        closeRewardModal() { this.showRewardModal = false; this.rewardUser = null; this.rewardAmount = ''; this.rewardNote = ''; },
+        closeRewardModal() { this.showRewardModal = false; this.rewardUser = null; this.rewardAmount = ''; this.rewardNote = ''; this.rewardPointsAmount = ''; },
 
         async giveReward() {
             const amt = parseFloat(this.rewardAmount);
@@ -2824,6 +2981,86 @@ new Vue({
                 this.rewardLoading = false;
             }
         },
+        async adjustRewardPoints(direction) {
+            const points = Number(this.rewardPointsAmount);
+            if (!Number.isSafeInteger(points) || points <= 0) {
+                this.showMessage('Whole reward points (at least 1) enter karo.');
+                return;
+            }
+            if (direction !== 'add' && direction !== 'deduct') {
+                this.showMessage('Reward point action invalid hai.');
+                return;
+            }
+            if (!this.rewardUser) return;
+
+            const user = this.rewardUser;
+            const userPath = user.type === 'email' && user.id
+                ? `users_email/${user.id}`
+                : user.type === 'mobile' && user.id
+                    ? `users/${user.id}`
+                    : '';
+            if (!userPath) { this.showMessage('User path nahi mila!'); return; }
+
+            this.rewardPointsLoading = true;
+            try {
+                const pointsRef = database.ref(`${userPath}/rewards`);
+                const result = await pointsRef.transaction(currentValue => {
+                    const balance = Math.max(0, Math.floor(Number(currentValue) || 0));
+                    if (direction === 'deduct' && balance < points) return;
+                    return direction === 'add' ? balance + points : balance - points;
+                });
+
+                if (!result.committed) {
+                    const currentBalance = Math.max(0, Math.floor(Number(result.snapshot.val()) || 0));
+                    if (direction === 'deduct' && currentBalance < points) {
+                        this.showMessage(`Insufficient points. Current balance: ${currentBalance}.`);
+                        this.rewardUser = { ...this.rewardUser, rewards: currentBalance };
+                        return;
+                    }
+                    throw new Error('Points update cancel hua. Dobara try karo.');
+                }
+
+                const newBalance = Math.max(0, Math.floor(Number(result.snapshot.val()) || 0));
+                const previousBalance = direction === 'add' ? newBalance - points : newBalance + points;
+                let historySaved = true;
+                try {
+                    await database.ref('reward_history').push({
+                        userId: user.id,
+                        userType: user.type || '',
+                        userName: user.name || '',
+                        userPhone: user.phone || '',
+                        userEmail: user.email || '',
+                        kind: 'points',
+                        direction,
+                        amount: points,
+                        previousBalance,
+                        newBalance,
+                        note: this.rewardNote || '',
+                        addedAt: new Date().toISOString(),
+                        addedBy: 'admin'
+                    });
+                } catch (historyError) {
+                    historySaved = false;
+                    console.warn('Reward points updated, but history could not be saved:', historyError.message);
+                }
+
+                this.rewardUser = { ...this.rewardUser, rewards: newBalance };
+                try { await this.loadUsers(); }
+                catch (refreshError) { console.warn('Points updated, but customer list refresh failed:', refreshError.message); }
+                const verb = direction === 'add' ? 'added to' : 'deducted from';
+                this.showMessage(`✅ ${points} points ${verb} ${user.name || user.phone || 'customer'}. New balance: ${newBalance}${historySaved ? '' : ' (history could not be saved)'}`);
+                this.closeRewardModal();
+            } catch (e) {
+                if (e.code === 'PERMISSION_DENIED' || (e.message && e.message.includes('PERMISSION_DENIED'))) {
+                    this.showMessage('❌ Permission denied! Firebase Rules check karo ya admin UID allowlist mein add karo.');
+                } else {
+                    this.showMessage('Reward points update failed: ' + e.message);
+                }
+                console.error('Could not adjust reward points:', e);
+            } finally {
+                this.rewardPointsLoading = false;
+            }
+        },
         async deleteUser(user) { if(confirm(`Delete ${user.name} permanently?`)) { this.loading = true; try { const node = user.type === 'email' ? 'users_email' : 'users'; await database.ref(`${node}/${user.id}`).remove(); if (user.type === 'email' && user.uid) { try { await firebase.auth().currentUser; } catch(e2) {} } this.showMessage('User deleted'); await this.loadUsers(); } catch(e) { this.showMessage(e.message); } finally { this.loading = false; } } },
         getStatusBadge(status) { const m = { pending: 'bg-yellow-100 text-yellow-700', confirmed: 'bg-blue-100 text-blue-700', shipped: 'bg-purple-100 text-purple-700', delivered: 'bg-green-100 text-green-700', rejected: 'bg-red-100 text-red-700', cancelled: 'bg-red-100 text-red-700' }; return m[status] || 'bg-gray-100'; },
         getStatusText(status) { const m = { pending: 'Pending', confirmed: 'Confirmed', shipped: 'Shipped', delivered: 'Delivered', rejected: 'Cancelled', cancelled: 'Cancelled' }; return m[status] || status; },
@@ -2854,10 +3091,228 @@ new Vue({
             return 'Admin';
         },
         getBorderClass(status) { return status === 'pending' ? 'border-yellow-400' : status === 'confirmed' ? 'border-blue-400' : status === 'shipped' ? 'border-purple-400' : status === 'delivered' ? 'border-green-400' : (status === 'cancelled' || status === 'rejected') ? 'border-red-400' : 'border-gray-300'; },
-        async loadAllData() { this.loading = true; await Promise.all([this.loadProducts(), this.loadOrders(), this.loadUsers(), this.loadBanners(), this.loadAdminControls(), this.loadReturnRequests(), this.loadRiders(), this.loadStoreRooms(), this.loadWithdrawals()]); this.loading = false; },
+                async loadAllData() { this.loading = true; try { await Promise.all([this.loadProducts(), this.loadOrders(), this.loadUsers(), this.loadMembershipPlans().catch(e => { this.membershipPlans = []; console.error('VIP plan load failed:', e); }), this.loadVipMembershipRequests().catch(e => { this.vipMembershipRequests = []; console.error('VIP request load failed:', e); }), this.loadBanners(), this.loadAdminControls(), this.loadReturnRequests(), this.loadRiders(), this.loadStoreRooms(), this.loadWithdrawals()]); } finally { this.loading = false; } },
         async loadProducts() { const snap = await database.ref('products').once('value'); const d = snap.val(); this.products = d ? Object.keys(d).map(k => ({ id: k, ...d[k] })) : []; },
         async loadOrders() { const snap = await database.ref('orders').once('value'); const d = snap.val(); this.orders = d ? Object.keys(d).map(k => ({ id: k, ...d[k] })).reverse() : []; },
-        async loadUsers() { const [snap1, snap2] = await Promise.all([database.ref('users').once('value'), database.ref('users_email').once('value')]); const d1 = snap1.val(); const d2 = snap2.val(); this.users = d1 ? Object.keys(d1).map(k => ({ id: k, type: 'mobile', ...d1[k] })) : []; this.emailUsers = d2 ? Object.keys(d2).map(k => ({ id: k, type: 'email', ...d2[k] })) : []; },
+        async loadUsers() { const [snap1, snap2] = await Promise.all([database.ref('users').once('value'), database.ref('users_email').once('value')]); const d1 = snap1.val(); const d2 = snap2.val(); this.users = d1 ? Object.keys(d1).map(k => ({ id: k, ...d1[k], type: 'mobile' })) : []; this.emailUsers = d2 ? Object.keys(d2).map(k => ({ id: k, ...d2[k], type: 'email' })) : []; },
+        async loadMembershipPlans() {
+            const snap = await database.ref('admin_settings/membership_plans').once('value');
+            const data = snap.val() || {};
+            this.membershipPlans = Object.keys(data).map(id => ({ id, ...data[id] })).filter(plan => plan.name);
+        },
+        async loadVipMembershipRequests() {
+            const snap = await database.ref('vip_membership_requests').once('value');
+            const data = snap.val() || {};
+            this.vipMembershipRequests = Object.keys(data).map(id => ({ id, ...data[id] })).sort((a, b) => (Date.parse(b.requestedAt) || 0) - (Date.parse(a.requestedAt) || 0));
+        },
+        attachVipAdminListeners() {
+            if (!this._vipAdminPlanRef) {
+                this._vipAdminPlanRef = database.ref('admin_settings/membership_plans');
+                this._vipAdminPlanRef.on('value', () => this.loadMembershipPlans(), error => console.error('VIP plan listener failed:', error));
+            }
+            if (!this._vipAdminRequestsRef) {
+                this._vipAdminRequestsRef = database.ref('vip_membership_requests');
+                this._vipAdminRequestsRef.on('value', () => this.loadVipMembershipRequests(), error => console.error('VIP request listener failed:', error));
+            }
+        },
+        stopVipAdminListeners() {
+            if (this._vipAdminPlanRef) { try { this._vipAdminPlanRef.off(); } catch(e){} this._vipAdminPlanRef = null; }
+            if (this._vipAdminRequestsRef) { try { this._vipAdminRequestsRef.off(); } catch(e){} this._vipAdminRequestsRef = null; }
+        },
+        openVipPlanModal(plan) {
+            this.editingVipPlanId = plan ? plan.id : null;
+            this.vipPlanDraft = plan
+                ? { name: plan.name || '', price: Number(plan.price), durationDays: Number(plan.durationDays), discount: Number(plan.discount), freeDelivery: !!plan.freeDelivery }
+                : { name: 'VIP Pass', price: 199, durationDays: 30, discount: 10, freeDelivery: true };
+            this.showVipPlanModal = true;
+        },
+        async saveVipPlan() {
+            const name = String(this.vipPlanDraft.name || '').trim();
+            const price = Number(this.vipPlanDraft.price);
+            const durationDays = Number(this.vipPlanDraft.durationDays);
+            const discount = Number(this.vipPlanDraft.discount);
+            if (!name || name.length > 80 || !Number.isFinite(price) || price <= 0 || !Number.isInteger(durationDays) || durationDays < 1 || !Number.isFinite(discount) || discount < 0 || discount > 100) {
+                this.showMessage('Enter a plan name, positive price, whole-day duration, and discount from 0 to 100%.');
+                return;
+            }
+            this.loading = true;
+            try {
+                const plan = { name, price, durationDays, discount, freeDelivery: !!this.vipPlanDraft.freeDelivery };
+                const planRef = this.editingVipPlanId
+                    ? database.ref(`admin_settings/membership_plans/${this.editingVipPlanId}`)
+                    : database.ref('admin_settings/membership_plans').push();
+                await planRef.set(plan);
+                this.showVipPlanModal = false;
+                this.showMessage(this.editingVipPlanId ? 'VIP plan updated.' : 'VIP plan created.');
+                await this.loadMembershipPlans();
+            } catch (e) {
+                console.error('Could not save VIP plan:', e);
+                this.showMessage('Could not save VIP plan. Check Firebase access and the plan values.');
+            } finally {
+                this.loading = false;
+            }
+        },
+        async deleteVipPlan(plan) {
+            if (!confirm(`Delete the "${plan.name}" plan? Existing memberships will keep their saved benefits.`)) return;
+            try {
+                await database.ref(`admin_settings/membership_plans/${plan.id}`).remove();
+                this.showMessage('VIP plan deleted.');
+                await this.loadMembershipPlans();
+            } catch (e) {
+                console.error('Could not delete VIP plan:', e);
+                this.showMessage('Could not delete VIP plan. Check Firebase access.');
+            }
+        },
+        formatVipExpiry(value) {
+            const timestamp = Date.parse(value);
+            return Number.isFinite(timestamp) ? new Date(timestamp).toLocaleDateString('en-GB') : '—';
+        },
+        vipMemberStatus(membership) {
+            return membership && membership.status === 'active' && (Date.parse(membership.expiryDate) || 0) > Date.now() ? 'ACTIVE' : 'EXPIRED';
+        },
+        normalizeVipPhone(value) {
+            return String(value || '').replace(/\D/g, '').slice(-10);
+        },
+        findVipCustomerByIdentifier(identifier) {
+            const value = String(identifier || '').trim();
+            if (value.includes('@')) {
+                const email = value.toLowerCase();
+                return this.emailUsers.find(user => String(user.email || '').toLowerCase() === email) || null;
+            }
+            const phone = this.normalizeVipPhone(value);
+            if (!phone) return null;
+            return this.users.find(user => this.normalizeVipPhone(user.phone || user.mobile) === phone)
+                || this.emailUsers.find(user => this.normalizeVipPhone(user.phone || user.mobile) === phone)
+                || null;
+        },
+        findVipCustomerForRequest(request) {
+            if (request.uid) {
+                const byUid = this.emailUsers.find(user => user.id === request.uid || user.uid === request.uid);
+                if (byUid) return byUid;
+            }
+            if (request.customerEmail) {
+                const byEmail = this.emailUsers.find(user => String(user.email || '').toLowerCase() === String(request.customerEmail).toLowerCase());
+                if (byEmail) return byEmail;
+            }
+            return this.findVipCustomerByIdentifier(request.customerPhone || '');
+        },
+        getVipCustomerPath(user) {
+            return user.type === 'email' ? `users_email/${user.id}` : `users/${user.id}`;
+        },
+        async activateVipCustomer(user, plan, request) {
+            const durationDays = Number(plan.durationDays);
+            const discount = Number(plan.discount);
+            if (!Number.isInteger(durationDays) || durationDays < 1 || !Number.isFinite(discount) || discount < 0 || discount > 100) {
+                throw new Error('The selected membership plan has invalid duration or discount settings.');
+            }
+            const userPath = this.getVipCustomerPath(user);
+            const now = Date.now();
+            const existingExpiry = Date.parse(user.membership && user.membership.expiryDate) || 0;
+            const activatedAt = new Date(now).toISOString();
+            const expiryDate = new Date(Math.max(now, existingExpiry) + durationDays * 86400000).toISOString();
+            const membership = {
+                status: 'active',
+                planId: plan.id,
+                planName: plan.name,
+                discountPercent: discount,
+                freeDelivery: !!plan.freeDelivery,
+                expiryDate,
+                activatedAt
+            };
+            const updates = { [`${userPath}/membership`]: membership };
+            if (request) {
+                const review = { requestId: request.id, status: 'approved', planName: plan.name, reviewedAt: activatedAt };
+                updates[`vip_membership_requests/${request.id}/status`] = 'approved';
+                updates[`vip_membership_requests/${request.id}/reviewedAt`] = activatedAt;
+                updates[`${userPath}/vipMembershipRequest`] = review;
+            }
+            await database.ref().update(updates);
+            return membership;
+        },
+        async activateVipManually() {
+            const user = this.findVipCustomerByIdentifier(this.vipManualTarget);
+            const plan = this.membershipPlans.find(item => item.id === this.vipManualPlanId);
+            if (!user) { this.showMessage('No registered customer found for that phone or email.'); return; }
+            if (!plan) { this.showMessage('Choose a valid VIP plan.'); return; }
+            this.loading = true;
+            try {
+                await this.activateVipCustomer(user, plan);
+                this.showManualVipModal = false;
+                this.vipManualTarget = '';
+                this.vipManualPlanId = '';
+                this.showMessage('VIP membership activated for customer.');
+                await this.loadUsers();
+            } catch (e) {
+                console.error('Could not activate VIP:', e);
+                this.showMessage('Could not activate VIP. Check Firebase access and customer details.');
+            } finally {
+                this.loading = false;
+            }
+        },
+        async cancelVipMembership(user) {
+            if (!confirm(`Remove VIP membership from ${user.name || user.phone || user.email || 'this customer'}?`)) return;
+            try {
+                await database.ref(`${this.getVipCustomerPath(user)}/membership`).remove();
+                this.showMessage('VIP membership removed.');
+                await this.loadUsers();
+            } catch (e) {
+                console.error('Could not remove VIP membership:', e);
+                this.showMessage('Could not remove VIP membership. Check Firebase access.');
+            }
+        },
+        async approveVipRequest(request) {
+            if (!confirm(`Verify the UTR and receipt for ${request.customerName || 'this customer'} before activating "${request.planName}"?`)) return;
+            let latestRequest;
+            try {
+                latestRequest = await database.ref(`vip_membership_requests/${request.id}`).once('value');
+            } catch (e) {
+                console.error('Could not recheck VIP request:', e);
+                this.showMessage('Could not verify request status. Check Firebase access.');
+                return;
+            }
+            if (!latestRequest.exists() || latestRequest.val().status !== 'pending') {
+                this.showMessage('This VIP request is no longer pending.');
+                await this.loadVipMembershipRequests();
+                return;
+            }
+            const user = this.findVipCustomerForRequest(request);
+            const plan = this.membershipPlans.find(item => item.id === request.planId);
+            if (!user) { this.showMessage('Customer profile not found. Use Manual Activate VIP after confirming the account.'); return; }
+            if (!plan) { this.showMessage('The requested plan no longer exists. Select a current plan using Manual Activate VIP.'); return; }
+            if (!Number.isFinite(Number(request.amount)) || Math.round((Number(request.amount) - Number(plan.price)) * 100) !== 0) {
+                this.showMessage('The plan price changed since this request. Verify the payment and use Manual Activate VIP if appropriate.');
+                return;
+            }
+            this.loading = true;
+            try {
+                await this.activateVipCustomer(user, plan, request);
+                this.showMessage('Payment verified and VIP membership activated.');
+                await Promise.all([this.loadUsers(), this.loadVipMembershipRequests()]);
+            } catch (e) {
+                console.error('Could not approve VIP request:', e);
+                this.showMessage('Could not activate membership. Check Firebase access.');
+            } finally {
+                this.loading = false;
+            }
+        },
+        async rejectVipRequest(request) {
+            if (!confirm(`Reject the VIP purchase request from ${request.customerName || 'this customer'}?`)) return;
+            const user = this.findVipCustomerForRequest(request);
+            const reviewedAt = new Date().toISOString();
+            const updates = {
+                [`vip_membership_requests/${request.id}/status`]: 'rejected',
+                [`vip_membership_requests/${request.id}/reviewedAt`]: reviewedAt
+            };
+            if (user) updates[`${this.getVipCustomerPath(user)}/vipMembershipRequest`] = { requestId: request.id, status: 'rejected', planName: request.planName, reviewedAt };
+            try {
+                await database.ref().update(updates);
+                this.showMessage('VIP purchase request rejected.');
+                await this.loadVipMembershipRequests();
+            } catch (e) {
+                console.error('Could not reject VIP request:', e);
+                this.showMessage('Could not reject request. Check Firebase access.');
+            }
+        },
         async loadBanners() { const snap = await database.ref('banners').once('value'); const d = snap.val(); this.banners = d ? Object.keys(d).map(k => ({ id: k, url: d[k] })) : []; },
         async loadReturnRequests() { const snap = await database.ref('return_requests').once('value'); const d = snap.val(); this.returns = d ? Object.keys(d).map(k => ({ id: k, ...d[k] })).reverse() : []; },
         async loadRiders() { const snap = await database.ref('riders').once('value'); const d = snap.val(); this.riders = d ? Object.keys(d).map(k => ({ id: k, ...d[k] })).reverse() : []; if (this.currentPage === 'riders') this.renderRiderCharts(); },
@@ -3617,6 +4072,8 @@ new Vue({
                 database.ref('products').on('value', () => this.loadProducts());
                 database.ref('orders').on('value', () => this.loadOrders());
                 database.ref('users').on('value', () => this.loadUsers());
+                database.ref('users_email').on('value', () => this.loadUsers());
+                this.attachVipAdminListeners();
                 database.ref('banners').on('value', () => this.loadBanners());
                 database.ref('return_requests').on('value', () => this.loadReturnRequests());
                 database.ref('riders').on('value', () => this.loadRiders());
@@ -3624,6 +4081,7 @@ new Vue({
                 database.ref('withdrawal_requests').on('value', () => this.loadWithdrawals());
             } else if (!user) {
                 this.adminLoggedIn = false;
+                this.stopVipAdminListeners();
                 localStorage.removeItem('pk_admin_session');
             }
         });
@@ -3633,7 +4091,7 @@ new Vue({
 
         window.addEventListener('popstate', (event) => {
             // Agar koi modal open hai, toh back dabane par pehle modal close ho
-            if (this.showStoreModal || this.showUserModal || this.podPhotoModal || this.showAddRiderModal || this.showEditModal || this.showReceiptModal || this.rejectModal.show || this.showCreateStoreModal) {
+            if (this.showStoreModal || this.showUserModal || this.podPhotoModal || this.showAddRiderModal || this.showEditModal || this.showReceiptModal || this.rejectModal.show || this.showCreateStoreModal || this.showVipPlanModal || this.showManualVipModal) {
                 this.showStoreModal = false;
                 this.showCreateStoreModal = false;
                 this.showUserModal = false;
@@ -3642,6 +4100,8 @@ new Vue({
                 this.showEditModal = false;
                 this.showReceiptModal = false;
                 this.rejectModal.show = false;
+                this.showVipPlanModal = false;
+                this.showManualVipModal = false;
 
                 // History balance rakhne ke liye vapas state push karein
                 history.pushState({ page: this.currentPage }, "");
