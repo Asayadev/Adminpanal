@@ -1614,7 +1614,7 @@
                                     <div class="text-[9px] font-bold text-green-500 uppercase tracking-wide mt-0.5">Available</div>
                                 </div>
                                 <div class="bg-gradient-to-br from-red-50 to-pink-50 border border-red-100 rounded-xl p-2">
-                                    <div class="text-base font-black text-red-500">{{ getRiderCancelledOrders(rider.phone).length }}</div>
+                                        <div class="text-base font-black text-red-500">{{ getRiderCancelledOrders(rider.id).length }}</div>
                                     <div class="text-[9px] font-bold text-red-400 uppercase tracking-wide mt-0.5">Cancelled</div>
                                 </div>
                             </div>
@@ -1629,10 +1629,10 @@
                             </div>
 
                             <!-- Cancelled Orders List -->
-                            <div v-if="getRiderCancelledOrders(rider.phone).length > 0" class="mt-3">
+                            <div v-if="getRiderCancelledOrders(rider.id).length > 0" class="mt-3">
                                 <h4 class="text-[10px] font-bold text-red-500 uppercase tracking-wide mb-2 flex items-center gap-1"><i class="fas fa-times-circle"></i> Cancelled Orders:</h4>
                                 <div class="space-y-1.5 max-h-36 overflow-y-auto pr-1">
-                                    <div v-for="co in getRiderCancelledOrders(rider.phone)" :key="co.id" class="bg-red-50 border border-red-100 rounded-xl p-2.5 text-xs">
+                                    <div v-for="co in getRiderCancelledOrders(rider.id)" :key="co.id" class="bg-red-50 border border-red-100 rounded-xl p-2.5 text-xs">
                                         <div class="flex justify-between font-mono text-red-600 font-bold">
                                             <span>#{{ co.id.slice(-6).toUpperCase() }}</span>
                                             <span class="text-gray-400 text-[10px]">{{ formatShortDate(co.cancelledAt) }}</span>
@@ -2333,6 +2333,9 @@ new Vue({
         banners: [],
         returns: [], 
         riders: [],
+        riderBalances: {},
+        _riderBalanceRefs: {},
+        _riderBalanceCallbacks: {},
         storeRooms: [], 
         showStoreModal: false,
         selectedStore: null,
@@ -2550,6 +2553,7 @@ new Vue({
         handleAdminLogout() {
             if (confirm('Admin logout karna chahte hain?')) {
                 this.stopVipAdminListeners();
+                this.stopRiderBalanceListeners();
                 auth.signOut().catch(() => {});
                 localStorage.removeItem('pk_admin_session');
                 this.adminLoggedIn = false;
@@ -3315,7 +3319,36 @@ new Vue({
         },
         async loadBanners() { const snap = await database.ref('banners').once('value'); const d = snap.val(); this.banners = d ? Object.keys(d).map(k => ({ id: k, url: d[k] })) : []; },
         async loadReturnRequests() { const snap = await database.ref('return_requests').once('value'); const d = snap.val(); this.returns = d ? Object.keys(d).map(k => ({ id: k, ...d[k] })).reverse() : []; },
-        async loadRiders() { const snap = await database.ref('riders').once('value'); const d = snap.val(); this.riders = d ? Object.keys(d).map(k => ({ id: k, ...d[k] })).reverse() : []; if (this.currentPage === 'riders') this.renderRiderCharts(); },
+        async loadRiders() {
+            const snap = await database.ref('riders').once('value');
+            const d = snap.val();
+            this.riders = d ? Object.keys(d).map(k => ({ id: k, ...d[k] })).reverse() : [];
+            const activeRiderIds = new Set(this.riders.map(rider => rider.id));
+
+            Object.keys(this._riderBalanceRefs).forEach(riderId => {
+                if (!activeRiderIds.has(riderId)) {
+                    this._riderBalanceRefs[riderId].off('value', this._riderBalanceCallbacks[riderId]);
+                    delete this._riderBalanceRefs[riderId];
+                    delete this._riderBalanceCallbacks[riderId];
+                    Vue.delete(this.riderBalances, riderId);
+                }
+            });
+
+            this.riders.forEach(rider => {
+                if (this._riderBalanceRefs[rider.id]) return;
+                const balanceRef = database.ref(`riders/${rider.id}/balance`);
+                const balanceCallback = balanceSnapshot => {
+                    Vue.set(this.riderBalances, rider.id, Number(balanceSnapshot.val()) || 0);
+                };
+                this._riderBalanceRefs[rider.id] = balanceRef;
+                this._riderBalanceCallbacks[rider.id] = balanceCallback;
+                balanceRef.on('value', balanceCallback, error => {
+                    console.error(`Could not read live balance for rider ${rider.id}:`, error);
+                });
+            });
+
+            if (this.currentPage === 'riders') this.renderRiderCharts();
+        },
         async loadStoreRooms() { const snap = await database.ref('shopkeepers').once('value'); const d = snap.val(); this.storeRooms = d ? Object.keys(d).map(k => ({ id: k, ...d[k] })) : []; },
         getOrderDetails(orderId) { return this.orders.find(o => o.id === orderId); },
         async processReturnRequest(requestId, orderId, finalStatus) { if(confirm(`Mark claim as ${finalStatus}?`)) { this.loading = true; try { let dbStatus = finalStatus === 'Approved' ? 'returned_completed' : 'delivered'; await database.ref(`orders/${orderId}`).update({ status: dbStatus, returnProcessed: true }); await database.ref(`return_requests/${requestId}`).remove(); this.showMessage(`Claim ${finalStatus}!`); await this.loadReturnRequests(); await this.loadOrders(); } catch(e) { this.showMessage(e.message); } finally { this.loading = false; } } },
@@ -3460,7 +3493,17 @@ new Vue({
             });
         },
         getRiderTotalEarnings(phone) {
-            return this.getRiderDeliveredOrders(phone).length * this.perDeliveryRate;
+            return this.getRiderDeliveredOrders(phone).reduce((total, order) => {
+                const savedAmount = Number(order.riderEarningAmount);
+                if (order.riderEarningAmount !== undefined && order.riderEarningAmount !== null && Number.isFinite(savedAmount)) {
+                    return total + savedAmount;
+                }
+                const savedRate = Number(order.riderEarningRate);
+                if (order.riderEarningRate !== undefined && order.riderEarningRate !== null && Number.isFinite(savedRate)) {
+                    return total + savedRate;
+                }
+                return total + (Number(this.perDeliveryRate) || 0);
+            }, 0);
         },
         getRiderTotalWithdrawn(riderId) {
             return this.withdrawals
@@ -3468,20 +3511,41 @@ new Vue({
                 .reduce((sum, w) => sum + (parseFloat(w.amount) || 0), 0);
         },
         getRiderAvailableBalance(riderId) {
+            if (Object.prototype.hasOwnProperty.call(this.riderBalances, riderId)) {
+                return Number(this.riderBalances[riderId]) || 0;
+            }
             const rider = this.riders.find(r => r.id === riderId);
-            if (!rider) return 0;
-            const earned = this.getRiderTotalEarnings(rider.phone);
-            const withdrawn = this.getRiderTotalWithdrawn(riderId);
-            return Math.max(0, earned - withdrawn);
+            return Number(rider && rider.balance) || 0;
         },
-        getRiderCancelledOrders(phone) {
+        getRiderCancelledOrders(riderId) {
             if (!this.orders) return [];
+            const rider = this.riders.find(r => r.id === riderId);
             return this.orders.filter(o =>
-                (o.status === 'cancelled') &&
-                (o.cancelledByPhone === phone ||
-                 o.assignedRiderPhone === phone ||
-                 (o.deliveryBoyDetails && o.deliveryBoyDetails.phone === phone))
+                (o.status === 'cancelled' || o.status === 'rejected') &&
+                (
+                    o.assignedRider === riderId ||
+                    o.cancelledBy === riderId ||
+                    o.cancelledByRiderId === riderId ||
+                    (rider && o.cancelledBy === 'rider' && o.cancelledByName && rider.name &&
+                        String(o.cancelledByName).trim().toLowerCase() === String(rider.name).trim().toLowerCase()) ||
+                    (rider && (
+                        o.assignedRiderPhone === rider.phone ||
+                        o.cancelledByPhone === rider.phone ||
+                        (o.deliveryBoyDetails && (
+                            o.deliveryBoyDetails.riderId === riderId ||
+                            o.deliveryBoyDetails.phone === rider.phone
+                        ))
+                    ))
+                )
             );
+        },
+        stopRiderBalanceListeners() {
+            Object.keys(this._riderBalanceRefs).forEach(riderId => {
+                this._riderBalanceRefs[riderId].off('value', this._riderBalanceCallbacks[riderId]);
+            });
+            this._riderBalanceRefs = {};
+            this._riderBalanceCallbacks = {};
+            this.riderBalances = {};
         },
         async savePerDeliveryRate() {
             const rate = parseFloat(this.perDeliveryRateInput);
@@ -3922,10 +3986,13 @@ new Vue({
         },
         getRiderDeliveredOrders(riderPhone) {
             if (!this.orders) return [];
-            return this.orders.filter(order => 
-                order.status === 'delivered' && 
-                order.deliveryBoyDetails && 
-                order.deliveryBoyDetails.phone === riderPhone
+            const rider = this.riders.find(r => r.phone === riderPhone);
+            return this.orders.filter(order =>
+                order.status === 'delivered' && (
+                    (rider && order.assignedRider === rider.id) ||
+                    order.assignedRiderPhone === riderPhone ||
+                    (order.deliveryBoyDetails && order.deliveryBoyDetails.phone === riderPhone)
+                )
             );
         },
         async uploadSizeChartToDrive(event, type) {
