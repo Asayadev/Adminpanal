@@ -2316,6 +2316,8 @@ new Vue({
         selectedUser: null,
         products: [],
         orders: [],
+        _ordersRef: null,
+        _ordersListener: null,
         users: [],
         emailUsers: [],
         membershipPlans: [],
@@ -2530,7 +2532,7 @@ new Vue({
                     localStorage.setItem('pk_admin_session', '1');
                     await this.loadAllData();
                     database.ref('products').on('value', () => this.loadProducts());
-                    database.ref('orders').on('value', () => this.loadOrders());
+                    this.attachOrdersListener();
                     database.ref('users').on('value', () => this.loadUsers()); database.ref('users_email').on('value', () => this.loadUsers());
                     this.attachVipAdminListeners();
                     database.ref('banners').on('value', () => this.loadBanners());
@@ -3098,6 +3100,19 @@ new Vue({
                 async loadAllData() { this.loading = true; try { await Promise.all([this.loadProducts(), this.loadOrders(), this.loadUsers(), this.loadMembershipPlans().catch(e => { this.membershipPlans = []; console.error('VIP plan load failed:', e); }), this.loadVipMembershipRequests().catch(e => { this.vipMembershipRequests = []; console.error('VIP request load failed:', e); }), this.loadBanners(), this.loadAdminControls(), this.loadReturnRequests(), this.loadRiders(), this.loadStoreRooms(), this.loadWithdrawals()]); } finally { this.loading = false; } },
         async loadProducts() { const snap = await database.ref('products').once('value'); const d = snap.val(); this.products = d ? Object.keys(d).map(k => ({ id: k, ...d[k] })) : []; },
         async loadOrders() { const snap = await database.ref('orders').once('value'); const d = snap.val(); this.orders = d ? Object.keys(d).map(k => ({ id: k, ...d[k] })).reverse() : []; },
+        attachOrdersListener() {
+            if (!this._ordersRef) this._ordersRef = database.ref('orders');
+            if (!this._ordersListener) {
+                this._ordersListener = snap => {
+                    const data = snap.val();
+                    this.orders = data ? Object.keys(data).map(k => ({ id: k, ...data[k] })).reverse() : [];
+                };
+            }
+            this._ordersRef.off('value', this._ordersListener);
+            this._ordersRef.on('value', this._ordersListener, error => {
+                console.error('Live orders listener failed:', error);
+            });
+        },
         async loadUsers() { const [snap1, snap2] = await Promise.all([database.ref('users').once('value'), database.ref('users_email').once('value')]); const d1 = snap1.val(); const d2 = snap2.val(); this.users = d1 ? Object.keys(d1).map(k => ({ id: k, ...d1[k], type: 'mobile' })) : []; this.emailUsers = d2 ? Object.keys(d2).map(k => ({ id: k, ...d2[k], type: 'email' })) : []; },
         async loadMembershipPlans() {
             const snap = await database.ref('admin_settings/membership_plans').once('value');
@@ -4137,7 +4152,7 @@ new Vue({
                 this.adminLoggedIn = true;
                 await this.loadAllData();
                 database.ref('products').on('value', () => this.loadProducts());
-                database.ref('orders').on('value', () => this.loadOrders());
+                this.attachOrdersListener();
                 database.ref('users').on('value', () => this.loadUsers());
                 database.ref('users_email').on('value', () => this.loadUsers());
                 this.attachVipAdminListeners();
