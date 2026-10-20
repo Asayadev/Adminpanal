@@ -2404,8 +2404,12 @@ new Vue({
     computed: {
         userOrders() { if (!this.selectedUser) return []; const ph = this.selectedUser.phone || this.selectedUser.mobile || ''; const em = this.selectedUser.email || ''; return this.orders.filter(o => (ph && o.customerPhone === ph) || (em && o.customerEmail === em)); },
         allUsers() { return [...this.users, ...this.emailUsers]; },
-        vipMembers() {
-            return this.allUsers.filter(user => user.membership && typeof user.membership === 'object');
+                vipMembers() {
+            return this.allUsers.filter(user => {
+                if (!user || !user.membership) return false;
+                // Check if membership status is active or valid object
+                return typeof user.membership === 'object' && user.membership.status === 'active';
+            });
         },
         pendingVipRequests() {
             return this.vipMembershipRequests.filter(request => request.status === 'pending');
@@ -3303,11 +3307,19 @@ new Vue({
             if (!user) { this.showMessage('Customer profile not found. Use Manual Activate VIP after confirming the account.'); return; }
             if (!plan) { this.showMessage('The requested plan no longer exists. Select a current plan using Manual Activate VIP.'); return; }
 
-            this.loading = true;
+                  this.loading = true;
             try {
+                // 1. Membership activate karein
                 await this.activateVipCustomer(user, plan, request);
                 this.showMessage('✅ Payment verified and VIP membership activated!');
-                await Promise.all([this.loadUsers(), this.loadVipMembershipRequests()]);
+                
+                // 2. Safe background refresh (taki error popup na aaye)
+                try {
+                    await this.loadUsers();
+                    await this.loadVipMembershipRequests();
+                } catch (refreshErr) {
+                    console.warn('VIP active, background refresh delay:', refreshErr);
+                }
             } catch (e) {
                 console.error('Could not approve VIP request:', e);
                 this.showMessage('Could not activate membership. Check Firebase access.');
