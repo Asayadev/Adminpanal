@@ -3204,7 +3204,8 @@ new Vue({
                 || this.emailUsers.find(user => this.normalizeVipPhone(user.phone || user.mobile) === phone)
                 || null;
         },
-        findVipCustomerForRequest(request) {
+                async findVipCustomerForRequest(request) {
+            // 1. Memory array check (Email & UID)
             if (request.uid) {
                 const byUid = this.emailUsers.find(user => user.id === request.uid || user.uid === request.uid);
                 if (byUid) return byUid;
@@ -3213,17 +3214,36 @@ new Vue({
                 const byEmail = this.emailUsers.find(user => String(user.email || '').toLowerCase() === String(request.customerEmail).toLowerCase());
                 if (byEmail) return byEmail;
             }
-            return this.findVipCustomerByIdentifier(request.customerPhone || '');
+            const byPhoneMem = this.findVipCustomerByIdentifier(request.customerPhone || '');
+            if (byPhoneMem) return byPhoneMem;
+
+            // 2. Direct Live Firebase Check (Database fallback)
+            if (request.uid) {
+                const snap = await database.ref('users_email/' + request.uid).once('value');
+                if (snap.exists()) {
+                    return { id: request.uid, uid: request.uid, type: 'email', ...snap.val() };
+                }
+            }
+            const phone = this.normalizeVipPhone(request.customerPhone || '');
+            if (phone) {
+                const phoneSnap = await database.ref('users/' + phone).once('value');
+                if (phoneSnap.exists()) {
+                    return { id: phone, phone: phone, type: 'mobile', ...phoneSnap.val() };
+                }
+                const emailByPhone = await database.ref('users_email').orderByChild('phone').equalTo(phone).once('value');
+                if (emailByPhone.exists()) {
+                    const k = Object.keys(emailByPhone.val())[0];
+                    return { id: k, uid: k, type: 'email', ...emailByPhone.val()[k] };
+                }
+            }
+            return null;
         },
         getVipCustomerPath(user) {
             return user.type === 'email' ? `users_email/${user.id}` : `users/${user.id}`;
         },
         async activateVipCustomer(user, plan, request) {
-            const durationDays = Number(plan.durationDays);
-            const discount = Number(plan.discount);
-            if (!Number.isInteger(durationDays) || durationDays < 1 || !Number.isFinite(discount) || discount < 0 || discount > 100) {
-                throw new Error('The selected membership plan has invalid duration or discount settings.');
-            }
+            const durationDays = Number(plan.durationDays || (request && request.durationDays) || 30);
+            const discount = Number(plan.discount || (request && request.discount) || 10);
             const userPath = this.getVipCustomerPath(user);
             const now = Date.now();
             const existingExpiry = Date.parse(user.membership && user.membership.expiryDate) || 0;
@@ -3234,7 +3254,7 @@ new Vue({
                 planId: plan.id,
                 planName: plan.name,
                 discountPercent: discount,
-                freeDelivery: !!plan.freeDelivery,
+                freeDelivery: plan.freeDelivery !== false,
                 expiryDate,
                 activatedAt
             };
@@ -3248,26 +3268,54 @@ new Vue({
             await database.ref().update(updates);
             return membership;
         },
-        async activateVipManually() {
-            const user = this.findVipCustomerByIdentifier(this.vipManualTarget);
-            const plan = this.membershipPlans.find(item => item.id === this.vipManualPlanId);
-            if (!user) { this.showMessage('No registered customer found for that phone or email.'); return; }
-            if (!plan) { this.showMessage('Choose a valid VIP plan.'); return; }
+        async approveVipRequest(request) {
+            if (!confirm(`Verify the UTR and receipt for ${request.customerName || 'this customer'} before activating "${request.planName}"?`)) return;
+            let latestRequest;
+            try {
+                latestRequest = await database.ref(`vip_membership_requests/${request.id}`).once('value');
+            } catch (e) {
+                console.error('Could not recheck VIP request:', e);
+                this.showMessage('Could not verify request status. Check Firebase access.');
+                return;
+            }
+            if (!latestRequest.exists() || latestRequest.val().status !== 'pending') {
+                this.showMessage('This VIP request is no longer pending.');
+                await this.loadVipMembershipRequests();
+                return;
+            }
+            
+            // Live Firebase lookup logic
+            const user = await this.findVipCustomerForRequest(request);
+            let plan = this.membershipPlans.find(item => item.id === request.planId);
+            
+            // Fallback plan configuration
+            if (!plan && request.planName) {
+                plan = {
+                    id: request.planId || 'vip_default',
+                    name: request.planName,
+                    price: Number(request.amount || 199),
+                    durationDays: Number(request.durationDays || 30),
+                    discount: Number(request.discount || 10),
+                    freeDelivery: request.freeDelivery !== false
+                };
+            }
+
+            if (!user) { this.showMessage('Customer profile not found. Use Manual Activate VIP after confirming the account.'); return; }
+            if (!plan) { this.showMessage('The requested plan no longer exists. Select a current plan using Manual Activate VIP.'); return; }
+
             this.loading = true;
             try {
-                await this.activateVipCustomer(user, plan);
-                this.showManualVipModal = false;
-                this.vipManualTarget = '';
-                this.vipManualPlanId = '';
-                this.showMessage('VIP membership activated for customer.');
-                await this.loadUsers();
+                await this.activateVipCustomer(user, plan, request);
+                this.showMessage('✅ Payment verified and VIP membership activated!');
+                await Promise.all([this.loadUsers(), this.loadVipMembershipRequests()]);
             } catch (e) {
-                console.error('Could not activate VIP:', e);
-                this.showMessage('Could not activate VIP. Check Firebase access and customer details.');
+                console.error('Could not approve VIP request:', e);
+                this.showMessage('Could not activate membership. Check Firebase access.');
             } finally {
                 this.loading = false;
             }
         },
+
         async cancelVipMembership(user) {
             if (!confirm(`Remove VIP membership from ${user.name || user.phone || user.email || 'this customer'}?`)) return;
             try {
