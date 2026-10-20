@@ -2571,16 +2571,8 @@ new Vue({
                     this.adminLoginLoading = false;
                     this.adminLoggedIn = true;
                     localStorage.setItem('pk_admin_session', '1');
-                    await this.loadAllData();
-                    database.ref('products').on('value', () => this.loadProducts());
-                    this.attachOrdersListener();
-                    database.ref('users').on('value', () => this.loadUsers()); database.ref('users_email').on('value', () => this.loadUsers());
-                    this.attachVipAdminListeners();
-                    database.ref('banners').on('value', () => this.loadBanners());
-                    database.ref('return_requests').on('value', () => this.loadReturnRequests());
-                    database.ref('riders').on('value', () => this.loadRiders());
-                    database.ref('shopkeepers').on('value', () => this.loadStoreRooms());
-                    database.ref('withdrawal_requests').on('value', () => this.loadWithdrawals());
+                    this.startAllRealtimeListeners();
+                    try { await this.loadAllData(); } catch (e) { console.error('loadAllData failed:', e); }
                 })
                 .catch((error) => {
                     this.adminLoginLoading = false;
@@ -2595,6 +2587,7 @@ new Vue({
         },
         handleAdminLogout() {
             if (confirm('Admin logout karna chahte hain?')) {
+                this.stopAllRealtimeListeners();
                 this.stopVipAdminListeners();
                 this.stopRiderBalanceListeners();
                 auth.signOut().catch(() => {});
@@ -3153,6 +3146,45 @@ new Vue({
             this._ordersRef.on('value', this._ordersListener, error => {
                 console.error('Live orders listener failed:', error);
             });
+        },
+        // ===== REALTIME LISTENERS (single source of truth) =====
+        startAllRealtimeListeners() {
+            // Pehle purane listeners hata do taaki duplicate na bane
+            this.stopAllRealtimeListeners();
+
+            const listeners = [
+                ['orders', snap => {
+                    const data = snap.val();
+                    this.orders = data ? Object.keys(data).map(k => ({ id: k, ...data[k] })).reverse() : [];
+                }],
+                ['users', () => this.loadUsers()],
+                ['users_email', () => this.loadUsers()],
+                ['vip_membership_requests', () => this.loadVipMembershipRequests().catch(e => console.error('VIP request sync failed:', e))],
+                ['admin_settings/membership_plans', () => this.loadMembershipPlans().catch(e => console.error('VIP plan sync failed:', e))],
+                ['banners', () => this.loadBanners()],
+                ['riders', () => this.loadRiders()],
+                ['withdrawal_requests', () => this.loadWithdrawals()],
+                // Pehle se existing listeners — inko bhi preserve kiya
+                ['products', () => this.loadProducts()],
+                ['return_requests', () => this.loadReturnRequests()],
+                ['shopkeepers', () => this.loadStoreRooms()]
+            ];
+
+            this._rtListeners = [];
+            listeners.forEach(([path, callback]) => {
+                const ref = database.ref(path);
+                ref.off('value'); // is path ke saare purane 'value' listeners clear
+                ref.on('value', callback, error => {
+                    console.error(`Realtime listener failed for "${path}":`, error);
+                });
+                this._rtListeners.push({ path, ref, callback });
+            });
+        },
+        stopAllRealtimeListeners() {
+            (this._rtListeners || []).forEach(({ ref, callback }) => {
+                try { ref.off('value', callback); } catch (e) {}
+            });
+            this._rtListeners = [];
         },
         async loadUsers() { const [snap1, snap2] = await Promise.all([database.ref('users').once('value').catch(e => { console.error('users load failed:', e); return { val: () => null }; }), database.ref('users_email').once('value').catch(e => { console.error('users_email load failed:', e); return { val: () => null }; })]); const d1 = snap1.val(); const d2 = snap2.val(); this.users = d1 ? Object.keys(d1).map(k => ({ id: k, ...d1[k], type: 'mobile' })) : []; this.emailUsers = d2 ? Object.keys(d2).map(k => ({ id: k, ...d2[k], type: 'email' })) : []; },
         async loadMembershipPlans() {
@@ -4212,19 +4244,11 @@ new Vue({
         auth.onAuthStateChanged(async (user) => {
             if (user && localStorage.getItem('pk_admin_session')) {
                 this.adminLoggedIn = true;
-                await this.loadAllData();
-                database.ref('products').on('value', () => this.loadProducts());
-                this.attachOrdersListener();
-                database.ref('users').on('value', () => this.loadUsers());
-                database.ref('users_email').on('value', () => this.loadUsers());
-                this.attachVipAdminListeners();
-                database.ref('banners').on('value', () => this.loadBanners());
-                database.ref('return_requests').on('value', () => this.loadReturnRequests());
-                database.ref('riders').on('value', () => this.loadRiders());
-                database.ref('shopkeepers').on('value', () => this.loadStoreRooms());
-                database.ref('withdrawal_requests').on('value', () => this.loadWithdrawals());
+                this.startAllRealtimeListeners();
+                try { await this.loadAllData(); } catch (e) { console.error('loadAllData failed:', e); }
             } else if (!user) {
                 this.adminLoggedIn = false;
+                this.stopAllRealtimeListeners();
                 this.stopVipAdminListeners();
                 localStorage.removeItem('pk_admin_session');
             }
