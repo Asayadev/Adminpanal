@@ -934,7 +934,21 @@
 
                 <section class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
                     <div class="p-4 border-b"><h3 class="font-black text-gray-800 text-sm">VIP Members</h3><p class="text-[10px] text-gray-400 mt-0.5">Live membership status from customer profiles.</p></div>
-                    <div class="overflow-x-auto">
+                    <div class="md:hidden p-3 space-y-3">
+                        <div v-for="member in vipMembers" :key="'m'+member.type+member.id" class="rounded-2xl border border-gray-100 p-3 text-xs">
+                            <div class="flex justify-between items-start gap-2">
+                                <div class="min-w-0">
+                                    <p class="font-black text-gray-800 truncate">{{ member.name || 'Customer' }}</p>
+                                    <p class="text-[10px] text-gray-500 break-all">{{ member.phone || member.email || '—' }}</p>
+                                </div>
+                                <span :class="vipMemberStatus(member.membership) === 'ACTIVE' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'" class="px-2 py-1 rounded-full text-[9px] font-black">{{ vipMemberStatus(member.membership) }}</span>
+                            </div>
+                            <p class="mt-2 text-[11px]"><span class="font-semibold">{{ member.membership.planName || 'VIP Plan' }}</span> · {{ Number(member.membership.discountPercent || 0) }}% off · Expiry {{ formatVipExpiry(member.membership.expiryDate) }}</p>
+                            <button @click="cancelVipMembership(member)" class="mt-2 w-full bg-red-50 text-red-600 px-3 py-2 rounded-xl font-bold"><i class="fas fa-ban mr-1"></i>Cancel VIP</button>
+                        </div>
+                        <p v-if="!vipMembers.length" class="p-6 text-center text-gray-400 text-xs">No VIP memberships found.</p>
+                    </div>
+                    <div class="overflow-x-auto hidden md:block">
                         <table class="w-full text-xs min-w-[720px]">
                             <thead class="bg-gray-50 text-gray-500"><tr><th class="p-3 text-left">Customer</th><th class="p-3 text-left">Phone / Email</th><th class="p-3 text-left">Plan</th><th class="p-3 text-left">Discount</th><th class="p-3 text-left">Expiry Date</th><th class="p-3 text-left">Status</th><th class="p-3 text-right">Action</th></tr></thead>
                             <tbody>
@@ -955,7 +969,30 @@
 
                 <section class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
                     <div class="p-4 border-b"><h3 class="font-black text-gray-800 text-sm">Pending VIP Purchases</h3><p class="text-[10px] text-gray-400 mt-0.5">Verify the UPI receipt and transaction ID before activating a plan.</p></div>
-                    <div class="overflow-x-auto">
+                    <div class="md:hidden p-3 space-y-3">
+                        <div v-for="request in pendingVipRequests" :key="'m'+request.id" class="rounded-2xl border border-amber-200 bg-amber-50/50 p-3 text-xs">
+                            <div class="flex justify-between items-start gap-2">
+                                <div class="min-w-0">
+                                    <p class="font-black text-gray-800 truncate">{{ request.customerName || 'Customer' }}</p>
+                                    <p class="text-[10px] text-gray-500 break-all">{{ request.customerPhone || request.customerEmail || '—' }}</p>
+                                </div>
+                                <p class="font-black text-amber-700 text-sm">₹{{ Number(request.amount || 0).toFixed(2) }}</p>
+                            </div>
+                            <div class="mt-2 grid grid-cols-2 gap-2 text-[11px]">
+                                <div><p class="text-gray-400">Plan</p><p class="font-semibold">{{ request.planName }}</p></div>
+                                <div><p class="text-gray-400">Date</p><p class="font-semibold">{{ formatVipExpiry(request.requestedAt) }}</p></div>
+                                <div class="col-span-2"><p class="text-gray-400">UTR</p><p class="font-mono font-semibold break-all">{{ request.utrId }}</p></div>
+                            </div>
+                            <a v-if="request.receiptUrl" :href="request.receiptUrl" target="_blank" rel="noopener noreferrer" class="mt-2 inline-block text-blue-600 underline font-bold">View receipt</a>
+                            <span v-else class="mt-2 inline-block text-gray-400">No receipt</span>
+                            <div class="mt-3 flex gap-2">
+                                <button @click="approveVipRequest(request)" class="flex-1 bg-green-600 text-white px-3 py-2.5 rounded-xl font-bold"><i class="fas fa-check mr-1"></i>Approve &amp; Activate</button>
+                                <button @click="rejectVipRequest(request)" class="bg-red-50 text-red-600 px-4 py-2.5 rounded-xl font-bold">Reject</button>
+                            </div>
+                        </div>
+                        <p v-if="!pendingVipRequests.length" class="p-6 text-center text-gray-400 text-xs">No pending VIP purchase requests.</p>
+                    </div>
+                    <div class="overflow-x-auto hidden md:block">
                         <table class="w-full text-xs min-w-[760px]">
                             <thead class="bg-gray-50 text-gray-500"><tr><th class="p-3 text-left">Customer</th><th class="p-3 text-left">Plan</th><th class="p-3 text-left">Amount</th><th class="p-3 text-left">UTR</th><th class="p-3 text-left">Receipt</th><th class="p-3 text-left">Requested</th><th class="p-3 text-right">Review</th></tr></thead>
                             <tbody>
@@ -3117,7 +3154,7 @@ new Vue({
                 console.error('Live orders listener failed:', error);
             });
         },
-        async loadUsers() { const [snap1, snap2] = await Promise.all([database.ref('users').once('value'), database.ref('users_email').once('value')]); const d1 = snap1.val(); const d2 = snap2.val(); this.users = d1 ? Object.keys(d1).map(k => ({ id: k, ...d1[k], type: 'mobile' })) : []; this.emailUsers = d2 ? Object.keys(d2).map(k => ({ id: k, ...d2[k], type: 'email' })) : []; },
+        async loadUsers() { const [snap1, snap2] = await Promise.all([database.ref('users').once('value').catch(e => { console.error('users load failed:', e); return { val: () => null }; }), database.ref('users_email').once('value').catch(e => { console.error('users_email load failed:', e); return { val: () => null }; })]); const d1 = snap1.val(); const d2 = snap2.val(); this.users = d1 ? Object.keys(d1).map(k => ({ id: k, ...d1[k], type: 'mobile' })) : []; this.emailUsers = d2 ? Object.keys(d2).map(k => ({ id: k, ...d2[k], type: 'email' })) : []; },
         async loadMembershipPlans() {
             const snap = await database.ref('admin_settings/membership_plans').once('value');
             const data = snap.val() || {};
@@ -3339,44 +3376,9 @@ new Vue({
                 this.showMessage('Could not remove VIP membership. Check Firebase access.');
             }
         },
-        async approveVipRequest(request) {
-            if (!confirm(`Verify the UTR and receipt for ${request.customerName || 'this customer'} before activating "${request.planName}"?`)) return;
-            let latestRequest;
-            try {
-                latestRequest = await database.ref(`vip_membership_requests/${request.id}`).once('value');
-            } catch (e) {
-                console.error('Could not recheck VIP request:', e);
-                this.showMessage('Could not verify request status. Check Firebase access.');
-                return;
-            }
-            if (!latestRequest.exists() || latestRequest.val().status !== 'pending') {
-                this.showMessage('This VIP request is no longer pending.');
-                await this.loadVipMembershipRequests();
-                return;
-            }
-            const user = this.findVipCustomerForRequest(request);
-            const plan = this.membershipPlans.find(item => item.id === request.planId);
-            if (!user) { this.showMessage('Customer profile not found. Use Manual Activate VIP after confirming the account.'); return; }
-            if (!plan) { this.showMessage('The requested plan no longer exists. Select a current plan using Manual Activate VIP.'); return; }
-            if (!Number.isFinite(Number(request.amount)) || Math.round((Number(request.amount) - Number(plan.price)) * 100) !== 0) {
-                this.showMessage('The plan price changed since this request. Verify the payment and use Manual Activate VIP if appropriate.');
-                return;
-            }
-            this.loading = true;
-            try {
-                await this.activateVipCustomer(user, plan, request);
-                this.showMessage('Payment verified and VIP membership activated.');
-                await Promise.all([this.loadUsers(), this.loadVipMembershipRequests()]);
-            } catch (e) {
-                console.error('Could not approve VIP request:', e);
-                this.showMessage('Could not activate membership. Check Firebase access.');
-            } finally {
-                this.loading = false;
-            }
-        },
         async rejectVipRequest(request) {
             if (!confirm(`Reject the VIP purchase request from ${request.customerName || 'this customer'}?`)) return;
-            const user = this.findVipCustomerForRequest(request);
+            const user = await this.findVipCustomerForRequest(request);
             const reviewedAt = new Date().toISOString();
             const updates = {
                 [`vip_membership_requests/${request.id}/status`]: 'rejected',
