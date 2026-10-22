@@ -789,6 +789,99 @@
                         <p class="text-[10px] text-red-300 mt-1">Rider cancelled</p>
                     </div>
                 </div>
+<!-- ==================== AAJ KA LIVE SALES DASHBOARD ==================== -->
+<div class="mb-6 bg-gradient-to-br from-slate-900 to-indigo-950 rounded-2xl p-4 sm:p-5 text-white shadow-xl border border-indigo-800/40">
+    <div class="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 pb-3 mb-4">
+        <div class="flex items-center gap-2.5">
+            <span class="w-9 h-9 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-base">
+                <i class="fas fa-calendar-day"></i>
+            </span>
+            <div>
+                <h3 class="text-base font-black tracking-wide">Aaj Ka Live Sales Report (Today)</h3>
+                <p class="text-[10px] text-gray-300">Live summary of today's total sold items, weight & machines</p>
+            </div>
+        </div>
+        <span class="text-[11px] font-black bg-emerald-500 text-white px-3 py-1 rounded-full shadow-sm animate-pulse">
+            <i class="fas fa-circle text-[8px] mr-1"></i> LIVE TODAY
+        </span>
+    </div>
+
+    <!-- 4 Summary Cards -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+        <div class="bg-white/10 rounded-xl p-3 border border-white/10">
+            <p class="text-[10px] uppercase font-bold text-gray-300">Aaj Ki Total Sale</p>
+            <p class="text-xl sm:text-2xl font-black text-emerald-400 mt-0.5">₹{{ todaySalesSummary.totalAmount.toFixed(2) }}</p>
+            <p class="text-[9px] text-gray-400">{{ todaySalesSummary.totalOrdersCount }} orders processed</p>
+        </div>
+
+        <div class="bg-white/10 rounded-xl p-3 border border-white/10">
+            <p class="text-[10px] uppercase font-bold text-gray-300">Sabzi / Kirana Total KG</p>
+            <p class="text-xl sm:text-2xl font-black text-amber-400 mt-0.5">{{ todaySalesSummary.totalKgWeight }} <span class="text-xs">KG</span></p>
+            <p class="text-[9px] text-gray-400">Total weight sold</p>
+        </div>
+
+        <div class="bg-white/10 rounded-xl p-3 border border-white/10">
+            <p class="text-[10px] uppercase font-bold text-gray-300">Kisan Machinery / Tools</p>
+            <p class="text-xl sm:text-2xl font-black text-cyan-400 mt-0.5">{{ todaySalesSummary.totalMachinesCount }} <span class="text-xs">Pcs</span></p>
+            <p class="text-[9px] text-gray-400">Pumps, sprayers & parts</p>
+        </div>
+
+        <div class="bg-white/10 rounded-xl p-3 border border-white/10">
+            <p class="text-[10px] uppercase font-bold text-gray-300">Total Items Count</p>
+            <p class="text-xl sm:text-2xl font-black text-purple-300 mt-0.5">
+                {{ todaySalesSummary.vegKiranaList.length + todaySalesSummary.machineList.length }} <span class="text-xs">Items</span>
+            </p>
+            <p class="text-[9px] text-gray-400">Distinct products</p>
+        </div>
+    </div>
+
+    <!-- Detailed Lists -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+        <!-- Sabzi / Kirana List -->
+        <div class="bg-white/5 rounded-xl p-3 border border-white/10">
+            <p class="text-[11px] font-black text-amber-300 mb-2 flex items-center gap-1.5">
+                <i class="fas fa-carrot"></i> Sabzi & Kirana Items (Kitna Bika)
+            </p>
+            <div v-if="todaySalesSummary.vegKiranaList.length === 0" class="text-gray-400 text-[11px] py-4 text-center">
+                Aaj abhi tak koi sabzi ya kirana order nahi aaya.
+            </div>
+            <div v-else class="space-y-1.5 max-h-48 overflow-y-auto pr-1">
+                <div v-for="it in todaySalesSummary.vegKiranaList" :key="it.name" class="flex justify-between items-center bg-white/10 px-2.5 py-1.5 rounded-lg">
+                    <div class="min-w-0 flex-1">
+                        <p class="font-bold text-gray-100 truncate text-[11px]">{{ it.name }}</p>
+                        <span v-if="it.kg > 0" class="text-[9px] text-amber-300 font-bold bg-amber-500/20 px-1.5 py-0.5 rounded">
+                            ⚖️ {{ it.kg }} KG
+                        </span>
+                        <span v-else class="text-[9px] text-gray-300">Qty: {{ it.qty }}</span>
+                    </div>
+                    <span class="font-black text-emerald-400 text-xs ml-2">₹{{ it.totalRevenue.toFixed(0) }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Kisan Machine List -->
+        <div class="bg-white/5 rounded-xl p-3 border border-white/10">
+            <p class="text-[11px] font-black text-cyan-300 mb-2 flex items-center gap-1.5">
+                <i class="fas fa-tools"></i> Kisan Machine & Tools (Kaun Kaun Si Biki)
+            </p>
+            <div v-if="todaySalesSummary.machineList.length === 0" class="text-gray-400 text-[11px] py-4 text-center">
+                Aaj abhi tak koi machine ya tool nahi bika.
+            </div>
+            <div v-else class="space-y-1.5 max-h-48 overflow-y-auto pr-1">
+                <div v-for="it in todaySalesSummary.machineList" :key="it.name" class="flex justify-between items-center bg-white/10 px-2.5 py-1.5 rounded-lg">
+                    <div class="min-w-0 flex-1">
+                        <p class="font-bold text-gray-100 truncate text-[11px]">{{ it.name }}</p>
+                        <span class="text-[9px] text-cyan-300 font-bold bg-cyan-500/20 px-1.5 py-0.5 rounded">
+                            ⚙️ {{ it.qty }} Units / Piece
+                        </span>
+                    </div>
+                    <span class="font-black text-emerald-400 text-xs ml-2">₹{{ it.totalRevenue.toFixed(0) }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- ==================== END AAJ KA LIVE SALES ==================== -->
                 <!-- ===== TOP SELLING PRODUCTS & TOP SELLERS ANALYTICS ROW ===== -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
 
@@ -2439,6 +2532,77 @@ new Vue({
         }
     },
     computed: {
+        todaySalesSummary() {
+            const todayStr = new Date().toDateString();
+            
+            let totalAmount = 0;
+            let totalOrdersCount = 0;
+            let totalKgWeight = 0;
+            let totalMachinesCount = 0;
+
+            const vegKiranaItems = {};
+            const machineItems = {};
+
+            const machineKeywords = ['machine', 'spray', 'pump', 'motor', 'pipe', 'cutter', 'torch', 'tirpal', 'valve'];
+
+            this.orders.forEach(order => {
+                if (order.status === 'cancelled' || order.status === 'rejected') return;
+
+                const checkDate = order.deliveredAt ? new Date(order.deliveredAt) : (order.date ? new Date(order.date) : null);
+                if (!checkDate || checkDate.toDateString() !== todayStr) return;
+
+                totalOrdersCount++;
+                totalAmount += Number(order.total || 0);
+
+                if (order.items && Array.isArray(order.items)) {
+                    order.items.forEach(item => {
+                        const name = (item.name || '').trim();
+                        const qty = Number(item.quantity || 1);
+                        const price = Number(item.price || 0) * qty;
+                        const lowerName = name.toLowerCase();
+
+                        const isMachine = machineKeywords.some(kw => lowerName.includes(kw));
+
+                        if (isMachine) {
+                            totalMachinesCount += qty;
+                            if (!machineItems[name]) {
+                                machineItems[name] = { name, qty: 0, totalRevenue: 0 };
+                            }
+                            machineItems[name].qty += qty;
+                            machineItems[name].totalRevenue += price;
+                        } else {
+                            let itemKg = 0;
+                            const kgMatch = lowerName.match(/(\d+(\.\d+)?)\s*kg/i);
+                            const gmMatch = lowerName.match(/(\d+)\s*g(ram)?/i);
+
+                            if (kgMatch) {
+                                itemKg = parseFloat(kgMatch[1]) * qty;
+                            } else if (gmMatch) {
+                                itemKg = (parseFloat(gmMatch[1]) / 1000) * qty;
+                            }
+
+                            totalKgWeight += itemKg;
+
+                            if (!vegKiranaItems[name]) {
+                                vegKiranaItems[name] = { name, qty: 0, kg: 0, totalRevenue: 0 };
+                            }
+                            vegKiranaItems[name].qty += qty;
+                            vegKiranaItems[name].kg += itemKg;
+                            vegKiranaItems[name].totalRevenue += price;
+                        }
+                    });
+                }
+            });
+
+            return {
+                totalAmount,
+                totalOrdersCount,
+                totalKgWeight: Number(totalKgWeight.toFixed(2)),
+                totalMachinesCount,
+                vegKiranaList: Object.values(vegKiranaItems),
+                machineList: Object.values(machineItems)
+            };
+        },
         userOrders() { if (!this.selectedUser) return []; const ph = this.selectedUser.phone || this.selectedUser.mobile || ''; const em = this.selectedUser.email || ''; return this.orders.filter(o => (ph && o.customerPhone === ph) || (em && o.customerEmail === em)); },
         allUsers() { return [...this.users, ...this.emailUsers]; },
                 vipMembers() {
