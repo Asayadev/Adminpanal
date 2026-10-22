@@ -2790,15 +2790,21 @@ new Vue({
                     }
                 });
         },
-        handleAdminLogout() {
+                handleAdminLogout() {
             if (confirm('Admin logout karna chahte hain?')) {
-                this.stopAllRealtimeListeners();
-                this.stopVipAdminListeners();
-                this.stopRiderBalanceListeners();
+                try {
+                    if (typeof this.stopAllRealtimeListeners === 'function') this.stopAllRealtimeListeners();
+                    if (typeof this.stopRiderBalanceListeners === 'function') this.stopRiderBalanceListeners();
+                } catch (e) {
+                    console.warn(e);
+                }
+                
                 auth.signOut().catch(() => {});
                 localStorage.removeItem('pk_admin_session');
                 this.adminLoggedIn = false;
                 this.adminLoginForm = { email: '', password: '' };
+                this.mobileMenuOpen = false;
+                window.location.reload();
             }
         },
         getDriveImageUrl(url) {
