@@ -425,17 +425,20 @@
                 </div>
             </div>
             <div class="space-y-3 text-xs">
-                <div>
-                    <label class="block font-bold text-gray-700 mb-1.5">Add to Wallet (₹)</label>
-                    <div class="flex gap-2">
-                        <input type="number" v-model="rewardAmount" min="0.01" step="0.01" placeholder="e.g. 50" class="min-w-0 flex-1 border-2 border-green-300 p-3 rounded-xl text-sm font-bold text-green-700 outline-none focus:border-green-500" @keyup.enter="giveReward">
-                        <button @click="giveReward" :disabled="rewardLoading || !rewardAmount" class="shrink-0 bg-green-600 hover:bg-green-700 disabled:bg-green-300 text-white px-3 rounded-xl font-bold text-xs flex items-center justify-center gap-1">
-                            <i v-if="rewardLoading" class="fas fa-circle-notch fa-spin"></i>
-                            <i v-else class="fas fa-wallet"></i>
-                            {{ rewardLoading ? 'Adding...' : 'Add ₹' }}
-                        </button>
-                    </div>
-                </div>
+                <div class="rounded-xl border border-green-200 bg-green-50/50 p-3">
+    <label class="block font-black text-green-900 mb-1.5 text-xs"><i class="fas fa-wallet text-green-600 mr-1"></i> Adjust Wallet Cashback (₹)</label>
+    <input type="number" v-model="rewardAmount" min="0.01" step="0.01" placeholder="e.g. 50" class="w-full border border-green-300 bg-white p-2.5 rounded-lg text-sm font-bold text-green-800 outline-none focus:border-green-500">
+    <div class="flex gap-2 mt-2">
+        <button @click="adjustWalletCashback('add')" :disabled="rewardLoading || !rewardAmount" class="flex-1 bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white py-2.5 rounded-lg font-black text-xs transition flex items-center justify-center gap-1">
+            <i v-if="rewardLoading" class="fas fa-circle-notch fa-spin"></i>
+            <i v-else class="fas fa-plus mr-0.5"></i> Add ₹
+        </button>
+        <button @click="adjustWalletCashback('deduct')" :disabled="rewardLoading || !rewardAmount" class="flex-1 bg-red-500 hover:bg-red-600 disabled:opacity-50 text-white py-2.5 rounded-lg font-black text-xs transition flex items-center justify-center gap-1">
+            <i v-if="rewardLoading" class="fas fa-circle-notch fa-spin"></i>
+            <i v-else class="fas fa-minus mr-0.5"></i> Deduct ₹
+        </button>
+    </div>
+</div>
                 <div class="rounded-xl border border-amber-200 bg-amber-50 p-3">
                     <div class="flex items-center justify-between mb-2">
                         <label class="font-black text-amber-900"><i class="fas fa-star text-amber-500 mr-1"></i> Adjust Reward Points</label>
@@ -3177,57 +3180,63 @@ new Vue({
         },
         closeRewardModal() { this.showRewardModal = false; this.rewardUser = null; this.rewardAmount = ''; this.rewardNote = ''; this.rewardPointsAmount = ''; },
 
-        async giveReward() {
+                async adjustWalletCashback(direction) {
             const amt = parseFloat(this.rewardAmount);
-            if (!amt || amt <= 0) { this.showMessage('Reward amount sahi daalo!'); return; }
+            if (!amt || amt <= 0) { this.showMessage('Amount sahi daalo!'); return; }
             if (!this.rewardUser) return;
+
+            const user = this.rewardUser;
+            let cashbackPath = null;
+
+            if (user.type === 'mobile' && user.id) {
+                cashbackPath = `users/${user.id}/cashback`;
+            } else if (user.type === 'email' && user.id) {
+                cashbackPath = `users_email/${user.id}/cashback`;
+            }
+
+            if (!cashbackPath) { this.showMessage('User path nahi mila!'); return; }
+
             this.rewardLoading = true;
             try {
-                const user = this.rewardUser;
-                let cashbackPath = null;
+                const snap = await database.ref(cashbackPath).once('value');
+                const currentBal = Number(snap.val() || 0);
 
-                if (user.type === 'mobile' && user.id) {
-                    cashbackPath = `users/${user.id}/cashback`;
-                } else if (user.type === 'email' && user.id) {
-                    cashbackPath = `users_email/${user.id}/cashback`;
+                if (direction === 'deduct' && currentBal < amt) {
+                    this.showMessage(`❌ Balance kam hai! Current wallet: ₹${currentBal.toFixed(2)}`);
+                    this.rewardLoading = false;
+                    return;
                 }
 
-                if (!cashbackPath) { this.showMessage('User path nahi mila!'); return; }
-
-                const snap = await database.ref(cashbackPath).once('value');
-                const newBal = Number(snap.val() || 0) + amt;
+                const newBal = direction === 'add' ? (currentBal + amt) : Math.max(0, currentBal - amt);
                 await database.ref(cashbackPath).set(newBal);
 
-                // reward_history alag try-catch mein — fail ho toh cashback block na ho
                 try {
-                    await database.ref(`reward_history`).push({
+                    await database.ref('reward_history').push({
                         userId: user.id,
+                        userType: user.type || '',
                         userName: user.name || '',
                         userPhone: user.phone || '',
                         userEmail: user.email || '',
+                        kind: 'cashback',
+                        direction,
                         amount: amt,
-                        note: this.rewardNote || '',
+                        previousBalance: currentBal,
                         newBalance: newBal,
+                        note: this.rewardNote || '',
                         addedAt: new Date().toISOString(),
                         addedBy: 'admin'
                     });
                 } catch(histErr) {
-                    // history save na ho toh bhi cashback already credit ho chuka hai
-                    console.warn('Reward history save nahi hua:', histErr.message);
+                    console.warn('History save issue:', histErr.message);
                 }
 
-                // Local user object update karo
                 this.rewardUser = { ...this.rewardUser, cashback: newBal };
-
-                this.showMessage(`✅ ₹${amt.toFixed(2)} reward ${user.name || user.phone}'s wallet me add ho gaya! New Balance: ₹${newBal.toFixed(2)}`);
+                const actionWord = direction === 'add' ? 'add ho gaye' : 'deduct ho gaye';
+                this.showMessage(`✅ ₹${amt.toFixed(2)} ${actionWord}! New Wallet: ₹${newBal.toFixed(2)}`);
                 await this.loadUsers();
                 this.closeRewardModal();
             } catch(e) {
-                if (e.code === 'PERMISSION_DENIED' || (e.message && e.message.includes('PERMISSION_DENIED'))) {
-                    this.showMessage('❌ Permission denied! Firebase Rules check karo ya admin node mein apna UID add karo.');
-                } else {
-                    this.showMessage('Error: ' + e.message);
-                }
+                this.showMessage('Error: ' + e.message);
             } finally {
                 this.rewardLoading = false;
             }
