@@ -4367,61 +4367,82 @@ new Vue({
             this.createStoreForm = { shopName: '', mobile: '', email: '', password: '', confirmPassword: '' };
             this.showCreateStorePwd = false;
         },
-        async submitCreateStore() {
+                async submitCreateStore() {
             this.createStoreError = '';
             this.createStoreSuccess = '';
             const { shopName, mobile, email, password, confirmPassword } = this.createStoreForm;
 
-            // Validations
-            if (!shopName.trim())               { this.createStoreError = '❌ Shop Name zaroori hai.'; return; }
-            if (!mobile.trim() || mobile.trim().replace(/\D/g,'').length < 10) { this.createStoreError = '❌ Valid 10-digit mobile number daalo.'; return; }
-            if (!email.trim())                  { this.createStoreError = '❌ Gmail address zaroori hai.'; return; }
-            if (!/^[^@]+@[^@]+\.[^@]+$/.test(email.trim())) { this.createStoreError = '❌ Valid Gmail format daalo.'; return; }
-            if (password.length < 6)            { this.createStoreError = '❌ Password kam se kam 6 characters ka hona chahiye.'; return; }
-            if (password !== confirmPassword)   { this.createStoreError = '❌ Dono passwords match nahi kar rahe.'; return; }
+            // 1. Basic Validations
+            if (!shopName || !shopName.trim()) { 
+                this.createStoreError = '❌ Shop Name zaroori hai.'; return; 
+            }
+            if (!mobile || mobile.trim().replace(/\D/g,'').length < 10) { 
+                this.createStoreError = '❌ Valid 10-digit mobile number daalo.'; return; 
+            }
+            const cleanEmail = (email || '').trim().toLowerCase();
+            if (!cleanEmail) { 
+                this.createStoreError = '❌ Gmail address zaroori hai.'; return; 
+            }
+            if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(cleanEmail)) { 
+                this.createStoreError = '❌ Gmail format sahi nahi hai.'; return; 
+            }
+            if (!password || password.length < 6) { 
+                this.createStoreError = '❌ Password kam se kam 6 characters ka hona chahiye.'; return; 
+            }
+            if (password !== confirmPassword) { 
+                this.createStoreError = '❌ Dono passwords match nahi kar rahe.'; return; 
+            }
 
-            // Duplicate shop name check
+            // 2. Duplicate shop name check
             const exists = this.storeRooms.find(s => (s.shopName || '').toLowerCase() === shopName.trim().toLowerCase());
-            if (exists) { this.createStoreError = '❌ Is naam ka store pehle se exist karta hai.'; return; }
+            if (exists) { 
+                this.createStoreError = '❌ Is naam ka store pehle se exist karta hai.'; return; 
+            }
 
             this.createStoreLoading = true;
             try {
-                // Firebase Auth mein naya user create karo
-                const cred = await auth.createUserWithEmailAndPassword(email.trim(), password);
+                // Secondary app instance taaki Admin ka apna session logout na ho
+                let secondaryApp = firebase.apps.find(a => a.name === 'SecondaryStoreApp');
+                if (!secondaryApp) {
+                    secondaryApp = firebase.initializeApp(firebaseConfig, 'SecondaryStoreApp');
+                }
+
+                // Naya store user banayein
+                const cred = await secondaryApp.auth().createUserWithEmailAndPassword(cleanEmail, password);
                 const uid = cred.user.uid;
                 await cred.user.updateProfile({ displayName: shopName.trim() });
+                await secondaryApp.auth().signOut();
 
-                // Store data prepare
+                // Store details database mein save karein
                 const storeData = {
                     uid,
                     shopName:  shopName.trim(),
                     mobile:    mobile.trim(),
-                    email:     email.trim(),
+                    email:     cleanEmail,
                     password:  password,
                     createdAt: new Date().toISOString(),
-                    lastLogin:  '',
+                    lastLogin: '',
                     blocked:   false
                 };
 
-                // shopkeepers_email node mein save karo (uid se key)
                 await database.ref('shopkeepers_email/' + uid).set(storeData);
-
-                // shopkeepers node mein bhi save karo (safe shopName key)
                 const safeKey = shopName.trim().replace(/[.#$[\]]/g, '_');
                 await database.ref('shopkeepers/' + safeKey).set(storeData);
 
-                // createUserWithEmailAndPassword ke baad Firebase naye user ke session mein chala jaata hai
-                // Admin ka session restore karo
-                await auth.signInWithEmailAndPassword(this.adminLoginForm.email, this.adminLoginForm.password);
-
-                this.createStoreSuccess = `✅ "${shopName.trim()}" ka account ban gaya! Email: ${email.trim()}`;
+                this.createStoreSuccess = `✅ "${shopName.trim()}" ka account ban gaya! Email: ${cleanEmail}`;
                 this.createStoreForm = { shopName: '', mobile: '', email: '', password: '', confirmPassword: '' };
-                setTimeout(() => { this.createStoreSuccess = ''; }, 8000);
+                await this.loadStoreRooms();
+                setTimeout(() => { this.createStoreSuccess = ''; }, 6000);
             } catch(e) {
-                if (e.code === 'auth/email-already-in-use') this.createStoreError = '❌ Yeh Gmail pehle se Firebase mein registered hai.';
-                else if (e.code === 'auth/invalid-email')   this.createStoreError = '❌ Gmail format sahi nahi hai.';
-                else if (e.code === 'auth/weak-password')   this.createStoreError = '❌ Password zyada strong banao (6+ characters).';
-                else this.createStoreError = '❌ ' + e.message;
+                if (e.code === 'auth/email-already-in-use') {
+                    this.createStoreError = '❌ Yeh Gmail pehle se registered hai.';
+                } else if (e.code === 'auth/invalid-email') {
+                    this.createStoreError = '❌ Gmail format sahi nahi hai.';
+                } else if (e.code === 'auth/weak-password') {
+                    this.createStoreError = '❌ Password zyada strong banao (6+ characters).';
+                } else {
+                    this.createStoreError = '❌ ' + e.message;
+                }
             } finally {
                 this.createStoreLoading = false;
             }
