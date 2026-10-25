@@ -1651,6 +1651,15 @@
                                     <span class="text-amber-600 font-semibold flex items-center gap-1"><i class="fas fa-motorcycle text-[10px]"></i> Delivery Charge</span>
                                     <span class="font-bold text-amber-700">+₹{{ Number(order.deliveryCharge).toFixed(2) }}</span>
                                 </div>
+<div v-if="Number(order.couponDiscount) > 0" class="flex justify-between items-center px-3 py-2 border-b border-gray-100 bg-pink-50">
+    <span class="text-pink-700 font-bold flex items-center gap-1.5">
+        <span class="inline-flex items-center gap-1 bg-pink-100 text-pink-700 px-2 py-0.5 rounded-full text-[10px] font-black">
+            <i class="fas fa-ticket-alt text-[9px]"></i> Coupon ({{ order.couponCode || 'APPLIED' }})
+        </span>
+    </span>
+    <span class="font-black text-pink-700">-₹{{ Number(order.couponDiscount).toFixed(2) }}</span>
+</div>
+
                                 <div v-if="Number(order.cashbackUsed) > 0" class="flex justify-between items-center px-3 py-2 border-b border-gray-100 bg-green-50">
                                     <span class="text-green-700 font-bold flex items-center gap-1.5">
                                         <span class="inline-flex items-center gap-1 bg-green-100 text-green-700 px-2 py-0.5 rounded-full text-[10px] font-black"><i class="fas fa-wallet text-[9px]"></i> Cashback Applied</span>
