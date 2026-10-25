@@ -1784,13 +1784,20 @@
                     </div>
                     <p class="text-[10px] text-emerald-600 mt-2"><i class="fas fa-info-circle mr-1"></i>Rate save hote hi sab riders ke panel me automatically update ho jayega</p>
                 </div>
+            <!-- 🔍 RIDER SEARCH BAR -->
+            <div class="bg-white rounded-xl shadow-sm p-3 border border-gray-100">
+                <div class="relative">
+                    <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
+                    <input type="text" v-model="riderSearch" placeholder="Rider naam, phone ya email se search karein..." class="w-full pl-9 pr-3 py-2 border border-gray-200 rounded-xl text-xs outline-none focus:border-emerald-500 bg-gray-50/50">
+                </div>
+            </div>
 
-                <div v-if="riders.length === 0" class="text-center py-12 bg-white rounded-xl text-gray-400 text-xs">
+                <div v-if="filteredRiders.length === 0" class="text-center py-12 bg-white rounded-xl text-gray-400 text-xs border">
                     No registered delivery boys found.
                 </div>
 
                 <div v-else class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div v-for="rider in riders" :key="rider.id" class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 flex flex-col justify-between">
+                    <div v-for="rider in filteredRiders" :key="rider.id" class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 flex flex-col justify-between">
                         <div>
                             <div class="flex justify-between items-start border-b pb-2.5">
                                 <div class="flex items-center gap-3">
@@ -2112,14 +2119,38 @@
                         <span class="bg-green-100 text-green-700 px-2 py-1 rounded-lg">✅ {{ withdrawals.filter(w=>w.status==='approved').length }} Approved</span>
                     </div>
                 </div>
-
-                <div v-if="withdrawals.length === 0" class="text-center py-16 bg-white rounded-2xl text-gray-400 text-sm border">
-                    <i class="fas fa-wallet text-4xl mb-3 opacity-30"></i>
-                    <p>No withdrawal requests yet</p>
+            <!-- 🔍 SEARCH BAR & FILTER BUTTONS -->
+            <div class="bg-white rounded-xl shadow-sm p-3 mb-4 space-y-2.5 border border-gray-100">
+                <div class="relative">
+                    <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
+                    <input type="text" v-model="withdrawalSearch" placeholder="Rider naam, phone ya UPI ID se search..." class="w-full pl-9 pr-3 py-2 border border-gray-200 rounded-xl text-xs outline-none focus:border-indigo-500 bg-gray-50/50">
                 </div>
+                <div class="flex flex-wrap gap-1.5 text-xs">
+                    <button @click="withdrawalStatusFilter = 'all'" :class="withdrawalStatusFilter === 'all' ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-600'" class="px-3 py-1 rounded-full font-bold text-[11px] transition">
+                        All ({{ withdrawals.length }})
+                    </button>
+                    <button @click="withdrawalStatusFilter = 'pending'" :class="withdrawalStatusFilter === 'pending' ? 'bg-yellow-500 text-white' : 'bg-yellow-50 text-yellow-700 border border-yellow-200'" class="px-2.5 py-1 rounded-full font-bold text-[11px] transition">
+                        ⏳ Pending ({{ withdrawals.filter(w=>w.status==='pending').length }})
+                    </button>
+                    <button @click="withdrawalStatusFilter = 'approved'" :class="withdrawalStatusFilter === 'approved' ? 'bg-green-600 text-white' : 'bg-green-50 text-green-700 border border-green-200'" class="px-2.5 py-1 rounded-full font-bold text-[11px] transition">
+                        ✅ Approved ({{ withdrawals.filter(w=>w.status==='approved').length }})
+                    </button>
+                    <button @click="withdrawalStatusFilter = 'rejected'" :class="withdrawalStatusFilter === 'rejected' ? 'bg-red-600 text-white' : 'bg-red-50 text-red-700 border border-red-200'" class="px-2.5 py-1 rounded-full font-bold text-[11px] transition">
+                        ❌ Rejected ({{ withdrawals.filter(w=>w.status==='rejected').length }})
+                    </button>
+                </div>
+            </div>
 
-                <div v-else class="space-y-3">
-                    <div v-for="req in withdrawals" :key="req.id" class="bg-white rounded-2xl shadow-sm border overflow-hidden transition hover:shadow-md">
+            <!-- Empty Search Result -->
+            <div v-if="filteredWithdrawals.length === 0" class="text-center py-16 bg-white rounded-2xl text-gray-400 text-sm border">
+                <i class="fas fa-search text-3xl mb-2 opacity-30"></i>
+                <p>Koi withdrawal request match nahi hui</p>
+            </div>
+
+            <!-- Loop filteredWithdrawals par -->
+            <div v-else class="space-y-3">
+                <div v-for="req in filteredWithdrawals" :key="req.id" class="bg-white rounded-2xl shadow-sm border overflow-hidden transition hover:shadow-md">
+
                         <div class="flex items-center justify-between px-4 py-3 border-b" :class="{
                             'bg-yellow-50': req.status === 'pending',
                             'bg-green-50': req.status === 'approved',
@@ -2571,6 +2602,7 @@ new Vue({
         banners: [],
         returns: [], 
         riders: [],
+        riderSearch: '',
         riderBalances: {},
         _riderBalanceRefs: {},
         _riderBalanceCallbacks: {},
@@ -2615,6 +2647,8 @@ new Vue({
         perDeliveryRateInput: 40,
         podPhotoModal: null,
         withdrawals: [],
+        withdrawalSearch: '',
+        withdrawalStatusFilter: 'all',
         receiptModalUrl: '',
         showReceiptModal: false,
         showPayoutModal: false,
@@ -2638,7 +2672,35 @@ new Vue({
         },
         monthlySalesChartInstance: null
     },
-  computed: {
+      computed: {
+        filteredRiders() {
+            if (!this.riderSearch || !this.riderSearch.trim()) {
+                return this.riders;
+            }
+            const s = this.riderSearch.trim().toLowerCase();
+            return this.riders.filter(r => 
+                (r.name && r.name.toLowerCase().includes(s)) ||
+                (r.phone && String(r.phone).includes(s)) ||
+                (r.email && r.email.toLowerCase().includes(s))
+            );
+        },
+        filteredWithdrawals() {
+            let list = this.withdrawals || [];
+            if (this.withdrawalStatusFilter !== 'all') {
+                list = list.filter(w => String(w.status || '').toLowerCase() === this.withdrawalStatusFilter.toLowerCase());
+            }
+            if (this.withdrawalSearch && this.withdrawalSearch.trim()) {
+                const s = this.withdrawalSearch.trim().toLowerCase();
+                list = list.filter(w => 
+                    (w.riderName && w.riderName.toLowerCase().includes(s)) ||
+                    (w.riderPhone && String(w.riderPhone).includes(s)) ||
+                    (w.upiId && w.upiId.toLowerCase().includes(s)) ||
+                    (w.amount && String(w.amount).includes(s))
+                );
+            }
+            return list;
+        },
+
 monthlyChartTotalRevenue() {
             const data = this.getMonthlySalesData();
             return data.revenues.reduce((sum, val) => sum + val, 0);
