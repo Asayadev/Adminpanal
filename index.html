@@ -751,6 +751,8 @@
                     <button @click="changePage('addProduct')" :class="{'nav-active': currentPage=='addProduct'}" class="w-full text-left px-3 py-2 rounded-lg flex items-center gap-2 text-sm font-medium"><i class="fas fa-plus-circle w-4"></i> Add New Product</button>
                     <button @click="changePage('storeRooms')" :class="{'nav-active': currentPage=='storeRooms'}" class="w-full text-left px-3 py-2 rounded-lg flex items-center gap-2 text-sm font-medium"><i class="fas fa-warehouse w-4 text-blue-600"></i> Store Rooms</button>
                     <button @click="changePage('banners')" :class="{'nav-active': currentPage=='banners'}" class="w-full text-left px-3 py-2 rounded-lg flex items-center gap-2 text-sm font-medium"><i class="fas fa-images w-4"></i> Banners</button>
+                    <button @click="changePage('coupons')" :class="{'nav-active': currentPage=='coupons'}" class="w-full text-left px-3 py-2 rounded-lg flex items-center gap-2 text-sm font-medium"><i class="fas fa-ticket-alt w-4 text-pink-500"></i> Promo Coupons</button>
+
                     <button @click="changePage('categories')" :class="{'nav-active': currentPage=='categories'}" class="w-full text-left px-3 py-2 rounded-lg flex items-center gap-2 text-sm font-medium"><i class="fas fa-tags w-4"></i> Categories</button>
                     <button @click="changePage('vipMembership')" :class="{'nav-active': currentPage=='vipMembership'}" class="w-full text-left px-3 py-2 rounded-lg flex items-center gap-2 text-sm font-medium"><i class="fas fa-crown w-4 text-amber-500"></i> VIP Membership<span v-if="pendingVipRequests.length" class="ml-auto rounded-full bg-amber-100 px-2 py-0.5 text-[9px] font-black text-amber-800">{{ pendingVipRequests.length }}</span></button>
                     <button @click="changePage('orders')" :class="{'nav-active': currentPage=='orders'}" class="w-full text-left px-3 py-2 rounded-lg flex items-center gap-2 text-sm font-medium"><i class="fas fa-truck-loading w-4"></i> Orders</button>
@@ -2499,6 +2501,119 @@
                     </div>
                 </div>
             </div>
+            <!-- ==================== COUPONS MANAGEMENT PAGE ==================== -->
+            <div v-if="currentPage == 'coupons'" class="space-y-5 p-4 md:p-6">
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                        <h2 class="text-lg font-bold text-gray-800"><i class="fas fa-ticket-alt text-pink-500 mr-2"></i>Promo & Coupon Codes</h2>
+                        <p class="text-xs text-gray-400 mt-0.5">Discount coupons create karein, active status change karein ya delete karein</p>
+                    </div>
+                    <div class="flex items-center gap-2 text-xs font-bold">
+                        <span class="bg-green-100 text-green-700 px-3 py-1 rounded-full">✅ Active: {{ coupons.filter(c => c.isActive).length }}</span>
+                        <span class="bg-gray-100 text-gray-600 px-3 py-1 rounded-full">Total: {{ coupons.length }}</span>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+                    <!-- Create Coupon Form Card -->
+                    <div class="bg-white p-5 rounded-2xl shadow-sm border border-pink-100 space-y-4">
+                        <h3 class="font-bold text-gray-800 text-sm flex items-center gap-2">
+                            <i class="fas fa-plus-circle text-pink-500"></i> Naya Coupon Banayein
+                        </h3>
+
+                        <div>
+                            <label class="block text-[11px] font-bold text-gray-500 uppercase mb-1">Coupon Code *</label>
+                            <input type="text" v-model="newCoupon.code" placeholder="e.g. WELCOME50, SAVE10" class="w-full px-3 py-2.5 border rounded-xl text-xs font-black uppercase tracking-wider outline-none focus:border-pink-500">
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-[11px] font-bold text-gray-500 uppercase mb-1">Discount Type</label>
+                                <select v-model="newCoupon.type" class="w-full px-3 py-2.5 border rounded-xl text-xs font-bold outline-none bg-white">
+                                    <option value="flat">Flat Amount (₹)</option>
+                                    <option value="percent">Percentage (%)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-bold text-gray-500 uppercase mb-1">{{ newCoupon.type === 'percent' ? 'Discount % *' : 'Discount ₹ *' }}</label>
+                                <input type="number" v-model.number="newCoupon.value" min="1" placeholder="50" class="w-full px-3 py-2.5 border rounded-xl text-xs font-bold outline-none focus:border-pink-500">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-[11px] font-bold text-gray-500 uppercase mb-1">Minimum Order Value (₹)</label>
+                            <input type="number" v-model.number="newCoupon.minOrder" min="0" placeholder="199" class="w-full px-3 py-2.5 border rounded-xl text-xs font-bold outline-none focus:border-pink-500">
+                            <p class="text-[10px] text-gray-400 mt-1">Is amount se kam ke order par code apply nahi hoga</p>
+                        </div>
+
+                        <div v-if="newCoupon.type === 'percent'">
+                            <label class="block text-[11px] font-bold text-gray-500 uppercase mb-1">Max Discount Cap (₹)</label>
+                            <input type="number" v-model.number="newCoupon.maxDiscount" min="1" placeholder="100" class="w-full px-3 py-2.5 border rounded-xl text-xs font-bold outline-none focus:border-pink-500">
+                            <p class="text-[10px] text-gray-400 mt-1">Percentage discount mein maximum itna hi rupiya minus hoga</p>
+                        </div>
+
+                        <div class="flex items-center gap-2 bg-pink-50 p-2.5 rounded-xl border border-pink-100">
+                            <input type="checkbox" id="couponActive" v-model="newCoupon.isActive" class="w-4 h-4 accent-pink-500 cursor-pointer">
+                            <label for="couponActive" class="text-xs font-bold text-pink-900 cursor-pointer">Coupon ko turant Active rakhein</label>
+                        </div>
+
+                        <button @click="saveCoupon" :disabled="couponSaving" class="w-full bg-pink-500 hover:bg-pink-600 disabled:bg-pink-300 text-white py-3 rounded-xl text-xs font-black transition flex items-center justify-center gap-2 shadow-md shadow-pink-200">
+                            <i v-if="couponSaving" class="fas fa-circle-notch fa-spin"></i>
+                            <i v-else class="fas fa-save"></i>
+                            Save Coupon
+                        </button>
+                    </div>
+
+                    <!-- Coupons List Table Card -->
+                    <div class="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                        <div class="p-4 border-b flex justify-between items-center">
+                            <h3 class="font-bold text-gray-800 text-sm">Coupons List ({{ coupons.length }})</h3>
+                        </div>
+
+                        <div v-if="coupons.length === 0" class="p-12 text-center text-gray-400 text-xs">
+                            <i class="fas fa-ticket-alt text-4xl mb-2 opacity-20 block"></i>
+                            Abhi koi coupon nahi banaya gaya hai. Naya coupon create karein!
+                        </div>
+
+                        <div v-else class="overflow-x-auto">
+                            <table class="w-full text-xs">
+                                <thead class="bg-gray-50 border-b text-gray-500 text-left">
+                                    <tr>
+                                        <th class="p-3">Code</th>
+                                        <th class="p-3">Discount</th>
+                                        <th class="p-3">Min Order</th>
+                                        <th class="p-3 text-center">Status</th>
+                                        <th class="p-3 text-right">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr v-for="c in coupons" :key="c.id" class="border-b hover:bg-gray-50/50 transition">
+                                        <td class="p-3">
+                                            <p class="font-black text-pink-600 tracking-wider">{{ c.code }}</p>
+                                            <p class="text-[10px] text-gray-400">{{ formatDate(c.createdAt) }}</p>
+                                        </td>
+                                        <td class="p-3 font-bold text-gray-800">
+                                            <span v-if="c.type === 'percent'">{{ c.value }}% OFF <span v-if="c.maxDiscount" class="text-[10px] text-gray-400">(Max ₹{{ c.maxDiscount }})</span></span>
+                                            <span v-else>Flat ₹{{ c.value }} OFF</span>
+                                        </td>
+                                        <td class="p-3 text-gray-600 font-semibold">₹{{ c.minOrder || 0 }}</td>
+                                        <td class="p-3 text-center">
+                                            <button @click="toggleCouponStatus(c)" :class="c.isActive ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600'" class="px-2.5 py-1 rounded-full text-[10px] font-black border transition">
+                                                {{ c.isActive ? 'ACTIVE' : 'INACTIVE' }}
+                                            </button>
+                                        </td>
+                                        <td class="p-3 text-right">
+                                            <button @click="deleteCoupon(c.id)" class="text-red-500 bg-red-50 hover:bg-red-100 p-2 rounded-lg transition" title="Delete">
+                                                <i class="fas fa-trash-alt"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </main>
         
         <div class="bottom-nav">
@@ -2600,6 +2715,16 @@ new Vue({
         userSearch: '',
         userTypeFilter: 'all',
         banners: [],
+        coupons: [],
+        newCoupon: {
+            code: '',
+            type: 'flat',
+            value: 50,
+            minOrder: 199,
+            maxDiscount: 100,
+            isActive: true
+        },
+        couponSaving: false,
         returns: [], 
         riders: [],
         riderSearch: '',
@@ -3693,7 +3818,7 @@ monthlyChartTotalRevenue() {
             return 'Admin';
         },
         getBorderClass(status) { return status === 'pending' ? 'border-yellow-400' : status === 'confirmed' ? 'border-blue-400' : status === 'shipped' ? 'border-purple-400' : status === 'delivered' ? 'border-green-400' : (status === 'cancelled' || status === 'rejected') ? 'border-red-400' : 'border-gray-300'; },
-                async loadAllData() { this.loading = true; try { await Promise.all([this.loadProducts(), this.loadOrders(), this.loadUsers(), this.loadMembershipPlans().catch(e => { this.membershipPlans = []; console.error('VIP plan load failed:', e); }), this.loadVipMembershipRequests().catch(e => { this.vipMembershipRequests = []; console.error('VIP request load failed:', e); }), this.loadBanners(), this.loadAdminControls(), this.loadReturnRequests(), this.loadRiders(), this.loadStoreRooms(), this.loadWithdrawals()]); } finally { this.loading = false; } },
+                async loadAllData() { this.loading = true; try { await Promise.all([this.loadProducts(), this.loadOrders(), this.loadUsers(), this.loadMembershipPlans().catch(e => { this.membershipPlans = []; console.error('VIP plan load failed:', e); }), this.loadVipMembershipRequests().catch(e => { this.vipMembershipRequests = []; console.error('VIP request load failed:', e); }), this.loadBanners(), this.loadCoupons(),this.loadAdminControls(), this.loadReturnRequests(), this.loadRiders(), this.loadStoreRooms(), this.loadWithdrawals()]); } finally { this.loading = false; } },
         async loadProducts() { const snap = await database.ref('products').once('value'); const d = snap.val(); this.products = d ? Object.keys(d).map(k => ({ id: k, ...d[k] })) : []; },
         async loadOrders() { const snap = await database.ref('orders').once('value'); const d = snap.val(); this.orders = d ? Object.keys(d).map(k => ({ id: k, ...d[k] })).reverse() : []; },
         attachOrdersListener() {
@@ -3725,6 +3850,7 @@ monthlyChartTotalRevenue() {
                 ['vip_membership_requests', () => this.loadVipMembershipRequests().catch(e => console.error('VIP request sync failed:', e))],
                 ['admin_settings/membership_plans', () => this.loadMembershipPlans().catch(e => console.error('VIP plan sync failed:', e))],
                 ['banners', () => this.loadBanners()],
+             ['coupons', () => this.loadCoupons()],
                 ['riders', () => this.loadRiders()],
                 ['withdrawal_requests', () => this.loadWithdrawals()],
                 // Pehle se existing listeners — inko bhi preserve kiya
@@ -3990,6 +4116,69 @@ monthlyChartTotalRevenue() {
             }
         },
         async loadBanners() { const snap = await database.ref('banners').once('value'); const d = snap.val(); this.banners = d ? Object.keys(d).map(k => ({ id: k, url: d[k] })) : []; },
+        async loadCoupons() {
+            try {
+                const snap = await database.ref('coupons').once('value');
+                const data = snap.val();
+                this.coupons = data ? Object.keys(data).map(k => ({ id: k, ...data[k] })).reverse() : [];
+            } catch(e) {
+                console.error('Coupons load error:', e);
+            }
+        },
+        async saveCoupon() {
+            const code = (this.newCoupon.code || '').trim().toUpperCase();
+            if (!code) {
+                this.showMessage('⚠️ Coupon code likhna zaroori hai (e.g. WELCOME50)');
+                return;
+            }
+            if (!this.newCoupon.value || Number(this.newCoupon.value) <= 0) {
+                this.showMessage('⚠️ Valid discount value daalein!');
+                return;
+            }
+
+            this.couponSaving = true;
+            try {
+                const payload = {
+                    code: code,
+                    type: this.newCoupon.type,
+                    value: Number(this.newCoupon.value) || 0,
+                    minOrder: Number(this.newCoupon.minOrder) || 0,
+                    maxDiscount: this.newCoupon.type === 'percent' ? (Number(this.newCoupon.maxDiscount) || 0) : null,
+                    isActive: this.newCoupon.isActive !== false,
+                    createdAt: new Date().toISOString()
+                };
+
+                await database.ref(`coupons/${code}`).set(payload);
+                this.showMessage(`✅ Coupon "${code}" successfully save ho gaya!`);
+                this.newCoupon = { code: '', type: 'flat', value: 50, minOrder: 199, maxDiscount: 100, isActive: true };
+                await this.loadCoupons();
+            } catch(e) {
+                this.showMessage('❌ Error: ' + e.message);
+            } finally {
+                this.couponSaving = false;
+            }
+        },
+        async toggleCouponStatus(c) {
+            const newStatus = !c.isActive;
+            try {
+                await database.ref(`coupons/${c.id}`).update({ isActive: newStatus });
+                c.isActive = newStatus;
+                this.showMessage(newStatus ? `✅ ${c.code} activate ho gaya` : `⛔ ${c.code} deactivate kar diya`);
+            } catch(e) {
+                this.showMessage('Error: ' + e.message);
+            }
+        },
+        async deleteCoupon(id) {
+            if (!confirm(`Kya aap coupon "${id}" ko permanently delete karna chahte hain?`)) return;
+            try {
+                await database.ref(`coupons/${id}`).remove();
+                this.showMessage('🗑️ Coupon delete kar diya gaya');
+                await this.loadCoupons();
+            } catch(e) {
+                this.showMessage('Error: ' + e.message);
+            }
+        },
+
         async loadReturnRequests() { const snap = await database.ref('return_requests').once('value'); const d = snap.val(); this.returns = d ? Object.keys(d).map(k => ({ id: k, ...d[k] })).reverse() : []; },
         async loadRiders() {
             const snap = await database.ref('riders').once('value');
