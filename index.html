@@ -5,7 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
     <title>Pinkkart Admin - Management Panel</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fontsgetStatusBadge(status) { const m = { pending: 'bg-yellow-100 text-yellow-700', confirmed: 'bg-blue-100 text-blue-700', shipped: 'bg-purple-100 text-purple-700', delivered: 'bg-green-100 text-green-700', rejected: 'bg-red-100 text-red-700', cancelled: 'bg-red-100 text-red-700' }; return m[status] || 'bg-gray-100'; },.googleapis.com/css2?family=I ['orders', snap => {
+                    const data = snap.val();
+                    this.orders = data ? Object.keys(data).map(k => ({ id: k, ...data[k] })).reverse() : [];
+                }],nter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
@@ -833,6 +836,30 @@
                         <p class="text-[10px] text-red-300 mt-1">Rider cancelled</p>
                     </div>
                 </div>
+<!-- ==================== MONTHLY SALES CHART (BUSINESS TRACKER) ==================== -->
+<div class="mb-6 bg-white rounded-2xl p-4 sm:p-5 shadow-sm border border-gray-100">
+    <div class="flex flex-wrap items-center justify-between gap-2 border-b border-gray-100 pb-3 mb-4">
+        <div class="flex items-center gap-2.5">
+            <span class="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-base">
+                <i class="fas fa-chart-line"></i>
+            </span>
+            <div>
+                <h3 class="text-base font-black text-gray-800 tracking-wide">Monthly Sales Performance</h3>
+                <p class="text-[10px] text-gray-400">Pichle 6 mahino ka total revenue aur order count</p>
+            </div>
+        </div>
+        <div class="flex items-center gap-2">
+            <span class="text-[11px] font-bold text-gray-500 bg-gray-50 border px-3 py-1 rounded-full">
+                📊 6 Months Revenue: <span class="text-blue-600 font-black">₹{{ monthlyChartTotalRevenue.toLocaleString('en-IN') }}</span>
+            </span>
+        </div>
+    </div>
+    <div class="relative w-full" style="height: 250px;">
+        <canvas id="monthlySalesChart"></canvas>
+    </div>
+</div>
+<!-- ==================== END MONTHLY SALES CHART ==================== -->
+
 <!-- ==================== AAJ KA LIVE SALES DASHBOARD ==================== -->
 <div class="mb-6 bg-gradient-to-br from-slate-900 to-indigo-950 rounded-2xl p-4 sm:p-5 text-white shadow-xl border border-indigo-800/40">
     <div class="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 pb-3 mb-4">
@@ -1524,7 +1551,22 @@
                 </div>
                 <div class="space-y-4">
                     <div v-for="order in filteredOrders" :key="order.id" class="bg-white rounded-xl shadow-sm overflow-hidden border-l-4 order-card" :class="getBorderClass(order.status)">
-                        <div class="bg-slate-50 px-4 py-2.5 border-b flex justify-between items-center flex-wrap gap-2 text-xs"><div><span class="font-mono font-black text-gray-800">ORDER #{{ order.id.slice(-6).toUpperCase() }}</span><span class="text-gray-400 ml-2 font-medium">{{ formatShortDate(order.date) }}</span><span v-if="Number(order.cashbackUsed) > 0" class="ml-2 inline-flex items-center gap-1 bg-green-100 text-green-700 font-bold px-2 py-0.5 rounded-full text-[10px]"><i class="fas fa-wallet text-[9px]"></i> ₹{{ Number(order.cashbackUsed).toFixed(2) }} Cashback</span></div><div class="flex items-center gap-3"><select v-model="order.status" @change="updateOrderStatus(order)" class="border rounded-full px-3 py-1 text-xs bg-white font-bold cursor-pointer"><option value="pending">⏳ Pending</option><option value="confirmed">✅ Confirmed</option><option value="shipped">📦 Shipped</option><option value="delivered">🏠 Delivered</option><option value="cancelled">❌ Cancelled</option><option value="rejected">❌ Rejected</option></select><span class="font-black text-blue-700 text-sm">₹{{ Number(order.total).toFixed(2) }}</span></div></div>
+                        <div class="bg-slate-50 px-4 py-2.5 border-b flex justify-between items-center flex-wrap gap-2 text-xs"><div><span class="font-mono font-black text-gray-800">ORDER #{{ order.id.slice(-6).toUpperCase() }}</span><span class="text-gray-400 ml-2 font-medium">{{ formatShortDate(order.date) }}</span><span v-if="Number(order.cashbackUsed) > 0" class="ml-2 inline-flex items-center gap-1 bg-green-100 text-green-700 font-bold px-2 py-0.5 rounded-full text-[10px]"><i class="fas fa-wallet text-[9px]"></i> ₹{{ Number(order.cashbackUsed).toFixed(2) }} Cashback</span></div><div class="flex items-center gap-3">
+
+<select v-model="order.status" @change="updateOrderStatus(order)" class="border rounded-full px-3 py-1 text-xs bg-white font-bold cursor-pointer">
+    <option value="pending">⏳ Pending</option>
+    <option value="confirmed">✅ Confirmed</option>
+    <option value="shipped">📦 Shipped</option>
+    <option value="delivered">🏠 Delivered</option>
+    <option value="return_pending">🔄 Return Request</option>
+    <option value="returned_completed">↩️ Return Completed</option>
+    <option value="exchange_pending">🔀 Exchange Request</option>
+    <option value="exchanged">🔁 Exchanged</option>
+    <option value="cancelled">❌ Cancelled</option>
+    <option value="rejected">❌ Rejected</option>
+</select>
+
+<span class="font-black text-blue-700 text-sm">₹{{ Number(order.total).toFixed(2) }}</span></div></div>
                         <div class="p-4 grid grid-cols-3 gap-3 text-xs border-b"><div class="bg-blue-50/50 p-2.5 rounded-lg"><p class="text-[10px] text-gray-400 font-semibold">Customer Name</p><p class="font-bold text-gray-800">{{ order.customerName }}</p></div><div class="bg-green-50/50 p-2.5 rounded-lg"><p class="text-[10px] text-gray-400 font-semibold">Mobile Number</p><p class="font-bold text-gray-800">{{ order.customerPhone }}</p></div><div class="bg-amber-50/50 p-2.5 rounded-lg"><p class="text-[10px] text-gray-400 font-semibold">Payment</p>
                                 <div class="flex items-center gap-1 mt-0.5">
                                     <span :class="order.payment_method === 'Online' ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700'" class="text-[10px] font-black px-2 py-0.5 rounded-full">
@@ -2582,8 +2624,8 @@ new Vue({
         payoutForm: { workingDays: 26, paidDays: 26, absentDays: 0, overtimeHours: 0, overtimeRate: 0, baseSalary: 0, incentives: 0, deductions: 0, advances: 0, status: 'pending', paidOn: '', adminNote: '' },
         rejectModal: { show: false, order: null, reason: '' },
         globalDiscount: 0,
-        globalDiscountInput: 0,
-        // ===== DELIVERY CHARGE SETTINGS =====
+        globalDiscountInput: 0,    
+ // ===== DELIVERY CHARGE SETTINGS =====
         deliverySettings: {
             minOrderLimit: 199,
             deliveryCharge: 40,
@@ -2593,10 +2635,15 @@ new Vue({
             minOrderLimit: 199,
             deliveryCharge: 40,
             isActive: true
-        }
+        },
+        monthlySalesChartInstance: null
     },
-    computed: {
-        todaySalesSummary() {
+  computed: {
+monthlyChartTotalRevenue() {
+            const data = this.getMonthlySalesData();
+            return data.revenues.reduce((sum, val) => sum + val, 0);
+        },
+        todaySalesSummary() {       
             const todayStr = new Date().toDateString();
             
             let totalAmount = 0;
@@ -2748,6 +2795,144 @@ new Vue({
     methods: {
         showMessage(msg) { const t = document.getElementById('toast'); document.getElementById('toastMsg').innerHTML = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2000); },
 
+        getMonthlySalesData() {
+            const months = [];
+            const labels = [];
+            const revenues = [];
+            const orderCounts = [];
+
+            // Pichle 6 mahine create karein (Purane se naye mahine tak)
+            for (let i = 5; i >= 0; i--) {
+                const d = new Date();
+                d.setDate(1); // month length issue avoid karne ke liye
+                d.setMonth(d.getMonth() - i);
+                const monthKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+                months.push(monthKey);
+                labels.push(d.toLocaleDateString('en-IN', { month: 'short', year: '2-digit' }));
+                revenues.push(0);
+                orderCounts.push(0);
+            }
+
+            // Database ke delivered aur active orders ko calculate karein
+            this.orders.forEach(order => {
+                if (order.status === 'cancelled' || order.status === 'rejected') return;
+                const orderDate = order.date ? new Date(order.date) : null;
+                if (!orderDate || isNaN(orderDate.getTime())) return;
+
+                const orderMonthKey = `${orderDate.getFullYear()}-${String(orderDate.getMonth() + 1).padStart(2, '0')}`;
+                const idx = months.indexOf(orderMonthKey);
+                if (idx !== -1) {
+                    revenues[idx] += Number(order.total || 0);
+                    orderCounts[idx] += 1;
+                }
+            });
+
+            return { labels, revenues, orderCounts };
+        },
+
+        renderMonthlySalesChart() {
+            this.$nextTick(() => {
+                const canvas = document.getElementById('monthlySalesChart');
+                if (!canvas) return;
+
+                // Purana chart destroy karein agar pehle se bana ho
+                if (this.monthlySalesChartInstance) {
+                    this.monthlySalesChartInstance.destroy();
+                }
+
+                const chartData = this.getMonthlySalesData();
+
+                this.monthlySalesChartInstance = new Chart(canvas, {
+                    type: 'line',
+                    data: {
+                        labels: chartData.labels,
+                        datasets: [
+                            {
+                                label: 'Revenue (₹)',
+                                data: chartData.revenues,
+                                borderColor: '#2563eb',
+                                backgroundColor: 'rgba(37, 99, 235, 0.08)',
+                                tension: 0.35,
+                                fill: true,
+                                borderWidth: 2.5,
+                                pointBackgroundColor: '#2563eb',
+                                pointBorderColor: '#ffffff',
+                                pointBorderWidth: 2,
+                                pointRadius: 4.5,
+                                yAxisID: 'y'
+                            },
+                            {
+                                label: 'Orders Count',
+                                data: chartData.orderCounts,
+                                borderColor: '#10b981',
+                                backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                                tension: 0.35,
+                                fill: false,
+                                borderDash: [4, 4],
+                                borderWidth: 2,
+                                pointBackgroundColor: '#10b981',
+                                pointRadius: 3.5,
+                                yAxisID: 'y1'
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        interaction: { mode: 'index', intersect: false },
+                        plugins: {
+                            legend: {
+                                display: true,
+                                position: 'top',
+                                labels: { boxWidth: 12, font: { size: 10, weight: 'bold' } }
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(ctx) {
+                                        if (ctx.dataset.label.includes('Revenue')) {
+                                            return ` Revenue: ₹${Number(ctx.parsed.y).toLocaleString('en-IN')}`;
+                                        }
+                                        return ` Orders: ${ctx.parsed.y}`;
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            x: {
+                                grid: { display: false },
+                                ticks: { font: { size: 10, weight: 'bold' }, color: '#64748b' }
+                            },
+                            y: {
+                                type: 'linear',
+                                display: true,
+                                position: 'left',
+                                beginAtZero: true,
+                                ticks: {
+                                    callback: function(val) { return '₹' + val.toLocaleString('en-IN'); },
+                                    font: { size: 9 },
+                                    color: '#2563eb'
+                                },
+                                grid: { color: 'rgba(0,0,0,0.04)' }
+                            },
+                            y1: {
+                                type: 'linear',
+                                display: true,
+                                position: 'right',
+                                beginAtZero: true,
+                                grid: { drawOnChartArea: false },
+                                ticks: {
+                                    stepSize: 1,
+                                    font: { size: 9 },
+                                    color: '#10b981'
+                                }
+                            }
+                        }
+                    }
+                });
+            });
+        },
+
+
         // ===== ADMIN AUTH =====
         handleAdminLogin() {
             if (!this.adminLoginForm.email || !this.adminLoginForm.password) {
@@ -2842,7 +3027,13 @@ new Vue({
             if (id) return 'https://lh3.googleusercontent.com/d/' + id;
             return url;
         },
-        changePage(page) { this.currentPage = page; this.mobileMenuOpen = false; window.scrollTo(0,0); if (page === 'riders') this.renderRiderCharts(); },
+        changePage(page) { 
+    this.currentPage = page; 
+    this.mobileMenuOpen = false; 
+    window.scrollTo(0,0); 
+    if (page === 'riders') this.renderRiderCharts(); 
+    if (page === 'dashboard') this.renderMonthlySalesChart(); // <-- YEH LINE ADD KAREIN
+},
         addImageField() { this.form.images.push(''); },
         removeImageField(idx) { this.form.images.splice(idx, 1); },
         addImageSlot() { this.form.images.push(''); },
@@ -3381,8 +3572,38 @@ new Vue({
             }
         },
         async deleteUser(user) { if(confirm(`Delete ${user.name} permanently?`)) { this.loading = true; try { const node = user.type === 'email' ? 'users_email' : 'users'; await database.ref(`${node}/${user.id}`).remove(); if (user.type === 'email' && user.uid) { try { await firebase.auth().currentUser; } catch(e2) {} } this.showMessage('User deleted'); await this.loadUsers(); } catch(e) { this.showMessage(e.message); } finally { this.loading = false; } } },
-        getStatusBadge(status) { const m = { pending: 'bg-yellow-100 text-yellow-700', confirmed: 'bg-blue-100 text-blue-700', shipped: 'bg-purple-100 text-purple-700', delivered: 'bg-green-100 text-green-700', rejected: 'bg-red-100 text-red-700', cancelled: 'bg-red-100 text-red-700' }; return m[status] || 'bg-gray-100'; },
-        getStatusText(status) { const m = { pending: 'Pending', confirmed: 'Confirmed', shipped: 'Shipped', delivered: 'Delivered', rejected: 'Cancelled', cancelled: 'Cancelled' }; return m[status] || status; },
+                getStatusBadge(status) { 
+            const m = { 
+                pending: 'bg-yellow-100 text-yellow-700', 
+                confirmed: 'bg-blue-100 text-blue-700', 
+                shipped: 'bg-purple-100 text-purple-700', 
+                delivered: 'bg-green-100 text-green-700', 
+                return_pending: 'bg-orange-100 text-orange-700',
+                returned_completed: 'bg-teal-100 text-teal-800',
+                exchange_pending: 'bg-amber-100 text-amber-800',
+                exchanged: 'bg-indigo-100 text-indigo-700',
+                rejected: 'bg-red-100 text-red-700', 
+                cancelled: 'bg-red-100 text-red-700' 
+            }; 
+            return m[status] || 'bg-gray-100 text-gray-700'; 
+        },
+
+                getStatusText(status) { 
+            const m = { 
+                pending: 'Pending', 
+                confirmed: 'Confirmed', 
+                shipped: 'Shipped', 
+                delivered: 'Delivered', 
+                return_pending: 'Return Requested',
+                returned_completed: 'Returned',
+                exchange_pending: 'Exchange Requested',
+                exchanged: 'Exchanged',
+                rejected: 'Cancelled', 
+                cancelled: 'Cancelled' 
+            }; 
+            return m[status] || status; 
+        },
+
         getSellerForItem(item) {
             const resolveStore = (val) => {
                 if (!val) return null;
@@ -3432,10 +3653,11 @@ new Vue({
             this.stopAllRealtimeListeners();
 
             const listeners = [
-                ['orders', snap => {
-                    const data = snap.val();
-                    this.orders = data ? Object.keys(data).map(k => ({ id: k, ...data[k] })).reverse() : [];
-                }],
+               ['orders', snap => {
+    const data = snap.val();
+    this.orders = data ? Object.keys(data).map(k => ({ id: k, ...data[k] })).reverse() : [];
+    if (this.currentPage === 'dashboard') this.renderMonthlySalesChart(); // <-- YEH LINE ADD KAREIN
+}],
                 ['users', () => this.loadUsers()],
                 ['users_email', () => this.loadUsers()],
                 ['vip_membership_requests', () => this.loadVipMembershipRequests().catch(e => console.error('VIP request sync failed:', e))],
