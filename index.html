@@ -748,6 +748,7 @@
                 <nav class="p-2 space-y-1">
                     <button @click="changePage('dashboard')" :class="{'nav-active': currentPage=='dashboard'}" class="w-full text-left px-3 py-2 rounded-lg flex items-center gap-2 text-sm font-medium"><i class="fas fa-chart-line w-4"></i> Dashboard</button>
                     <button @click="changePage('products')" :class="{'nav-active': currentPage=='products'}" class="w-full text-left px-3 py-2 rounded-lg flex items-center gap-2 text-sm font-medium"><i class="fas fa-boxes w-4"></i> Products Catalog</button>
+<button @click="changePage('kisanPurchase')" :class="{'nav-active': currentPage=='kisanPurchase'}" class="w-full text-left px-3 py-2 rounded-lg flex items-center gap-2 text-sm font-medium"><i class="fas fa-tractor w-4 text-emerald-600"></i> Kisan Purchases</button>
                     <button @click="changePage('addProduct')" :class="{'nav-active': currentPage=='addProduct'}" class="w-full text-left px-3 py-2 rounded-lg flex items-center gap-2 text-sm font-medium"><i class="fas fa-plus-circle w-4"></i> Add New Product</button>
                     <button @click="changePage('storeRooms')" :class="{'nav-active': currentPage=='storeRooms'}" class="w-full text-left px-3 py-2 rounded-lg flex items-center gap-2 text-sm font-medium"><i class="fas fa-warehouse w-4 text-blue-600"></i> Store Rooms</button>
                     <button @click="changePage('banners')" :class="{'nav-active': currentPage=='banners'}" class="w-full text-left px-3 py-2 rounded-lg flex items-center gap-2 text-sm font-medium"><i class="fas fa-images w-4"></i> Banners</button>
@@ -2510,6 +2511,93 @@
                     </div>
                 </div>
             </div>
+            <!-- ==================== KISAN PURCHASE PAGE ==================== -->
+            <div v-if="currentPage == 'kisanPurchase'" class="space-y-5 p-4 md:p-6">
+                <!-- Header -->
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                        <h2 class="text-lg font-bold text-gray-800"><i class="fas fa-tractor text-emerald-600 mr-2"></i>Kisan Sabzi Khareed (Procurement)</h2>
+                        <p class="text-xs text-gray-400 mt-0.5">Chhote kisano se khareedi gayi sabzi, wajan aur payment ka hisab-kitab</p>
+                    </div>
+                    <button @click="openFarmerPurchaseModal()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-4 py-2.5 rounded-xl flex items-center gap-1.5 shadow transition active:scale-95">
+                        <i class="fas fa-plus"></i> + Nayi Khareed Entry
+                    </button>
+                </div>
+
+                <!-- 3 Stats Cards -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div class="bg-gradient-to-br from-emerald-500 to-teal-600 text-white p-4 rounded-2xl shadow-sm">
+                        <p class="text-[10px] font-bold uppercase tracking-wider opacity-80">Kul Khareed Kharcha</p>
+                        <p class="text-2xl font-black mt-1">₹{{ totalKisanKharcha }}</p>
+                        <p class="text-[10px] opacity-75 mt-1">{{ farmerPurchases.length }} Total Entries</p>
+                    </div>
+                    <div class="bg-gradient-to-br from-amber-500 to-orange-500 text-white p-4 rounded-2xl shadow-sm">
+                        <p class="text-[10px] font-bold uppercase tracking-wider opacity-80">Kisan Baaki (Pending)</p>
+                        <p class="text-2xl font-black mt-1">₹{{ totalKisanBaaki }}</p>
+                        <p class="text-[10px] opacity-75 mt-1">Payment dena baaki hai</p>
+                    </div>
+                    <div class="bg-gradient-to-br from-blue-500 to-indigo-600 text-white p-4 rounded-2xl shadow-sm">
+                        <p class="text-[10px] font-bold uppercase tracking-wider opacity-80">Kul Wajan (Kg)</p>
+                        <p class="text-2xl font-black mt-1">{{ totalKisanWeight }} <span class="text-sm">KG</span></p>
+                        <p class="text-[10px] opacity-75 mt-1">Total procured weight</p>
+                    </div>
+                </div>
+
+                <!-- Purchases Table Card -->
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                    <div class="p-4 border-b flex justify-between items-center">
+                        <h3 class="font-bold text-gray-800 text-sm">Khareed Entries Record ({{ farmerPurchases.length }})</h3>
+                    </div>
+
+                    <div v-if="farmerPurchases.length === 0" class="p-12 text-center text-gray-400 text-xs">
+                        <i class="fas fa-leaf text-4xl mb-2 opacity-20 block"></i>
+                        Abhi tak kisi kisan se sabzi khareed ki entry nahi ki gayi hai.
+                    </div>
+
+                    <div v-else class="overflow-x-auto">
+                        <table class="w-full text-xs min-w-[700px]">
+                            <thead class="bg-gray-50 border-b text-gray-500 text-left">
+                                <tr>
+                                    <th class="p-3">Kisan Details</th>
+                                    <th class="p-3">Sabzi / Item</th>
+                                    <th class="p-3 text-center">Wajan (KG)</th>
+                                    <th class="p-3 text-center">Rate (₹/Kg)</th>
+                                    <th class="p-3 text-center">Kul Rakam</th>
+                                    <th class="p-3 text-center">Payment Status</th>
+                                    <th class="p-3 text-right">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr v-for="p in farmerPurchases" :key="p.id" class="border-b hover:bg-gray-50/50 transition">
+                                    <td class="p-3">
+                                        <p class="font-bold text-gray-800">{{ p.farmerName }}</p>
+                                        <p class="text-[10px] text-gray-400">{{ p.village || 'Gaon N/A' }} <span v-if="p.farmerPhone">· 📞 {{ p.farmerPhone }}</span></p>
+                                        <p class="text-[9px] text-gray-400">{{ formatDate(p.date) }}</p>
+                                    </td>
+                                    <td class="p-3 font-semibold text-emerald-700">
+                                        {{ p.item }}
+                                        <p v-if="p.notes" class="text-[10px] text-gray-400 italic">{{ p.notes }}</p>
+                                    </td>
+                                    <td class="p-3 text-center font-bold text-gray-700">{{ p.weightKg }} KG</td>
+                                    <td class="p-3 text-center text-gray-600">₹{{ p.ratePerKg }}</td>
+                                    <td class="p-3 text-center font-black text-emerald-700 text-sm">₹{{ Number(p.totalAmount).toFixed(2) }}</td>
+                                    <td class="p-3 text-center">
+                                        <button @click="toggleFarmerPaymentStatus(p)" class="px-2.5 py-1 rounded-full text-[10px] font-black border transition"
+                                            :class="p.paymentStatus === 'paid' ? 'bg-green-100 text-green-700 border-green-300' : 'bg-amber-100 text-amber-700 border-amber-300'">
+                                            {{ p.paymentStatus === 'paid' ? '✅ PAID (' + (p.paymentMethod || 'CASH') + ')' : '⏳ PENDING' }}
+                                        </button>
+                                    </td>
+                                    <td class="p-3 text-right">
+                                        <button @click="deleteFarmerPurchase(p.id)" class="text-red-500 bg-red-50 hover:bg-red-100 p-2 rounded-lg transition" title="Delete Entry">
+                                            <i class="fas fa-trash-alt"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
             <!-- ==================== COUPONS MANAGEMENT PAGE ==================== -->
             <div v-if="currentPage == 'coupons'" class="space-y-5 p-4 md:p-6">
                 <div class="flex flex-wrap items-center justify-between gap-3">
@@ -2665,9 +2753,91 @@
                 <button type="submit" :disabled="loading || !membershipPlans.length" class="w-full bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-white rounded-xl p-3 font-black">{{ loading ? 'Activating…' : 'Activate VIP' }}</button>
             </form>
         </div>
-    </div>
 </div>
+        <!-- ==================== KISAN PURCHASE ENTRY MODAL ==================== -->
+        <div v-if="showPurchaseModal" class="fixed inset-0 bg-black/60 flex items-center justify-center z-[150] p-4" @click.self="showPurchaseModal = false">
+            <div class="bg-white rounded-3xl w-full max-w-md shadow-2xl overflow-hidden animate-fade-in">
+                <div class="bg-emerald-700 text-white p-4 flex justify-between items-center">
+                    <div>
+                        <h3 class="font-black text-base flex items-center gap-2">
+                            <i class="fas fa-tractor"></i> Kisan Sabzi Purchase Entry
+                        </h3>
+                        <p class="text-[10px] text-emerald-200">Kisan se khareedi gayi sabzi ka record</p>
+                    </div>
+                    <button @click="showPurchaseModal = false" class="text-white/80 hover:text-white">
+                        <i class="fas fa-times text-lg"></i>
+                    </button>
+                </div>
 
+                <div class="p-5 space-y-3 text-xs bg-slate-50 max-h-[78vh] overflow-y-auto">
+                    <div>
+                        <label class="block font-bold text-gray-700 mb-1">Kisan Ka Naam *</label>
+                        <input type="text" v-model="purchaseForm.farmerName" placeholder="Kisan ka naam" class="w-full p-2.5 bg-white border rounded-xl outline-none focus:border-emerald-500">
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block font-bold text-gray-700 mb-1">Mobile No.</label>
+                            <input type="tel" v-model="purchaseForm.farmerPhone" placeholder="Mobile" class="w-full p-2.5 bg-white border rounded-xl outline-none focus:border-emerald-500">
+                        </div>
+                        <div>
+                            <label class="block font-bold text-gray-700 mb-1">Gaon / Village</label>
+                            <input type="text" v-model="purchaseForm.village" placeholder="Village name" class="w-full p-2.5 bg-white border rounded-xl outline-none focus:border-emerald-500">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block font-bold text-gray-700 mb-1">Sabzi / Product Item *</label>
+                        <input type="text" v-model="purchaseForm.item" placeholder="Jaise: Drumstick (Muniga), Tamatar, Mirchi" class="w-full p-2.5 bg-white border rounded-xl outline-none focus:border-emerald-500">
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block font-bold text-gray-700 mb-1">Kul Wajan (Kg) *</label>
+                            <input type="number" step="0.1" v-model="purchaseForm.weightKg" placeholder="Kg" class="w-full p-2.5 bg-white border rounded-xl font-bold outline-none focus:border-emerald-500">
+                        </div>
+                        <div>
+                            <label class="block font-bold text-gray-700 mb-1">Rate (₹/Kg) *</label>
+                            <input type="number" step="0.5" v-model="purchaseForm.ratePerKg" placeholder="₹ per kg" class="w-full p-2.5 bg-white border rounded-xl font-bold outline-none focus:border-emerald-500">
+                        </div>
+                    </div>
+
+                    <div class="bg-emerald-50 border border-emerald-200 rounded-2xl p-3 flex justify-between items-center">
+                        <span class="font-bold text-emerald-800">Kul Banta Pesa:</span>
+                        <span class="text-xl font-black text-emerald-700">₹{{ calculatedPurchaseTotal }}</span>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block font-bold text-gray-700 mb-1">Payment Status</label>
+                            <select v-model="purchaseForm.paymentStatus" class="w-full p-2.5 bg-white border rounded-xl font-bold outline-none">
+                                <option value="paid">✅ Paid (De diya)</option>
+                                <option value="pending">⏳ Pending (Baaki hai)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block font-bold text-gray-700 mb-1">Payment Mode</label>
+                            <select v-model="purchaseForm.paymentMethod" class="w-full p-2.5 bg-white border rounded-xl font-bold outline-none">
+                                <option value="CASH">💵 Cash</option>
+                                <option value="UPI">📱 UPI / PhonePe</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block font-bold text-gray-700 mb-1">Notes / Remarks (Optional)</label>
+                        <input type="text" v-model="purchaseForm.notes" placeholder="e.g. Khet se sidha uthaya" class="w-full p-2.5 bg-white border rounded-xl outline-none focus:border-emerald-500">
+                    </div>
+
+                    <button @click="saveFarmerPurchase" :disabled="purchaseSaving" class="w-full bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-300 text-white py-3 rounded-xl font-bold text-sm shadow-md transition active:scale-95 flex items-center justify-center gap-2">
+                        <i v-if="purchaseSaving" class="fas fa-circle-notch fa-spin"></i>
+                        <i v-else class="fas fa-save"></i>
+                        <span>{{ purchaseSaving ? 'Save ho raha hai...' : 'Record Save Karein' }}</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+  </div>
 <script>
 const firebaseConfig = {
     apiKey: "AIzaSyDbVF9_RqXDXdIASOy2WgbwSmwuiowu2Bg",
@@ -2804,9 +2974,39 @@ new Vue({
             deliveryCharge: 40,
             isActive: true
         },
-        monthlySalesChartInstance: null
+        monthlySalesChartInstance: null,
+        showPurchaseModal: false,
+        purchaseSaving: false,
+        farmerPurchases: [],
+        purchaseForm: {
+            farmerName: '',
+            farmerPhone: '',
+            village: '',
+            item: '',
+            weightKg: '',
+            ratePerKg: '',
+            paymentStatus: 'paid',
+            paymentMethod: 'CASH',
+            notes: ''
+        },
     },
       computed: {
+        calculatedPurchaseTotal() {
+            const w = parseFloat(this.purchaseForm.weightKg) || 0;
+            const r = parseFloat(this.purchaseForm.ratePerKg) || 0;
+            return (w * r).toFixed(2);
+        },
+        totalKisanKharcha() {
+            return (this.farmerPurchases || []).reduce((sum, p) => sum + (parseFloat(p.totalAmount) || 0), 0).toFixed(2);
+        },
+        totalKisanBaaki() {
+            return (this.farmerPurchases || [])
+                .filter(p => p.paymentStatus === 'pending')
+                .reduce((sum, p) => sum + (parseFloat(p.totalAmount) || 0), 0).toFixed(2);
+        },
+        totalKisanWeight() {
+            return (this.farmerPurchases || []).reduce((sum, p) => sum + (parseFloat(p.weightKg) || 0), 0).toFixed(1);
+        },
         filteredRiders() {
             if (!this.riderSearch || !this.riderSearch.trim()) {
                 return this.riders;
@@ -2925,7 +3125,8 @@ monthlyChartTotalRevenue() {
         filteredUsers() { let list = this.allUsers; if (this.userTypeFilter === 'mobile') list = list.filter(u => u.type === 'mobile'); else if (this.userTypeFilter === 'email') list = list.filter(u => u.type === 'email'); if (this.userSearch) { const s = this.userSearch.toLowerCase(); list = list.filter(u => (u.name && u.name.toLowerCase().includes(s)) || (u.phone && u.phone.includes(s)) || (u.email && u.email.toLowerCase().includes(s))); } return list; },
         filteredProducts() { if (!this.productSearch) return this.products; const s = this.productSearch.toLowerCase(); return this.products.filter(p => p.name.toLowerCase().includes(s) || (p.category && p.category.toLowerCase().includes(s))); },
         filteredOrders() { let filtered = this.orders; if (this.orderStatusFilter === 'cancelled') { filtered = filtered.filter(o => o.status === 'cancelled' || o.status === 'rejected'); } else if (this.orderStatusFilter === 'online_pending') { filtered = filtered.filter(o => o.payment_method === 'Online' && o.status === 'pending'); } else if (this.orderStatusFilter !== 'all') { filtered = filtered.filter(o => o.status === this.orderStatusFilter); } if (this.orderSearch) { const s = this.orderSearch.toLowerCase(); filtered = filtered.filter(o => (o.id && o.id.toLowerCase().includes(s)) || (o.customerName && o.customerName.toLowerCase().includes(s)) || (o.customerPhone && o.customerPhone.includes(s))); } return filtered; },
-        getPageTitle() { const t = { dashboard: 'Dashboard', products: 'Products', addProduct: 'Add Product', storeRooms: 'Store Rooms', banners: 'Banners', categories: 'Categories', users: 'Users', vipMembership: 'VIP Membership', orders: 'Orders', returns: 'Returns', settings: 'Settings', riders: 'Riders', withdrawals: 'Withdrawals' }; return t[this.currentPage] || 'Admin'; },
+        getPageTitle() { const t = { dashboard: 'Dashboard', products: 'Products', addProduct: 'Add Product', storeRooms: 'Store Rooms', banners: 'Banners', categories: 'Categories', users: 'Users', vipMembership: 'VIP Membership', orders: 'Orders', returns: 'Returns', settings: 'Settings', riders: 'Riders', withdrawals: 'Withdrawals',kisanPurchase: 'Kisan Purchases'
+}; return t[this.currentPage] || 'Admin'; },
 
         // ===== TOP SELLING PRODUCTS (Dashboard Analytics) =====
         topSellingProducts() {
@@ -3827,7 +4028,8 @@ monthlyChartTotalRevenue() {
             return 'Admin';
         },
         getBorderClass(status) { return status === 'pending' ? 'border-yellow-400' : status === 'confirmed' ? 'border-blue-400' : status === 'shipped' ? 'border-purple-400' : status === 'delivered' ? 'border-green-400' : (status === 'cancelled' || status === 'rejected') ? 'border-red-400' : 'border-gray-300'; },
-                async loadAllData() { this.loading = true; try { await Promise.all([this.loadProducts(), this.loadOrders(), this.loadUsers(), this.loadMembershipPlans().catch(e => { this.membershipPlans = []; console.error('VIP plan load failed:', e); }), this.loadVipMembershipRequests().catch(e => { this.vipMembershipRequests = []; console.error('VIP request load failed:', e); }), this.loadBanners(), this.loadCoupons(),this.loadAdminControls(), this.loadReturnRequests(), this.loadRiders(), this.loadStoreRooms(), this.loadWithdrawals()]); } finally { this.loading = false; } },
+                async loadAllData() { this.loading = true; try { await Promise.all([this.loadProducts(), this.loadOrders(), this.loadUsers(), this.loadMembershipPlans().catch(e => { this.membershipPlans = []; console.error('VIP plan load failed:', e); }), this.loadVipMembershipRequests().catch(e => { this.vipMembershipRequests = []; console.error('VIP request load failed:', e); }), this.loadBanners(), this.loadCoupons(),this.loadAdminControls(), this.loadReturnRequests(), this.loadRiders(), this.loadStoreRooms(), this.loadWithdrawals(),this.loadFarmerPurchases()
+]); } finally { this.loading = false; } },
         async loadProducts() { const snap = await database.ref('products').once('value'); const d = snap.val(); this.products = d ? Object.keys(d).map(k => ({ id: k, ...d[k] })) : []; },
         async loadOrders() { const snap = await database.ref('orders').once('value'); const d = snap.val(); this.orders = d ? Object.keys(d).map(k => ({ id: k, ...d[k] })).reverse() : []; },
         attachOrdersListener() {
@@ -3862,6 +4064,7 @@ monthlyChartTotalRevenue() {
              ['coupons', () => this.loadCoupons()],
                 ['riders', () => this.loadRiders()],
                 ['withdrawal_requests', () => this.loadWithdrawals()],
+            ['farmer_purchases', () => this.loadFarmerPurchases()],
                 // Pehle se existing listeners — inko bhi preserve kiya
                 ['products', () => this.loadProducts()],
                 ['return_requests', () => this.loadReturnRequests()],
@@ -4924,6 +5127,92 @@ monthlyChartTotalRevenue() {
         },
         formatDate(iso) { if (!iso) return ''; return new Date(iso).toLocaleString('en-IN', { day:'numeric', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' }); },
         formatShortDate(iso) { if (!iso) return ''; return new Date(iso).toLocaleString('en-IN', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' }); },
+        openFarmerPurchaseModal() {
+            this.purchaseForm = {
+                farmerName: '',
+                farmerPhone: '',
+                village: '',
+                item: '',
+                weightKg: '',
+                ratePerKg: '',
+                paymentStatus: 'paid',
+                paymentMethod: 'CASH',
+                notes: ''
+            };
+            this.showPurchaseModal = true;
+        },
+
+        async saveFarmerPurchase() {
+            if (!this.purchaseForm.farmerName.trim() || !this.purchaseForm.item.trim()) {
+                this.showMessage('⚠️ Kisan ka naam aur Sabzi ka naam bharna zaroori hai!');
+                return;
+            }
+            const weight = parseFloat(this.purchaseForm.weightKg) || 0;
+            const rate = parseFloat(this.purchaseForm.ratePerKg) || 0;
+            if (weight <= 0 || rate <= 0) {
+                this.showMessage('⚠️ Valid Wajan (Kg) aur Rate daalein!');
+                return;
+            }
+
+            this.purchaseSaving = true;
+            try {
+                const total = parseFloat(this.calculatedPurchaseTotal);
+                const record = {
+                    farmerName: this.purchaseForm.farmerName.trim(),
+                    farmerPhone: this.purchaseForm.farmerPhone.trim(),
+                    village: this.purchaseForm.village.trim(),
+                    item: this.purchaseForm.item.trim(),
+                    weightKg: weight,
+                    ratePerKg: rate,
+                    totalAmount: total,
+                    paymentStatus: this.purchaseForm.paymentStatus,
+                    paymentMethod: this.purchaseForm.paymentMethod,
+                    notes: this.purchaseForm.notes.trim(),
+                    date: new Date().toISOString()
+                };
+
+                await database.ref('farmer_purchases').push(record);
+                this.showMessage('✅ Kisan purchase entry safalta se save ho gayi!');
+                this.showPurchaseModal = false;
+                await this.loadFarmerPurchases();
+            } catch (err) {
+                this.showMessage('Error: ' + err.message);
+            } finally {
+                this.purchaseSaving = false;
+            }
+        },
+
+        async loadFarmerPurchases() {
+            try {
+                const snap = await database.ref('farmer_purchases').once('value');
+                const data = snap.val();
+                this.farmerPurchases = data ? Object.keys(data).map(k => ({ id: k, ...data[k] })).reverse() : [];
+            } catch (e) {
+                console.error('Farmer purchases load error:', e);
+            }
+        },
+
+        async toggleFarmerPaymentStatus(p) {
+            const newStatus = p.paymentStatus === 'paid' ? 'pending' : 'paid';
+            try {
+                await database.ref(`farmer_purchases/${p.id}`).update({ paymentStatus: newStatus });
+                p.paymentStatus = newStatus;
+                this.showMessage(newStatus === 'paid' ? '✅ Payment Mark as Paid!' : '⏳ Payment Mark as Pending!');
+            } catch (e) {
+                this.showMessage('Error: ' + e.message);
+            }
+        },
+
+        async deleteFarmerPurchase(id) {
+            if (!confirm('Kya aap is purchase entry ko delete karna chahte hain?')) return;
+            try {
+                await database.ref(`farmer_purchases/${id}`).remove();
+                this.showMessage('🗑️ Entry delete ho gayi!');
+                await this.loadFarmerPurchases();
+            } catch (e) {
+                this.showMessage('Error: ' + e.message);
+            }
+        },
 
         // ===== CREATE STORE USER =====
         closeCreateStoreModal() {
