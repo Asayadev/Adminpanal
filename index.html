@@ -5,10 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
     <title>Pinkkart Admin - Management Panel</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fontsgetStatusBadge(status) { const m = { pending: 'bg-yellow-100 text-yellow-700', confirmed: 'bg-blue-100 text-blue-700', shipped: 'bg-purple-100 text-purple-700', delivered: 'bg-green-100 text-green-700', rejected: 'bg-red-100 text-red-700', cancelled: 'bg-red-100 text-red-700' }; return m[status] || 'bg-gray-100'; },.googleapis.com/css2?family=I ['orders', snap => {
-                    const data = snap.val();
-                    this.orders = data ? Object.keys(data).map(k => ({ id: k, ...data[k] })).reverse() : [];
-                }],nter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
@@ -1186,7 +1183,7 @@
             </div>
 
             <div v-if="currentPage == 'addProduct'"><div class="max-w-md mx-auto bg-white p-5 rounded-xl shadow-md"><h2 class="text-base font-bold mb-4 text-gray-800"><i class="fas fa-plus-circle text-green-500 mr-1"></i> Add New Product</h2><div class="space-y-3.5 text-xs"><div><label class="block font-bold text-gray-700 mb-1">Product Title *</label><input type="text" v-model="form.name" placeholder="E.g. iPhone 15 Pro" class="w-full border p-2 rounded-lg text-xs outline-none"></div><div class="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-lg p-2"><input type="checkbox" id="hasVariantsAdd" v-model="form.hasVariants" style="width:16px;height:16px;"><label for="hasVariantsAdd" class="text-xs font-bold text-gray-700 cursor-pointer">Kya is product ke alag-alag weights/prices hain? (Variants)</label></div><div v-if="form.hasVariants" style="border:1px dashed #93c5fd;background:#eff6ff;padding:10px;border-radius:10px;"><h5 class="text-xs font-bold text-blue-700 mb-2"><i class="fas fa-weight-hanging mr-1"></i> Product Variants (Weights &amp; Prices)</h5><div v-for="(variant, index) in form.variants" :key="index" style="display:flex;gap:8px;margin-bottom:6px;"><input type="text" v-model="variant.weight" placeholder="e.g. 500g, 1kg" class="border p-2 rounded-lg text-xs" style="width:45%;"><input type="number" v-model.number="variant.price" placeholder="Price (₹)" class="border p-2 rounded-lg text-xs" style="width:35%;"><button type="button" @click="removeVariant(index)" class="bg-red-50 text-red-600 border border-red-200 rounded-lg text-xs font-bold" style="width:20%;">✕</button></div><button type="button" @click="addVariantSlot" class="w-full bg-blue-100 text-blue-700 rounded-lg py-1.5 text-xs font-bold mt-1"><i class="fas fa-plus mr-1"></i> Naya Variant Jodein</button></div><div class="grid grid-cols-2 gap-3"><div><label class="block font-bold text-gray-700 mb-1">Selling Price (₹) *</label><input type="number" v-model="form.price" placeholder="80" class="w-full border p-2 rounded-lg text-xs font-bold text-blue-600"></div><div><label class="block font-bold text-gray-400 mb-1">Original Price (M.R.P) ₹</label><input type="number" v-model="form.originalPrice" placeholder="100" class="w-full border p-2 rounded-lg text-xs"></div></div><div class="grid grid-cols-2 gap-3"><div><label class="block font-bold text-gray-700 mb-1">Category *</label><select v-model="form.category" class="w-full border p-2 rounded-lg text-xs bg-white"><option value="" disabled>Select Category</option><option v-for="cat in availableCategories" :key="cat" :value="cat">{{ cat }}</option></select></div><div><label class="block font-bold text-gray-700 mb-1">Stock Status</label><select v-model="form.stockStatus" class="w-full border p-2 rounded-lg text-xs bg-white"><option value="In stock">In Stock ✅</option><option value="Out of stock">Out of Stock ❌</option></select></div></div><div><label class="block font-bold text-gray-700 mb-1">Top Badge (Optional)</label><input type="text" v-model="form.badge" placeholder="Trending, Bestseller, New" class="w-full border p-2 rounded-lg text-xs"></div><div style="background:#f0fdf4;padding:12px;border:1.5px dashed #86efac;border-radius:12px;"><label style="display:block;font-weight:800;color:#166534;margin-bottom:6px;font-size:11px;"><i class="fas fa-wallet mr-1"></i> Cashback Reward (₹) — Optional</label><input type="number" v-model="form.cashback" min="0" placeholder="e.g. 20 (0 = no cashback)" style="width:100%;border:1px solid #86efac;padding:7px 10px;border-radius:8px;font-size:12px;font-weight:700;color:#15803d;outline:none;background:white;"><p style="font-size:10px;color:#4ade80;margin-top:4px;">Yeh amount customer ke wallet me automatically add hoga jab order deliver ho jayega</p></div><div style="background:#f8fafc;padding:15px;border:1px dashed #cbd5e1;border-radius:12px;">
-    <label style="display:block;font-weight:700;color:#334155;margin-bottom:10px;">📸 Product Images — Google Drive Upload (Slider ke liye)</label>
+    <label style="display:block;font-weight:700;color:#334155;margin-bottom:10px;">📸 Product Images — Upload (Slider ke liye)</label>
 
     <!-- Each image slot -->
     <div v-for="(img, idx) in form.images" :key="idx" style="background:white;border:1px solid #e2e8f0;border-radius:10px;padding:10px;margin-bottom:10px;">
@@ -3438,39 +3435,37 @@ monthlyChartTotalRevenue() {
             if (this.form.images.length <= 1) return;
             this.form.images.splice(idx, 1);
         },
-        async uploadImageToDrive(event, idx) {
+                 async uploadImageToDrive(event, idx) {
             const file = event.target.files[0];
             if (!file) return;
             this.uploadingIdx = idx;
-            this.showMessage("⏳ Image " + (idx + 1) + " ImgBB pe upload ho raha hai...");
-            const reader = new FileReader();
-            reader.onload = async (e) => {
-                const base64String = e.target.result.split(',')[1];
-                try {
-                    const fd = new FormData();
-                    fd.append('key', '9b6ea4121e0281d6911d13eaf8d59c86');
-                    fd.append('image', base64String);
-                    fd.append('name', file.name.replace(/\.[^.]+$/, '') + '_' + Date.now());
-                    const response = await fetch('https://api.imgbb.com/1/upload', { method: 'POST', body: fd });
-                    const result = await response.json();
-                    if (result.success && result.data && result.data.url) {
-                        this.$set(this.form.images, idx, result.data.url);
-                        this.showMessage("✅ Image " + (idx + 1) + " ImgBB pe save ho gayi!");
-                    } else {
-                        this.showMessage("❌ Upload failed: " + (result.error && result.error.message || "Try again"));
-                    }
-                } catch (err) {
-                    this.showMessage("⚠️ Network error — dobara try karein.");
-                    console.error(err);
-                } finally {
-                    this.uploadingIdx = -1;
-                    const input = document.getElementById('adminImg_' + idx);
-                    if (input) input.value = '';
+            this.showMessage("⏳ Image " + (idx + 1) + " Cloudinary pe upload ho raha hai...");
+            try {
+                const fd = new FormData();
+                fd.append('file', file);
+                fd.append('upload_preset', 'pinkkart_preset');
+
+                const response = await fetch('https://api.cloudinary.com/v1_1/j2dkr5jj/image/upload', {
+                    method: 'POST',
+                    body: fd
+                });
+                const result = await response.json();
+                if (result.secure_url) {
+                    this.$set(this.form.images, idx, result.secure_url);
+                    this.showMessage("✅ Image " + (idx + 1) + " Cloudinary pe save ho gayi!");
+                } else {
+                    this.showMessage("❌ Upload failed: " + (result.error && result.error.message || "Try again"));
                 }
-            };
-            reader.readAsDataURL(file);
+            } catch (err) {
+                this.showMessage("⚠️ Network error — dobara try karein.");
+                console.error(err);
+            } finally {
+                this.uploadingIdx = -1;
+                const input = document.getElementById('adminImg_' + idx);
+                if (input) input.value = '';
+            }
         },
-        
+                    
         openEditModal(product) {
             this.currentEditId = product.id;
             this.editForm = { name: product.name || '', price: product.price || '', originalPrice: product.originalPrice || '', stockStatus: product.stockStatus || 'In stock', badge: product.badge || '', sizeChartImage: product.sizeChartImage || '', sizes: Array.isArray(product.sizes) ? [...product.sizes] : [], cashback: product.cashback || 0, hasVariants: !!product.hasVariants, variants: Array.isArray(product.variants) && product.variants.length ? product.variants.map(v => ({ weight: v.weight, price: v.price })) : [{ weight: '1 kg', price: 0 }] };
@@ -4742,47 +4737,44 @@ monthlyChartTotalRevenue() {
             } catch(e) { this.showMessage('Error: ' + e.message); }
             finally { this.loading = false; }
         },
-        async uploadQrImageToImgbb(event) {
+                       async uploadQrImageToImgbb(event) {
             const file = event.target.files[0];
             if (!file) return;
-            // Reset input so same file can be re-selected
             event.target.value = '';
             if (file.size > 5 * 1024 * 1024) {
                 this.showMessage('❌ File too large! Max 5MB allowed.');
                 return;
             }
             this.qrUploading = true;
-            this.qrUploadProgress = 'Reading image...';
-            const reader = new FileReader();
-            reader.onload = async (e) => {
-                try {
-                    this.qrUploadProgress = 'Uploading to ImgBB...';
-                    const base64 = e.target.result.split(',')[1];
-                    const fd = new FormData();
-                    fd.append('key', '9b6ea4121e0281d6911d13eaf8d59c86');
-                    fd.append('image', base64);
-                    fd.append('name', 'payment_qr_' + Date.now());
-                    const res = await fetch('https://api.imgbb.com/1/upload', { method: 'POST', body: fd });
-                    const data = await res.json();
-                    if (data.success && data.data && data.data.url) {
-                        const imgUrl = data.data.url;
-                        this.qrUploadProgress = 'Saving to Firebase...';
-                        await database.ref('admin_settings/payment_qr_url').set(imgUrl);
-                        this.adminQrUrl = imgUrl;
-                        this.adminQrInput = imgUrl;
-                        this.showMessage('✅ QR Code uploaded & saved successfully!');
-                    } else {
-                        this.showMessage('❌ ImgBB upload failed: ' + (data.error && data.error.message || 'Try again'));
-                    }
-                } catch(err) {
-                    this.showMessage('⚠️ Network error — please try again.');
-                } finally {
-                    this.qrUploading = false;
-                    this.qrUploadProgress = '';
+            this.qrUploadProgress = 'Uploading to Cloudinary...';
+            try {
+                const fd = new FormData();
+                fd.append('file', file);
+                fd.append('upload_preset', 'pinkkart_preset');
+
+                const res = await fetch('https://api.cloudinary.com/v1_1/j2dkr5jj/image/upload', {
+                    method: 'POST',
+                    body: fd
+                });
+                const data = await res.json();
+                if (data.secure_url) {
+                    const imgUrl = data.secure_url;
+                    this.qrUploadProgress = 'Saving to Firebase...';
+                    await database.ref('admin_settings/payment_qr_url').set(imgUrl);
+                    this.adminQrUrl = imgUrl;
+                    this.adminQrInput = imgUrl;
+                    this.showMessage('✅ QR Code uploaded & saved to Cloudinary!');
+                } else {
+                    this.showMessage('❌ Cloudinary upload failed: ' + (data.error && data.error.message || 'Try again'));
                 }
-            };
-            reader.readAsDataURL(file);
+            } catch(err) {
+                this.showMessage('⚠️ Network error — please try again.');
+            } finally {
+                this.qrUploading = false;
+                this.qrUploadProgress = '';
+            }
         },
+
         async saveGlobalDiscount() {
             const val = Math.min(90, Math.max(0, Number(this.globalDiscountInput) || 0));
             try {
@@ -5093,38 +5085,37 @@ monthlyChartTotalRevenue() {
                 )
             );
         },
-        async uploadSizeChartToDrive(event, type) {
+                        async uploadSizeChartToDrive(event, type) {
             const file = event.target.files[0];
             if (!file) return;
             if (type === 'add') this.sizeChartUploading = true;
             else this.editSizeChartUploading = true;
-            this.showMessage("⏳ Size chart ImgBB pe upload ho raha hai...");
-            const reader = new FileReader();
-            reader.onload = async (e) => {
-                const base64String = e.target.result.split(',')[1];
-                try {
-                    const fd = new FormData();
-                    fd.append('key', '9b6ea4121e0281d6911d13eaf8d59c86');
-                    fd.append('image', base64String);
-                    fd.append('name', 'sizechart_' + Date.now());
-                    const response = await fetch('https://api.imgbb.com/1/upload', { method: 'POST', body: fd });
-                    const result = await response.json();
-                    if (result.success && result.data && result.data.url) {
-                        if (type === 'add') this.form.sizeChartImage = result.data.url;
-                        else this.editForm.sizeChartImage = result.data.url;
-                        this.showMessage("✅ Size Chart ImgBB pe save ho gayi!");
-                    } else {
-                        this.showMessage("❌ Upload failed: " + (result.error && result.error.message || "Try again"));
-                    }
-                } catch (err) {
-                    this.showMessage("⚠️ Upload issue — dobara try karein.");
-                } finally {
-                    if (type === 'add') { this.sizeChartUploading = false; const inp = document.getElementById('addSizeChartInput'); if(inp) inp.value = ''; }
-                    else { this.editSizeChartUploading = false; const inp = document.getElementById('editSizeChartInput'); if(inp) inp.value = ''; }
+            this.showMessage("⏳ Size chart Cloudinary pe upload ho raha hai...");
+            try {
+                const fd = new FormData();
+                fd.append('file', file);
+                fd.append('upload_preset', 'pinkkart_preset');
+
+                const response = await fetch('https://api.cloudinary.com/v1_1/j2dkr5jj/image/upload', {
+                    method: 'POST',
+                    body: fd
+                });
+                const result = await response.json();
+                if (result.secure_url) {
+                    if (type === 'add') this.form.sizeChartImage = result.secure_url;
+                    else this.editForm.sizeChartImage = result.secure_url;
+                    this.showMessage("✅ Size Chart Cloudinary pe save ho gayi!");
+                } else {
+                    this.showMessage("❌ Upload failed: " + (result.error && result.error.message || "Try again"));
                 }
-            };
-            reader.readAsDataURL(file);
+            } catch (err) {
+                this.showMessage("⚠️ Upload issue — dobara try karein.");
+            } finally {
+                if (type === 'add') { this.sizeChartUploading = false; const inp = document.getElementById('addSizeChartInput'); if(inp) inp.value = ''; }
+                else { this.editSizeChartUploading = false; const inp = document.getElementById('editSizeChartInput'); if(inp) inp.value = ''; }
+            }
         },
+            
         formatDate(iso) { if (!iso) return ''; return new Date(iso).toLocaleString('en-IN', { day:'numeric', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' }); },
         formatShortDate(iso) { if (!iso) return ''; return new Date(iso).toLocaleString('en-IN', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' }); },
         openFarmerPurchaseModal() {
