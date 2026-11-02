@@ -1453,10 +1453,18 @@
                             <label class="block text-xs font-semibold text-gray-600 mb-1">Category Name *</label>
                             <input type="text" v-model="newCategoryInput" placeholder="e.g. Electronics, Footwear..." class="w-full border px-3 py-2 rounded-lg text-xs outline-none focus:border-blue-400" @keyup.enter="addNewCategory">
                         </div>
-                        <div>
-                            <label class="block text-xs font-semibold text-gray-600 mb-1">Category Image URL <span class="text-gray-400 font-normal">(optional)</span></label>
-                            <input type="text" v-model="newCategoryImage" placeholder="Paste image link (Google Drive, Imgur, etc.)" class="w-full border px-3 py-2 rounded-lg text-xs outline-none focus:border-blue-400">
-                        </div>
+                          <div>
+    <label class="block text-xs font-semibold text-gray-600 mb-1">Category Image (Upload ya Link)</label>
+    <div class="flex items-center gap-2">
+        <label class="cursor-pointer bg-white border border-blue-300 hover:bg-blue-50 text-blue-700 font-bold px-3 py-2 rounded-lg text-xs flex items-center gap-1.5 transition whitespace-nowrap shadow-sm">
+            <i v-if="categoryUploading" class="fas fa-circle-notch fa-spin text-blue-600"></i>
+            <i v-else class="fas fa-camera text-blue-600"></i>
+            <span>{{ categoryUploading ? 'Uploading...' : 'Choose File' }}</span>
+            <input type="file" accept="image/*" @change="uploadNewCategoryImage" :disabled="categoryUploading" class="hidden">
+        </label>
+        <input type="text" v-model="newCategoryImage" placeholder="Ya image URL yahan paste karein" class="w-full border px-3 py-2 rounded-lg text-xs outline-none focus:border-blue-400">
+    </div>
+</div>
                         <div v-if="newCategoryImage" class="flex items-center gap-3 bg-white border rounded-lg p-2">
                             <img :src="newCategoryImage" class="w-12 h-12 object-contain rounded-lg border bg-gray-50" onerror="this.src='https://placehold.co/48x48?text=Err'">
                             <span class="text-[10px] text-gray-500 truncate flex-1">{{ newCategoryImage }}</span>
@@ -2921,6 +2929,8 @@ new Vue({
         editingCatIdx: null, editCatName: '', editCatImage: '',
         newCategoryInput: '',
         newCategoryImage: '',
+categoryUploading: false,
+editCategoryUploading: false,
         adminPaymentLink: '',
         adminQrUrl: '',
         adminQrInput: '',
@@ -4675,6 +4685,70 @@ monthlyChartTotalRevenue() {
             } catch(e) { this.showMessage('Error: ' + e.message); } finally { this.loading = false; }
         },
         async deleteProduct(id) { if (confirm('Delete product permanently?')) { await database.ref(`products/${id}`).remove(); await this.loadProducts(); this.showMessage('Product removed'); } },
+        async uploadNewCategoryImage(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            if (file.size > 5 * 1024 * 1024) {
+                this.showMessage('❌ File bahut badi hai! Max 5MB allowed.');
+                return;
+            }
+            this.categoryUploading = true;
+            this.showMessage('⏳ Category image Cloudinary pe upload ho rahi hai...');
+            try {
+                const fd = new FormData();
+                fd.append('file', file);
+                fd.append('upload_preset', 'pinkkart_preset');
+
+                const res = await fetch('https://api.cloudinary.com/v1_1/j2dkr5jj/image/upload', {
+                    method: 'POST',
+                    body: fd
+                });
+                const data = await res.json();
+                if (data && data.secure_url) {
+                    this.newCategoryImage = data.secure_url;
+                    this.showMessage('✅ Category image upload ho gayi!');
+                } else {
+                    this.showMessage('❌ Upload fail: ' + (data.error && data.error.message || 'Dobara try karein'));
+                }
+            } catch (err) {
+                this.showMessage('⚠️ Network error — connection check karein.');
+            } finally {
+                this.categoryUploading = false;
+                event.target.value = '';
+            }
+        },
+        async uploadEditCategoryImage(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            if (file.size > 5 * 1024 * 1024) {
+                this.showMessage('❌ File bahut badi hai! Max 5MB allowed.');
+                return;
+            }
+            this.editCategoryUploading = true;
+            this.showMessage('⏳ Image update ho rahi hai...');
+            try {
+                const fd = new FormData();
+                fd.append('file', file);
+                fd.append('upload_preset', 'pinkkart_preset');
+
+                const res = await fetch('https://api.cloudinary.com/v1_1/j2dkr5jj/image/upload', {
+                    method: 'POST',
+                    body: fd
+                });
+                const data = await res.json();
+                if (data && data.secure_url) {
+                    this.editCatImage = data.secure_url;
+                    this.showMessage('✅ Image update ho gayi!');
+                } else {
+                    this.showMessage('❌ Upload fail: ' + (data.error && data.error.message || 'Dobara try karein'));
+                }
+            } catch (err) {
+                this.showMessage('⚠️ Network error — connection check karein.');
+            } finally {
+                this.editCategoryUploading = false;
+                event.target.value = '';
+            }
+        },
         async addNewCategory() {
             const val = this.newCategoryInput.trim();
             const img = this.newCategoryImage.trim();
