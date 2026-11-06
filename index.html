@@ -1672,6 +1672,26 @@
                                     </span>
                                     <span class="font-black text-green-700">-₹{{ Number(order.cashbackUsed).toFixed(2) }}</span>
                                 </div>
+                                <!-- VIP Discount (Agar laga ho) -->
+                                <div v-if="Number(order.vipDiscount) > 0" class="flex justify-between items-center px-3 py-2 border-b border-gray-100 bg-amber-50">
+                                    <span class="text-amber-800 font-bold flex items-center gap-1.5">
+                                        <span class="inline-flex items-center gap-1 bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full text-[10px] font-black">
+                                            <i class="fas fa-crown text-[9px] text-amber-600"></i> VIP Discount
+                                        </span>
+                                    </span>
+                                    <span class="font-black text-amber-700">-₹{{ Number(order.vipDiscount).toFixed(2) }}</span>
+                                </div>
+
+                                <!-- Reward Points Used (Agar points use hue hon) -->
+                                <div v-if="Number(order.rewardPointsUsed) > 0" class="flex justify-between items-center px-3 py-2 border-b border-gray-100 bg-purple-50">
+                                    <span class="text-purple-700 font-bold flex items-center gap-1.5">
+                                        <span class="inline-flex items-center gap-1 bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full text-[10px] font-black">
+                                            <i class="fas fa-star text-[9px] text-purple-500"></i> Reward Points ({{ Number(order.rewardPointsUsed).toFixed(0) }} Pts)
+                                        </span>
+                                    </span>
+                                    <span class="font-black text-purple-700">-₹{{ Number(order.rewardPointsUsed).toFixed(2) }}</span>
+                                </div>
+
                                 <div class="flex justify-between items-center px-3 py-2.5" :class="Number(order.cashbackUsed) > 0 ? 'bg-blue-50' : 'bg-gray-50'">
                                     <span class="font-black text-gray-800 flex items-center gap-1.5">
                                         <i class="fas fa-hand-holding-usd text-blue-500 text-[11px]"></i>
@@ -4858,7 +4878,7 @@ monthlyChartTotalRevenue() {
                 this.showMessage(val > 0 ? `✅ ${val}% discount sabhi products par apply ho gaya!` : '✅ Global discount hata diya gaya.');
             } catch(e) { this.showMessage('Error: ' + e.message); }
         },
-        async updateOrderStatus(order) {
+                async updateOrderStatus(order) {
             try {
                 await database.ref(`orders/${order.id}`).update({ status: order.status, lastUpdated: new Date().toISOString() });
                 this.showMessage(`Status: ${this.getStatusText(order.status)}`);
@@ -4868,12 +4888,12 @@ monthlyChartTotalRevenue() {
                     try {
                         let earnAmt = Number(order.totalCashbackEarnable || 0);
 
-                        // Fallback 1: sum cashback from items stored in order
+                        // Fallback 1: order items me se calculate karo
                         if (earnAmt === 0 && order.items && order.items.length) {
                             earnAmt = order.items.reduce((s, it) => s + Number(it.cashback || 0) * Number(it.quantity || 1), 0);
                         }
 
-                        // Fallback 2: look up each product in Firebase and sum cashback
+                        // Fallback 2: products catalog se dhoondho
                         if (earnAmt === 0 && order.items && order.items.length) {
                             const productSnaps = await Promise.all(
                                 order.items.map(it => database.ref('products/' + it.id).once('value'))
@@ -4885,37 +4905,36 @@ monthlyChartTotalRevenue() {
                         }
 
                         if (earnAmt > 0) {
-                            const phone = order.customerPhone;
-                            const uid   = order.uid;
+                            const phone = order.customerPhone ? String(order.customerPhone).replace(/\D/g, '') : '';
+                            const uid = order.uid || '';
 
-                            // Detect correct path: phone users → users/<phone>, email users → users_email/<uid>
-                            let cashbackPath = null;
+                            // 1. users_email me credit karo (Customer app yahi se balance leti hai)
+                            if (uid) {
+                                await database.ref(`users_email/${uid}/cashback`).transaction(cur => (Number(cur) || 0) + earnAmt);
+                            }
+
+                            // 2. phone wale node me bhi sync karo (Backup)
                             if (phone) {
-                                const profileSnap = await database.ref(`users/${phone}`).once('value');
-                                if (profileSnap.exists()) {
-                                    cashbackPath = `users/${phone}/cashback`;
-                                }
-                            }
-                            if (!cashbackPath && uid) {
-                                cashbackPath = `users_email/${uid}/cashback`;
-                            }
-                            if (!cashbackPath && phone) {
-                                // Last fallback: phone path even if profile not found
-                                cashbackPath = `users/${phone}/cashback`;
+                                await database.ref(`users/${phone}/cashback`).transaction(cur => (Number(cur) || 0) + earnAmt);
                             }
 
-                            if (cashbackPath) {
-                                const userSnap = await database.ref(cashbackPath).once('value');
-                                const newBal = Number(userSnap.val() || 0) + earnAmt;
-                                await database.ref(cashbackPath).set(newBal);
-                                await database.ref(`orders/${order.id}`).update({ cashbackCredited: true, totalCashbackEarnable: earnAmt });
-                                order.cashbackCredited = true;
-                                this.showMessage(`✅ ₹${earnAmt.toFixed(2)} Cashback credited to ${phone || uid}'s wallet!`);
-                            }
+                            // Order par lock mark karo taaki duplicate credit na ho
+                            await database.ref(`orders/${order.id}`).update({ 
+                                cashbackCredited: true, 
+                                totalCashbackEarnable: earnAmt,
+                                cashbackCreditedAt: new Date().toISOString()
+                            });
+                            order.cashbackCredited = true;
+
+                            this.showMessage(`✅ ₹${earnAmt.toFixed(2)} Cashback wallet me add ho gaya!`);
                         }
-                    } catch(ce) { console.log('Cashback credit error:', ce); }
+                    } catch(ce) { 
+                        console.error('Cashback credit error:', ce); 
+                    }
                 }
-            } catch(e) { this.showMessage(e.message); }
+            } catch(e) { 
+                this.showMessage(e.message); 
+            }
         },
         async approveOnlineOrder(order) {
             try {
