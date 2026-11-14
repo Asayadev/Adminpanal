@@ -2679,26 +2679,40 @@
                                     <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Bonus Reward Points</label>
                                     <input type="number" v-model.number="adminMilestones[lvl].points" min="0" class="w-full p-2 border rounded-xl text-xs font-bold outline-none focus:border-indigo-500 bg-gray-50">
                                 </div>
+<!-- Har Milestone Level ke andar Gifts List -->
+<div class="mt-3 p-3 bg-gray-50 rounded-2xl border border-gray-200 space-y-3">
+    <div class="flex justify-between items-center">
+        <p class="text-xs font-black text-gray-700 uppercase">🎁 Mystery Gifts Pool for this Level</p>
+        <button @click="addGiftToMilestone(lvl)" class="px-2.5 py-1 bg-pink-500 text-white text-[10px] font-black rounded-lg active:scale-95" type="button">
+            + Naya Gift Jodein
+        </button>
+    </div>
 
-                                <div>
-                                    <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Gift Title / Product Name</label>
-                                    <input type="text" v-model="adminMilestones[lvl].giftTitle" placeholder="e.g. Masala Pack, Electric Kettle" class="w-full p-2 border rounded-xl text-xs font-bold outline-none focus:border-indigo-500 bg-gray-50">
-                                </div>
+    <!-- Multi-Gift Items Loop -->
+    <div v-for="(gift, gIndex) in (adminMilestones[lvl].gifts || [])" :key="gIndex" class="bg-white p-3 rounded-xl border border-gray-100 shadow-sm space-y-2.5">
+        <div class="flex gap-2 items-start">
+            <div class="flex-1 space-y-2">
+                <input type="text" v-model="gift.title" placeholder="Gift Title / Product Name" 
+                       class="w-full p-2 bg-gray-50 border border-gray-200 rounded-lg text-xs font-bold text-gray-800 outline-none">
+                <input type="text" v-model="gift.image" placeholder="Gift Photo URL (Direct Link)" 
+                       class="w-full p-2 bg-gray-50 border border-gray-200 rounded-lg text-xs font-mono text-gray-600 outline-none">
+            </div>
+            <!-- Delete Gift Button -->
+            <button @click="adminMilestones[lvl].gifts.splice(gIndex, 1)" class="text-red-500 hover:text-red-700 p-2 text-xs mt-1" type="button" title="Delete Gift">
+                <i class="fas fa-trash-alt"></i>
+            </button>
+        </div>
 
-                                <div>
-                                    <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Gift Photo URL</label>
-                                    <input type="text" v-model="adminMilestones[lvl].giftImage" placeholder="Cloudinary Image link" class="w-full p-2 border rounded-xl text-xs font-medium outline-none focus:border-indigo-500 bg-gray-50">
-                                </div>
-
-                                <div class="h-20 bg-gray-50 rounded-xl border border-dashed border-gray-200 flex items-center justify-center overflow-hidden">
-                                    <img v-if="adminMilestones[lvl].giftImage" :src="adminMilestones[lvl].giftImage" class="h-full object-contain p-1">
-                                    <span v-else class="text-[10px] text-gray-400 font-semibold">No Image Preview</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
+        <!-- Live Image Preview Box -->
+        <div v-if="gift.image" class="h-16 bg-gray-50 rounded-lg border border-dashed border-gray-200 flex items-center justify-center overflow-hidden">
+            <img :src="getDriveImageUrl ? getDriveImageUrl(gift.image) : gift.image" class="h-full object-contain p-1" onerror="this.src='https://placehold.co/100x100?text=Invalid+Image+URL'">
+        </div>
+    </div>
+</div> 
+    </div>
+</div>
+</div>
+</div>
                 <!-- ===== ADD NEW LEVEL POPUP MODAL ===== -->
                 <div v-if="showNewMilestoneModal" class="fixed inset-0 bg-black/60 flex items-center justify-center z-[150] p-4" @click.self="showNewMilestoneModal = false">
                     <div class="bg-white rounded-3xl w-full max-w-sm p-5 shadow-2xl space-y-4">
@@ -3353,6 +3367,12 @@ monthlyChartTotalRevenue() {
         }
     },
     methods: {
+addGiftToMilestone(lvl) {
+    if (!this.adminMilestones[lvl].gifts) {
+        this.$set(this.adminMilestones[lvl], 'gifts', []);
+    }
+    this.adminMilestones[lvl].gifts.push({ title: '', image: '' });
+},
         openAddMilestoneModal() {
             this.newMilestoneDraft = { level: null, points: 10, giftTitle: '', giftImage: '', isActive: true };
             this.showNewMilestoneModal = true;
