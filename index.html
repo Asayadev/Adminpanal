@@ -686,7 +686,7 @@
                     <button type="button" @click="addEditVariantSlot" class="w-full bg-blue-100 text-blue-700 rounded-lg py-1.5 text-xs font-bold mt-1"><i class="fas fa-plus mr-1"></i> Naya Variant Jodein</button>
                 </div>
                 <div class="grid grid-cols-2 gap-3"><div><label class="block font-bold text-gray-700 mb-1">Selling Price (₹) *</label><input type="number" v-model="editForm.price" class="w-full border p-2.5 rounded-lg text-blue-600 font-bold outline-none"></div><div><label class="block font-bold text-gray-500 mb-1">Original Price (M.R.P) ₹</label><input type="number" v-model="editForm.originalPrice" class="w-full border p-2.5 rounded-lg outline-none"></div></div>
-                <div class="grid grid-cols-2 gap-3"><div><label class="block font-bold text-gray-700 mb-1">Stock Status</label><select v-model="editForm.stockStatus" class="w-full border p-2.5 rounded-lg bg-white outline-none"><option value="In stock">In Stock ✅</option><option value="Out of stock">Out of Stock ❌</option><option value="Currently unavailable">Currently Unavailable ⏳</option></select></div><div><label class="block font-bold text-gray-700 mb-1">Top Badge</label><input type="text" v-model="editForm.badge" placeholder="Trending, Bestseller, New" class="w-full border p-2.5 rounded-lg outline-none"></div></div><div style="background:#fff7ed;padding:12px;border:1.5px dashed #fdba74;border-radius:12px;"><label style="display:flex;align-items:center;gap:8px;font-weight:800;color:#9a3412;font-size:11px;cursor:pointer;"><input type="checkbox" v-model="editForm.isSponsored" style="width:16px;height:16px;"> 📢 Sponsored (Paid Ad) Product</label><div v-if="editForm.isSponsored" style="margin-top:8px;"><label class="block font-bold text-gray-700 mb-1" style="font-size:10px;">Sponsored Valid Till (Last Date)</label><input type="date" v-model="editForm.sponsoredUntil" class="w-full border p-2.5 rounded-lg text-xs bg-white"><p style="font-size:9px;color:#9a3412;margin-top:4px;">Is date ke baad product apne aap normal ho jayega.</p></div></div>
+                <div class="grid grid-cols-2 gap-3"><div><label class="block font-bold text-gray-700 mb-1">Stock Status</label><select v-model="editForm.stockStatus" class="w-full border p-2.5 rounded-lg bg-white outline-none"><option value="In stock">In Stock ✅</option><option value="Out of stock">Out of Stock ❌</option><option value="Currently unavailable">Currently Unavailable ⏳</option></select></div><div><label class="block font-bold text-gray-700 mb-1">Top Badge</label><input type="text" v-model="editForm.badge" placeholder="Trending, Bestseller, New" class="w-full border p-2.5 rounded-lg outline-none"></div></div><div style="background:#fff7ed;padding:12px;border:1.5px dashed #fdba74;border-radius:12px;"><label style="display:flex;align-items:center;gap:8px;font-weight:800;color:#9a3412;font-size:11px;cursor:pointer;"><input type="checkbox" v-model="editForm.isSponsored" style="width:16px;height:16px;"> 📢 Sponsored (Paid Ad) Product</label><div v-if="editForm.isSponsored" style="margin-top:8px;"><label class="block font-bold text-gray-700 mb-1" style="font-size:10px;">Sponsored Valid Till (Last Date)</label><input type="date" v-model="editForm.sponsoredUntil" class="w-full border p-2.5 rounded-lg text-xs bg-white"><p style="font-size:9px;color:#9a3412;margin-top:4px;">Is date ke baad product apne aap normal ho jayega.</p></div></div><div style="background:#fef2f2;padding:10px 12px;border:1.5px dashed #fca5a5;border-radius:12px;"><label style="display:flex;align-items:center;gap:8px;font-weight:800;color:#991b1b;font-size:11px;cursor:pointer;"><input type="checkbox" v-model="editForm.inFlashSale" style="width:16px;height:16px;"> ⚡ Flash Sale mein shamil karein</label></div>
                 <!-- Cashback Edit -->
                 <div style="background:#f0fdf4;padding:12px;border:1.5px dashed #86efac;border-radius:12px;">
                     <label style="display:block;font-weight:800;color:#166534;margin-bottom:6px;font-size:11px;"><i class="fas fa-wallet mr-1"></i> Cashback Reward (₹)</label>
@@ -1180,10 +1180,10 @@
             <div v-if="currentPage == 'products'">
                 <div class="flex justify-between items-center mb-4"><h2 class="text-base font-bold text-gray-800">🛒 Live Products Catalog</h2><button @click="changePage('addProduct')" class="bg-blue-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-blue-700 transition"><i class="fas fa-plus mr-1"></i> Add New Product</button></div>
                 <div class="mb-3 bg-white rounded-xl shadow-sm p-3"><div class="relative"><i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-xs"></i><input type="text" v-model="productSearch" placeholder="Search catalog items by name or keywords..." class="w-full pl-9 pr-3 py-2 border rounded-lg text-xs"></div></div>
-                <div class="bg-white rounded-xl shadow-sm overflow-x-auto border border-gray-100"><table class="w-full text-xs"><thead class="bg-gray-50 border-b border-gray-100 text-gray-500 font-semibold"><tr><th class="p-3 text-left">Product Details</th><th class="p-3 text-left">Category</th><th class="p-3 text-left">Pricing (₹)</th><th class="p-3 text-left">Stock Status</th><th class="p-3 text-center">Actions</th></tr></thead><tbody><tr v-for="p in filteredProducts" :key="p.id" class="border-b border-gray-50 hover:bg-gray-50/50 transition"><td class="p-3 flex items-center gap-3"><img :src="getDriveImageUrl(p.image || (p.images ? p.images[0] : ''))" class="w-10 h-10 object-contain rounded bg-gray-50 border" onerror="this.src='https://placehold.co/80x80?text=No+Img'"><div><p class="font-bold text-gray-800">{{ p.name }}</p><span v-if="p.badge" class="bg-orange-100 text-orange-600 font-semibold px-1.5 py-0.5 rounded text-[9px] mt-0.5 inline-block">{{ p.badge }}</span><span v-if="p.isSponsored" class="bg-amber-100 text-amber-700 font-bold px-1.5 py-0.5 rounded text-[9px] mt-0.5 ml-1 inline-block">📢 Sponsored<span v-if="p.sponsoredUntil"> · till {{ p.sponsoredUntil }}</span></span></div></td><td class="p-3 text-gray-600">{{ p.category || 'Uncategorized' }}</td><td class="p-3"><p class="font-bold text-blue-600">₹{{ Number(p.price).toFixed(2) }}</p><p v-if="p.originalPrice" class="line-through text-gray-400 text-[10px]">₹{{ Number(p.originalPrice).toFixed(2) }}</p></td><td class="p-3"><button @click.stop="toggleStockStatus(p)" :class="(p.stockStatus === 'In stock' || !p.stockStatus) ? 'text-green-700 bg-green-50 border-green-300 hover:bg-green-100' : 'text-red-700 bg-red-50 border-red-300 hover:bg-red-100'" class="font-bold px-2.5 py-1 rounded-lg text-[10px] border cursor-pointer transition-all flex items-center gap-1 whitespace-nowrap"><i :class="(p.stockStatus === 'In stock' || !p.stockStatus) ? 'fas fa-check-circle' : 'fas fa-times-circle'" class="text-[9px]"></i>{{ p.stockStatus || 'In stock' }}<i class="fas fa-exchange-alt text-[8px] opacity-50 ml-0.5"></i></button></td><td class="p-3 text-center space-x-2 whitespace-nowrap"><button @click="openEditModal(p)" class="text-blue-500 hover:text-blue-700 bg-blue-50 p-1.5 rounded-md transition"><i class="fas fa-edit"></i></button><button @click="deleteProduct(p.id)" class="text-red-500 hover:text-red-700 bg-red-50 p-1.5 rounded-md transition"><i class="fas fa-trash-alt"></i></button></td></tr><tr v-if="filteredProducts.length === 0"><td colspan="5" class="p-8 text-center text-gray-400 font-medium">No Products Available matching search</td></tr></tbody></table></div>
+                <div class="bg-white rounded-xl shadow-sm overflow-x-auto border border-gray-100"><table class="w-full text-xs"><thead class="bg-gray-50 border-b border-gray-100 text-gray-500 font-semibold"><tr><th class="p-3 text-left">Product Details</th><th class="p-3 text-left">Category</th><th class="p-3 text-left">Pricing (₹)</th><th class="p-3 text-left">Stock Status</th><th class="p-3 text-center">Actions</th></tr></thead><tbody><tr v-for="p in filteredProducts" :key="p.id" class="border-b border-gray-50 hover:bg-gray-50/50 transition"><td class="p-3 flex items-center gap-3"><img :src="getDriveImageUrl(p.image || (p.images ? p.images[0] : ''))" class="w-10 h-10 object-contain rounded bg-gray-50 border" onerror="this.src='https://placehold.co/80x80?text=No+Img'"><div><p class="font-bold text-gray-800">{{ p.name }}</p><span v-if="p.badge" class="bg-orange-100 text-orange-600 font-semibold px-1.5 py-0.5 rounded text-[9px] mt-0.5 inline-block">{{ p.badge }}</span><span v-if="p.inFlashSale" class="bg-red-100 text-red-600 font-bold px-1.5 py-0.5 rounded text-[9px] mt-0.5 ml-1 inline-block">⚡ Flash</span><span v-if="p.isSponsored" class="bg-amber-100 text-amber-700 font-bold px-1.5 py-0.5 rounded text-[9px] mt-0.5 ml-1 inline-block">📢 Sponsored<span v-if="p.sponsoredUntil"> · till {{ p.sponsoredUntil }}</span></span></div></td><td class="p-3 text-gray-600">{{ p.category || 'Uncategorized' }}</td><td class="p-3"><p class="font-bold text-blue-600">₹{{ Number(p.price).toFixed(2) }}</p><p v-if="p.originalPrice" class="line-through text-gray-400 text-[10px]">₹{{ Number(p.originalPrice).toFixed(2) }}</p></td><td class="p-3"><button @click.stop="toggleStockStatus(p)" :class="(p.stockStatus === 'In stock' || !p.stockStatus) ? 'text-green-700 bg-green-50 border-green-300 hover:bg-green-100' : 'text-red-700 bg-red-50 border-red-300 hover:bg-red-100'" class="font-bold px-2.5 py-1 rounded-lg text-[10px] border cursor-pointer transition-all flex items-center gap-1 whitespace-nowrap"><i :class="(p.stockStatus === 'In stock' || !p.stockStatus) ? 'fas fa-check-circle' : 'fas fa-times-circle'" class="text-[9px]"></i>{{ p.stockStatus || 'In stock' }}<i class="fas fa-exchange-alt text-[8px] opacity-50 ml-0.5"></i></button></td><td class="p-3 text-center space-x-2 whitespace-nowrap"><button @click="openEditModal(p)" class="text-blue-500 hover:text-blue-700 bg-blue-50 p-1.5 rounded-md transition"><i class="fas fa-edit"></i></button><button @click="deleteProduct(p.id)" class="text-red-500 hover:text-red-700 bg-red-50 p-1.5 rounded-md transition"><i class="fas fa-trash-alt"></i></button></td></tr><tr v-if="filteredProducts.length === 0"><td colspan="5" class="p-8 text-center text-gray-400 font-medium">No Products Available matching search</td></tr></tbody></table></div>
             </div>
 
-            <div v-if="currentPage == 'addProduct'"><div class="max-w-md mx-auto bg-white p-5 rounded-xl shadow-md"><h2 class="text-base font-bold mb-4 text-gray-800"><i class="fas fa-plus-circle text-green-500 mr-1"></i> Add New Product</h2><div class="space-y-3.5 text-xs"><div><label class="block font-bold text-gray-700 mb-1">Product Title *</label><input type="text" v-model="form.name" placeholder="E.g. iPhone 15 Pro" class="w-full border p-2 rounded-lg text-xs outline-none"></div><div class="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-lg p-2"><input type="checkbox" id="hasVariantsAdd" v-model="form.hasVariants" style="width:16px;height:16px;"><label for="hasVariantsAdd" class="text-xs font-bold text-gray-700 cursor-pointer">Kya is product ke alag-alag weights/prices hain? (Variants)</label></div><div v-if="form.hasVariants" style="border:1px dashed #93c5fd;background:#eff6ff;padding:10px;border-radius:10px;"><h5 class="text-xs font-bold text-blue-700 mb-2"><i class="fas fa-weight-hanging mr-1"></i> Product Variants (Weights &amp; Prices)</h5><div v-for="(variant, index) in form.variants" :key="index" style="display:flex;gap:8px;margin-bottom:6px;"><input type="text" v-model="variant.weight" placeholder="e.g. 500g, 1kg" class="border p-2 rounded-lg text-xs" style="width:45%;"><input type="number" v-model.number="variant.price" placeholder="Price (₹)" class="border p-2 rounded-lg text-xs" style="width:35%;"><button type="button" @click="removeVariant(index)" class="bg-red-50 text-red-600 border border-red-200 rounded-lg text-xs font-bold" style="width:20%;">✕</button></div><button type="button" @click="addVariantSlot" class="w-full bg-blue-100 text-blue-700 rounded-lg py-1.5 text-xs font-bold mt-1"><i class="fas fa-plus mr-1"></i> Naya Variant Jodein</button></div><div class="grid grid-cols-2 gap-3"><div><label class="block font-bold text-gray-700 mb-1">Selling Price (₹) *</label><input type="number" v-model="form.price" placeholder="80" class="w-full border p-2 rounded-lg text-xs font-bold text-blue-600"></div><div><label class="block font-bold text-gray-400 mb-1">Original Price (M.R.P) ₹</label><input type="number" v-model="form.originalPrice" placeholder="100" class="w-full border p-2 rounded-lg text-xs"></div></div><div class="grid grid-cols-2 gap-3"><div><label class="block font-bold text-gray-700 mb-1">Category *</label><select v-model="form.category" class="w-full border p-2 rounded-lg text-xs bg-white"><option value="" disabled>Select Category</option><option v-for="cat in availableCategories" :key="cat" :value="cat">{{ cat }}</option></select></div><div><label class="block font-bold text-gray-700 mb-1">Stock Status</label><select v-model="form.stockStatus" class="w-full border p-2 rounded-lg text-xs bg-white"><option value="In stock">In Stock ✅</option><option value="Out of stock">Out of Stock ❌</option></select></div></div><div><label class="block font-bold text-gray-700 mb-1">Top Badge (Optional)</label><input type="text" v-model="form.badge" placeholder="Trending, Bestseller, New" class="w-full border p-2 rounded-lg text-xs"></div><div style="background:#fff7ed;padding:12px;border:1.5px dashed #fdba74;border-radius:12px;"><label style="display:flex;align-items:center;gap:8px;font-weight:800;color:#9a3412;font-size:11px;cursor:pointer;"><input type="checkbox" v-model="form.isSponsored" style="width:16px;height:16px;"> 📢 Sponsored (Paid Ad) Product</label><div v-if="form.isSponsored" style="margin-top:8px;"><label class="block font-bold text-gray-700 mb-1" style="font-size:10px;">Sponsored Valid Till (Last Date)</label><input type="date" v-model="form.sponsoredUntil" class="w-full border p-2 rounded-lg text-xs bg-white"><p style="font-size:9px;color:#9a3412;margin-top:4px;">Is date ke baad product apne aap normal ho jayega.</p></div></div><div style="background:#f0fdf4;padding:12px;border:1.5px dashed #86efac;border-radius:12px;"><label style="display:block;font-weight:800;color:#166534;margin-bottom:6px;font-size:11px;"><i class="fas fa-wallet mr-1"></i> Cashback Reward (₹) — Optional</label><input type="number" v-model="form.cashback" min="0" placeholder="e.g. 20 (0 = no cashback)" style="width:100%;border:1px solid #86efac;padding:7px 10px;border-radius:8px;font-size:12px;font-weight:700;color:#15803d;outline:none;background:white;"><p style="font-size:10px;color:#4ade80;margin-top:4px;">Yeh amount customer ke wallet me automatically add hoga jab order deliver ho jayega</p></div><div style="background:#f8fafc;padding:15px;border:1px dashed #cbd5e1;border-radius:12px;">
+            <div v-if="currentPage == 'addProduct'"><div class="max-w-md mx-auto bg-white p-5 rounded-xl shadow-md"><h2 class="text-base font-bold mb-4 text-gray-800"><i class="fas fa-plus-circle text-green-500 mr-1"></i> Add New Product</h2><div class="space-y-3.5 text-xs"><div><label class="block font-bold text-gray-700 mb-1">Product Title *</label><input type="text" v-model="form.name" placeholder="E.g. iPhone 15 Pro" class="w-full border p-2 rounded-lg text-xs outline-none"></div><div class="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-lg p-2"><input type="checkbox" id="hasVariantsAdd" v-model="form.hasVariants" style="width:16px;height:16px;"><label for="hasVariantsAdd" class="text-xs font-bold text-gray-700 cursor-pointer">Kya is product ke alag-alag weights/prices hain? (Variants)</label></div><div v-if="form.hasVariants" style="border:1px dashed #93c5fd;background:#eff6ff;padding:10px;border-radius:10px;"><h5 class="text-xs font-bold text-blue-700 mb-2"><i class="fas fa-weight-hanging mr-1"></i> Product Variants (Weights &amp; Prices)</h5><div v-for="(variant, index) in form.variants" :key="index" style="display:flex;gap:8px;margin-bottom:6px;"><input type="text" v-model="variant.weight" placeholder="e.g. 500g, 1kg" class="border p-2 rounded-lg text-xs" style="width:45%;"><input type="number" v-model.number="variant.price" placeholder="Price (₹)" class="border p-2 rounded-lg text-xs" style="width:35%;"><button type="button" @click="removeVariant(index)" class="bg-red-50 text-red-600 border border-red-200 rounded-lg text-xs font-bold" style="width:20%;">✕</button></div><button type="button" @click="addVariantSlot" class="w-full bg-blue-100 text-blue-700 rounded-lg py-1.5 text-xs font-bold mt-1"><i class="fas fa-plus mr-1"></i> Naya Variant Jodein</button></div><div class="grid grid-cols-2 gap-3"><div><label class="block font-bold text-gray-700 mb-1">Selling Price (₹) *</label><input type="number" v-model="form.price" placeholder="80" class="w-full border p-2 rounded-lg text-xs font-bold text-blue-600"></div><div><label class="block font-bold text-gray-400 mb-1">Original Price (M.R.P) ₹</label><input type="number" v-model="form.originalPrice" placeholder="100" class="w-full border p-2 rounded-lg text-xs"></div></div><div class="grid grid-cols-2 gap-3"><div><label class="block font-bold text-gray-700 mb-1">Category *</label><select v-model="form.category" class="w-full border p-2 rounded-lg text-xs bg-white"><option value="" disabled>Select Category</option><option v-for="cat in availableCategories" :key="cat" :value="cat">{{ cat }}</option></select></div><div><label class="block font-bold text-gray-700 mb-1">Stock Status</label><select v-model="form.stockStatus" class="w-full border p-2 rounded-lg text-xs bg-white"><option value="In stock">In Stock ✅</option><option value="Out of stock">Out of Stock ❌</option></select></div></div><div><label class="block font-bold text-gray-700 mb-1">Top Badge (Optional)</label><input type="text" v-model="form.badge" placeholder="Trending, Bestseller, New" class="w-full border p-2 rounded-lg text-xs"></div><div style="background:#fff7ed;padding:12px;border:1.5px dashed #fdba74;border-radius:12px;"><label style="display:flex;align-items:center;gap:8px;font-weight:800;color:#9a3412;font-size:11px;cursor:pointer;"><input type="checkbox" v-model="form.isSponsored" style="width:16px;height:16px;"> 📢 Sponsored (Paid Ad) Product</label><div v-if="form.isSponsored" style="margin-top:8px;"><label class="block font-bold text-gray-700 mb-1" style="font-size:10px;">Sponsored Valid Till (Last Date)</label><input type="date" v-model="form.sponsoredUntil" class="w-full border p-2 rounded-lg text-xs bg-white"><p style="font-size:9px;color:#9a3412;margin-top:4px;">Is date ke baad product apne aap normal ho jayega.</p></div></div><div style="background:#fef2f2;padding:10px 12px;border:1.5px dashed #fca5a5;border-radius:12px;"><label style="display:flex;align-items:center;gap:8px;font-weight:800;color:#991b1b;font-size:11px;cursor:pointer;"><input type="checkbox" v-model="form.inFlashSale" style="width:16px;height:16px;"> ⚡ Flash Sale mein shamil karein</label></div><div style="background:#f0fdf4;padding:12px;border:1.5px dashed #86efac;border-radius:12px;"><label style="display:block;font-weight:800;color:#166534;margin-bottom:6px;font-size:11px;"><i class="fas fa-wallet mr-1"></i> Cashback Reward (₹) — Optional</label><input type="number" v-model="form.cashback" min="0" placeholder="e.g. 20 (0 = no cashback)" style="width:100%;border:1px solid #86efac;padding:7px 10px;border-radius:8px;font-size:12px;font-weight:700;color:#15803d;outline:none;background:white;"><p style="font-size:10px;color:#4ade80;margin-top:4px;">Yeh amount customer ke wallet me automatically add hoga jab order deliver ho jayega</p></div><div style="background:#f8fafc;padding:15px;border:1px dashed #cbd5e1;border-radius:12px;">
     <label style="display:block;font-weight:700;color:#334155;margin-bottom:10px;">📸 Product Images — Upload (Slider ke liye)</label>
 
     <!-- Each image slot -->
@@ -2425,6 +2425,48 @@
                         </div>
                     </div>
 
+                    <!-- ===== FLASH SALE SETTINGS CARD ===== -->
+                    <div class="bg-white p-5 rounded-2xl shadow-sm border border-red-100 space-y-4">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-red-500 flex items-center justify-center shadow"><i class="fas fa-bolt text-white text-base"></i></div>
+                            <div>
+                                <h3 class="font-bold text-gray-800 text-base leading-tight">Flash Sale (Countdown Timer)</h3>
+                                <p class="text-[11px] text-gray-400 mt-0.5">Timer khatam hote hi sale price apne aap band ho jayega</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-between bg-red-50 rounded-2xl px-4 py-3 border border-red-100">
+                            <div>
+                                <p class="text-xs font-bold text-gray-700">Sale Status</p>
+                                <p v-if="flashSaleInput.isActive" class="text-[11px] text-red-600 font-semibold mt-0.5">🔥 ON — {{ flashSaleInput.discountPercent }}% off</p>
+                                <p v-else class="text-[11px] text-gray-400 mt-0.5">OFF</p>
+                            </div>
+                            <div @click="flashSaleInput.isActive = !flashSaleInput.isActive" class="cursor-pointer flex items-center gap-2">
+                                <span class="text-[10px] font-bold" :class="flashSaleInput.isActive ? 'text-red-600' : 'text-gray-400'">{{ flashSaleInput.isActive ? 'ON' : 'OFF' }}</span>
+                                <div class="relative w-12 h-6 rounded-full transition-colors" :class="flashSaleInput.isActive ? 'bg-red-500' : 'bg-gray-300'">
+                                    <div class="absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-all" :class="flashSaleInput.isActive ? 'left-7' : 'left-1'"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 mb-1">Sale Title</label>
+                            <input type="text" v-model="flashSaleInput.title" placeholder="Flash Sale ⚡" class="w-full border p-2.5 rounded-xl text-sm outline-none">
+                        </div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-bold text-gray-700 mb-1">Discount %</label>
+                                <input type="number" min="1" max="90" v-model.number="flashSaleInput.discountPercent" class="w-full border p-2.5 rounded-xl text-sm outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-700 mb-1">Sale End (Date &amp; Time)</label>
+                                <input type="datetime-local" v-model="flashSaleInput.endAt" class="w-full border p-2.5 rounded-xl text-xs outline-none">
+                            </div>
+                        </div>
+                        <button @click="saveFlashSale" :disabled="loading" class="w-full bg-red-500 hover:bg-red-600 disabled:bg-red-300 text-white py-3 rounded-xl text-sm font-bold transition shadow-md active:scale-95 flex items-center justify-center gap-2">
+                            <i v-if="loading" class="fas fa-circle-notch fa-spin"></i><i v-else class="fas fa-save"></i> Save Flash Sale
+                        </button>
+                        <p class="text-[10px] text-gray-400 text-center"><i class="fas fa-info-circle mr-1"></i>Products mein "⚡ Flash Sale mein shamil karein" tick karo. Settings <code class="bg-gray-100 px-1 rounded">app_settings/flashSale</code> mein save hongi</p>
+                    </div>
+
                     <!-- ===== DELIVERY CHARGE SETTINGS CARD ===== -->
                     <div class="bg-white p-5 rounded-2xl shadow-sm border border-orange-100 space-y-4">
                         <div class="flex items-center gap-3">
@@ -3091,7 +3133,7 @@ editCategoryUploading: false,
         productSearch: '',
         orderSearch: '',
         orderStatusFilter: 'all',
-        form: { name: '', price: '', originalPrice: '', images: [''], description: '', category: '', badge: '', isSponsored: false, sponsoredUntil: '', stockStatus: 'In stock', sizeChartImage: '', sizes: [], cashback: 0, hasVariants: false, variants: [{ weight: '1 kg', price: 0 }] },
+        form: { name: '', price: '', originalPrice: '', images: [''], description: '', category: '', badge: '', isSponsored: false, sponsoredUntil: '', inFlashSale: false, stockStatus: 'In stock', sizeChartImage: '', sizes: [], cashback: 0, hasVariants: false, variants: [{ weight: '1 kg', price: 0 }] },
         newSizeInput: '',
         bannerForm: { url: '' },
         riderForm: { name: '', phone: '', email: '', password: '' },
@@ -3101,7 +3143,7 @@ editCategoryUploading: false,
         editingRiderId: null,
         showEditModal: false,
         currentEditId: null,
-        editForm: { name: '', price: '', originalPrice: '', stockStatus: 'In stock', badge: '', isSponsored: false, sponsoredUntil: '', sizeChartImage: '', sizes: [], cashback: 0 },
+        editForm: { name: '', price: '', originalPrice: '', stockStatus: 'In stock', badge: '', isSponsored: false, sponsoredUntil: '', inFlashSale: false, sizeChartImage: '', sizes: [], cashback: 0 },
         editNewSizeInput: '',
         sizeChartUploading: false,
         editSizeChartUploading: false,
@@ -3128,6 +3170,7 @@ editCategoryUploading: false,
             deliveryCharge: 40,
             isActive: true
         },
+        flashSaleInput: { isActive: false, title: 'Flash Sale ⚡', discountPercent: 10, endAt: '' },
         deliverySettingsInput: {
             minOrderLimit: 199,
             deliveryCharge: 40,
@@ -3719,11 +3762,11 @@ addGiftToMilestone(lvl) {
                     
         openEditModal(product) {
             this.currentEditId = product.id;
-            this.editForm = { name: product.name || '', price: product.price || '', originalPrice: product.originalPrice || '', stockStatus: product.stockStatus || 'In stock', badge: product.badge || '', isSponsored: product.isSponsored === true, sponsoredUntil: product.sponsoredUntil || '', sizeChartImage: product.sizeChartImage || '', sizes: Array.isArray(product.sizes) ? [...product.sizes] : [], cashback: product.cashback || 0, hasVariants: !!product.hasVariants, variants: Array.isArray(product.variants) && product.variants.length ? product.variants.map(v => ({ weight: v.weight, price: v.price })) : [{ weight: '1 kg', price: 0 }] };
+            this.editForm = { name: product.name || '', price: product.price || '', originalPrice: product.originalPrice || '', stockStatus: product.stockStatus || 'In stock', badge: product.badge || '', isSponsored: product.isSponsored === true, inFlashSale: product.inFlashSale === true, sponsoredUntil: product.sponsoredUntil || '', sizeChartImage: product.sizeChartImage || '', sizes: Array.isArray(product.sizes) ? [...product.sizes] : [], cashback: product.cashback || 0, hasVariants: !!product.hasVariants, variants: Array.isArray(product.variants) && product.variants.length ? product.variants.map(v => ({ weight: v.weight, price: v.price })) : [{ weight: '1 kg', price: 0 }] };
             this.editNewSizeInput = '';
             this.showEditModal = true;
         },
-        closeEditModal() { this.showEditModal = false; this.currentEditId = null; this.editForm = { name: '', price: '', originalPrice: '', stockStatus: 'In stock', badge: '', isSponsored: false, sponsoredUntil: '', sizeChartImage: '', sizes: [], cashback: 0, hasVariants: false, variants: [{ weight: '1 kg', price: 0 }] }; this.editNewSizeInput = ''; this.editSizeChartUploading = false; },
+        closeEditModal() { this.showEditModal = false; this.currentEditId = null; this.editForm = { name: '', price: '', originalPrice: '', stockStatus: 'In stock', badge: '', isSponsored: false, sponsoredUntil: '', inFlashSale: false, sizeChartImage: '', sizes: [], cashback: 0, hasVariants: false, variants: [{ weight: '1 kg', price: 0 }] }; this.editNewSizeInput = ''; this.editSizeChartUploading = false; },
         addEditVariantSlot() { this.editForm.variants.push({ weight: '', price: 0 }); },
         removeEditVariant(index) { if (this.editForm.variants.length > 1) { this.editForm.variants.splice(index, 1); } else { this.showMessage('Kam se kam ek variant hona zaroori hai!'); } },
         addSizeToForm(type) {
@@ -3754,7 +3797,7 @@ addGiftToMilestone(lvl) {
             const basePrice = parseFloat(this.editForm.price);
             this.loading = true;
             try {
-                await database.ref(`products/${this.currentEditId}`).update({ name: this.editForm.name.trim(), price: basePrice, originalPrice: this.editForm.originalPrice ? parseFloat(this.editForm.originalPrice) : null, stockStatus: this.editForm.stockStatus, badge: this.editForm.badge || '', isSponsored: !!this.editForm.isSponsored, sponsoredUntil: this.editForm.isSponsored ? (this.editForm.sponsoredUntil || '') : '', sizeChartImage: this.editForm.sizeChartImage || '', sizes: this.editForm.sizes && this.editForm.sizes.length ? this.editForm.sizes : [], cashback: this.editForm.cashback ? parseFloat(this.editForm.cashback) : 0, hasVariants: !!this.editForm.hasVariants, variants: this.editForm.hasVariants ? cleanVariants : [] });
+                await database.ref(`products/${this.currentEditId}`).update({ name: this.editForm.name.trim(), price: basePrice, originalPrice: this.editForm.originalPrice ? parseFloat(this.editForm.originalPrice) : null, stockStatus: this.editForm.stockStatus, badge: this.editForm.badge || '', isSponsored: !!this.editForm.isSponsored, inFlashSale: !!this.editForm.inFlashSale, sponsoredUntil: this.editForm.isSponsored ? (this.editForm.sponsoredUntil || '') : '', sizeChartImage: this.editForm.sizeChartImage || '', sizes: this.editForm.sizes && this.editForm.sizes.length ? this.editForm.sizes : [], cashback: this.editForm.cashback ? parseFloat(this.editForm.cashback) : 0, hasVariants: !!this.editForm.hasVariants, variants: this.editForm.hasVariants ? cleanVariants : [] });
                 this.showMessage('✅ Product Updated Successfully!');
                 this.closeEditModal();
                 await this.loadProducts();
@@ -4745,6 +4788,7 @@ addGiftToMilestone(lvl) {
                 this.globalDiscountInput = discSnap.val();
             }
             await this.loadDeliverySettings();
+            await this.loadFlashSale();
         },
         viewPodPhoto(order) { this.podPhotoModal = order; },
         async loadWithdrawals() {
@@ -4937,12 +4981,12 @@ addGiftToMilestone(lvl) {
             }
             let filteredImages = this.form.images.filter(url => url.trim() !== ''); if (filteredImages.length === 0) filteredImages = ['https://placehold.co/400x300?text=Product'];
             const basePrice = parseFloat(this.form.price);
-            const productPayload = { name: this.form.name, price: basePrice, originalPrice: this.form.originalPrice ? parseFloat(this.form.originalPrice) : null, image: filteredImages[0], images: filteredImages, description: this.form.description || '', category: this.form.category, badge: this.form.badge || '', isSponsored: !!this.form.isSponsored, sponsoredUntil: this.form.isSponsored ? (this.form.sponsoredUntil || '') : '', stockStatus: this.form.stockStatus, shopkeeper: 'Admin Core', sizeChartImage: this.form.sizeChartImage || '', sizes: this.form.sizes && this.form.sizes.length ? this.form.sizes : [], cashback: this.form.cashback ? parseFloat(this.form.cashback) : 0, hasVariants: !!this.form.hasVariants, variants: this.form.hasVariants ? cleanVariants : [] };
+            const productPayload = { name: this.form.name, price: basePrice, originalPrice: this.form.originalPrice ? parseFloat(this.form.originalPrice) : null, image: filteredImages[0], images: filteredImages, description: this.form.description || '', category: this.form.category, badge: this.form.badge || '', isSponsored: !!this.form.isSponsored, inFlashSale: !!this.form.inFlashSale, sponsoredUntil: this.form.isSponsored ? (this.form.sponsoredUntil || '') : '', stockStatus: this.form.stockStatus, shopkeeper: 'Admin Core', sizeChartImage: this.form.sizeChartImage || '', sizes: this.form.sizes && this.form.sizes.length ? this.form.sizes : [], cashback: this.form.cashback ? parseFloat(this.form.cashback) : 0, hasVariants: !!this.form.hasVariants, variants: this.form.hasVariants ? cleanVariants : [] };
             this.loading = true;
             try {
                 await database.ref('products').push(productPayload);
                 this.showMessage('✅ Product Published Successfully!');
-                this.form = { name: '', price: '', originalPrice: '', images: [''], description: '', category: '', badge: '', isSponsored: false, sponsoredUntil: '', stockStatus: 'In stock', sizeChartImage: '', sizes: [], cashback: 0, hasVariants: false, variants: [{ weight: '1 kg', price: 0 }] };
+                this.form = { name: '', price: '', originalPrice: '', images: [''], description: '', category: '', badge: '', isSponsored: false, sponsoredUntil: '', inFlashSale: false, stockStatus: 'In stock', sizeChartImage: '', sizes: [], cashback: 0, hasVariants: false, variants: [{ weight: '1 kg', price: 0 }] };
                 this.newSizeInput = '';
                 await this.loadProducts();
                 this.changePage('products');
@@ -5642,6 +5686,40 @@ addGiftToMilestone(lvl) {
             }
         },
 
+        // ===== FLASH SALE SETTINGS =====
+        async saveFlashSale() {
+            const f = this.flashSaleInput;
+            const pct = Number(f.discountPercent);
+            if (!(pct >= 1 && pct <= 90)) { this.showMessage('❌ Discount 1 se 90 ke beech hona chahiye!'); return; }
+            const endTime = f.endAt ? new Date(f.endAt).getTime() : 0;
+            if (f.isActive && (!endTime || endTime <= Date.now())) { this.showMessage('❌ Sale ka end time future ka select karein!'); return; }
+            this.loading = true;
+            try {
+                await database.ref('app_settings/flashSale').set({
+                    isActive: !!f.isActive,
+                    title: (f.title || 'Flash Sale ⚡').trim(),
+                    discountPercent: pct,
+                    endTime: endTime || 0,
+                    updatedAt: new Date().toISOString()
+                });
+                this.showMessage('✅ Flash Sale save ho gayi!');
+            } catch (err) {
+                this.showMessage('❌ Error: ' + err.message);
+            } finally {
+                this.loading = false;
+            }
+        },
+        async loadFlashSale() {
+            try {
+                const snap = await database.ref('app_settings/flashSale').once('value');
+                if (snap.exists()) {
+                    const d = snap.val();
+                    const end = Number(d.endTime) || 0;
+                    const endAt = end ? new Date(end - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16) : '';
+                    this.flashSaleInput = { isActive: d.isActive === true, title: d.title || 'Flash Sale ⚡', discountPercent: Number(d.discountPercent) || 10, endAt };
+                }
+            } catch (e) { console.log('Flash sale load error', e); }
+        },
         // ===== DELIVERY SETTINGS =====
         async saveDeliverySettings() {
             if (this.deliverySettingsInput.minOrderLimit < 0 || this.deliverySettingsInput.deliveryCharge < 0) {
