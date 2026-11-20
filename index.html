@@ -4342,7 +4342,43 @@ addGiftToMilestone(lvl) {
             } catch (e) { console.error('Identity migration failed:', e); }
         },
         async loadProducts() { const snap = await database.ref('products').once('value'); const d = snap.val(); this.products = d ? Object.keys(d).map(k => ({ id: k, ...d[k] })) : []; },
-        async loadOrders() { const snap = await database.ref('orders').once('value'); const d = snap.val(); this.orders = d ? Object.keys(d).map(k => ({ id: k, ...d[k] })).reverse() : []; },
+        async loadOrders() { const snap = await database.ref('orders').once('value'); const d = snap.val(); this.orders = d ? Object.keys(d).map(k => ({ id: k, ...d[k] })).reverse() : []; this.scheduleLeaderboardRefresh(); },
+        // ===== LEADERBOARD (public_leaderboard) =====
+        // Is mahine ke delivered orders se Top 20 shoppers nikal kar publish karta hai. User app sirf yahi node padhta hai.
+        scheduleLeaderboardRefresh() {
+            clearTimeout(this._lbTimer);
+            this._lbTimer = setTimeout(() => { this.refreshLeaderboard().catch(e => console.log('Leaderboard error', e)); }, 3000);
+        },
+        async refreshLeaderboard() {
+            const now = new Date();
+            const month = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
+            const map = {};
+            (this.orders || []).forEach(o => {
+                if (o.status !== 'delivered' || !o.date) return;
+                const d = new Date(o.date);
+                if (isNaN(d.getTime()) || d.getFullYear() !== now.getFullYear() || d.getMonth() !== now.getMonth()) return;
+                const phone = String(o.customerPhone || '').replace(/\D/g, '');
+                const uid = o.uid || phone;
+                if (!uid) return;
+                if (!map[uid]) {
+                    map[uid] = {
+                        uid: uid,
+                        name: String(o.customerName || 'Shopper').split(' ')[0],
+                        maskedPhone: phone.length >= 10 ? phone.slice(0, 4) + '****' + phone.slice(-2) : 'User',
+                        avatarUrl: o.customerAvatar || o.userAvatar || '',
+                        totalSpent: 0
+                    };
+                }
+                map[uid].totalSpent += Number(o.total || 0);
+                if (!map[uid].avatarUrl) map[uid].avatarUrl = o.customerAvatar || o.userAvatar || '';
+            });
+            const list = Object.values(map).sort((a, b) => b.totalSpent - a.totalSpent).slice(0, 20)
+                .map(x => ({ ...x, totalSpent: Math.round(x.totalSpent * 100) / 100 }));
+            const sig = month + JSON.stringify(list);
+            if (sig === this._lbSig) return; // kuch badla nahi to dobara write nahi
+            this._lbSig = sig;
+            await database.ref('public_leaderboard').set({ month, list, updatedAt: new Date().toISOString() });
+        },
         attachOrdersListener() {
             if (!this._ordersRef) this._ordersRef = database.ref('orders');
             if (!this._ordersListener) {
