@@ -2,6 +2,8 @@
 <html lang="hi">
 <head>
     <meta charset="UTF-8">
+    <meta name="robots" content="noindex,nofollow">
+    <meta name="referrer" content="no-referrer">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
     <title>Pinkkart Admin - Management Panel</title>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -263,7 +265,7 @@
                             </div>
                             <div class="flex-1 min-w-0">
                                 <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wide">Password</p>
-                                <p class="text-xs font-black text-gray-800 font-mono">{{ selectedStore && selectedStore.password ? selectedStore.password : '(not saved)' }}</p>
+                                <p class="text-xs font-black text-gray-800 font-mono">•••••••• (secure — yahan nahi dikhta)</p>
                             </div>
                         </div>
                     </div>
@@ -482,7 +484,7 @@
                     <p class="text-white text-xs font-bold">📍 {{ podPhotoModal.customerAddress }}</p>
                     <p class="text-white/60 text-[10px] mt-1">Photo captured: {{ podPhotoModal.deliveryPhotoTime ? formatDate(podPhotoModal.deliveryPhotoTime) : 'N/A' }}</p>
                 </div>
-                <a :href="podPhotoModal.deliveryPhoto" target="_blank" class="bg-purple-600 text-white px-3 py-1.5 rounded-lg text-[10px] font-bold hover:bg-purple-700 transition whitespace-nowrap ml-3"><i class="fas fa-download mr-1"></i>Download</a>
+                <a :href="safeUrl(podPhotoModal.deliveryPhoto)" target="_blank" rel="noopener noreferrer" class="bg-purple-600 text-white px-3 py-1.5 rounded-lg text-[10px] font-bold hover:bg-purple-700 transition whitespace-nowrap ml-3"><i class="fas fa-download mr-1"></i>Download</a>
             </div>
         </div>
     </div>
@@ -751,6 +753,7 @@
                     <button @click="changePage('banners')" :class="{'nav-active': currentPage=='banners'}" class="w-full text-left px-3 py-2 rounded-lg flex items-center gap-2 text-sm font-medium"><i class="fas fa-images w-4"></i> Banners</button>
                     <button @click="changePage('coupons')" :class="{'nav-active': currentPage=='coupons'}" class="w-full text-left px-3 py-2 rounded-lg flex items-center gap-2 text-sm font-medium"><i class="fas fa-ticket-alt w-4 text-pink-500"></i> Promo Coupons</button>
 <button @click="changePage('milestones')" :class="{'nav-active': currentPage=='milestones'}" class="w-full text-left px-3 py-2 rounded-lg flex items-center gap-2 text-sm font-medium"><i class="fas fa-gift w-4 text-pink-500"></i> Milestone Gifts</button>
+                    <button @click="changePage('giftClaims')" :class="{'nav-active': currentPage=='giftClaims'}" class="w-full text-left px-3 py-2 rounded-lg flex items-center gap-2 text-sm font-medium"><i class="fas fa-box-open w-4 text-orange-500"></i> Gift Claims<span v-if="pendingGiftClaims.length" class="ml-auto rounded-full bg-orange-100 px-2 py-0.5 text-[9px] font-black text-orange-800">{{ pendingGiftClaims.length }}</span></button>
 
                     <button @click="changePage('categories')" :class="{'nav-active': currentPage=='categories'}" class="w-full text-left px-3 py-2 rounded-lg flex items-center gap-2 text-sm font-medium"><i class="fas fa-tags w-4"></i> Categories</button>
                     <button @click="changePage('vipMembership')" :class="{'nav-active': currentPage=='vipMembership'}" class="w-full text-left px-3 py-2 rounded-lg flex items-center gap-2 text-sm font-medium"><i class="fas fa-crown w-4 text-amber-500"></i> VIP Membership<span v-if="pendingVipRequests.length" class="ml-auto rounded-full bg-amber-100 px-2 py-0.5 text-[9px] font-black text-amber-800">{{ pendingVipRequests.length }}</span></button>
@@ -1081,7 +1084,7 @@
                             <thead class="bg-gray-50 text-gray-500"><tr><th class="p-3 text-left">Plan</th><th class="p-3 text-left">Price</th><th class="p-3 text-left">Duration</th><th class="p-3 text-left">Discount</th><th class="p-3 text-left">Perks</th><th class="p-3 text-right">Actions</th></tr></thead>
                             <tbody>
                                 <tr v-for="plan in membershipPlans" :key="plan.id" class="border-t">
-                                    <td class="p-3 font-bold text-gray-800">{{ plan.name }}</td>
+                                    <td class="p-3 font-bold text-gray-800">{{ plan.name }}<span v-if="plan.milestoneOnly" class="ml-2 rounded-full bg-pink-100 px-2 py-0.5 text-[9px] font-black text-pink-700">🎁 Milestone only</span></td>
                                     <td class="p-3 font-black text-amber-700">₹{{ Number(plan.price).toFixed(2) }}</td>
                                     <td class="p-3">{{ plan.durationDays }} days</td>
                                     <td class="p-3">{{ plan.discount }}%</td>
@@ -1148,7 +1151,7 @@
                                 <div><p class="text-gray-400">Date</p><p class="font-semibold">{{ formatVipExpiry(request.requestedAt) }}</p></div>
                                 <div class="col-span-2"><p class="text-gray-400">UTR</p><p class="font-mono font-semibold break-all">{{ request.utrId }}</p></div>
                             </div>
-                            <a v-if="request.receiptUrl" :href="request.receiptUrl" target="_blank" rel="noopener noreferrer" class="mt-2 inline-block text-blue-600 underline font-bold">View receipt</a>
+                            <a v-if="request.receiptUrl" :href="safeUrl(request.receiptUrl)" target="_blank" rel="noopener noreferrer" class="mt-2 inline-block text-blue-600 underline font-bold">View receipt</a>
                             <span v-else class="mt-2 inline-block text-gray-400">No receipt</span>
                             <div class="mt-3 flex gap-2">
                                 <button @click="approveVipRequest(request)" class="flex-1 bg-green-600 text-white px-3 py-2.5 rounded-xl font-bold"><i class="fas fa-check mr-1"></i>Approve &amp; Activate</button>
@@ -1166,7 +1169,7 @@
                                     <td class="p-3 font-semibold">{{ request.planName }}</td>
                                     <td class="p-3 font-black text-amber-700">₹{{ Number(request.amount || 0).toFixed(2) }}</td>
                                     <td class="p-3 font-mono">{{ request.utrId }}</td>
-                                    <td class="p-3"><a v-if="request.receiptUrl" :href="request.receiptUrl" target="_blank" rel="noopener noreferrer" class="text-blue-600 underline font-bold">View receipt</a><span v-else class="text-gray-400">No receipt</span></td>
+                                    <td class="p-3"><a v-if="request.receiptUrl" :href="safeUrl(request.receiptUrl)" target="_blank" rel="noopener noreferrer" class="text-blue-600 underline font-bold">View receipt</a><span v-else class="text-gray-400">No receipt</span></td>
                                     <td class="p-3">{{ formatVipExpiry(request.requestedAt) }}</td>
                                     <td class="p-3 text-right whitespace-nowrap"><button @click="approveVipRequest(request)" class="bg-green-600 text-white px-2.5 py-1.5 rounded-lg font-bold mr-1"><i class="fas fa-check mr-1"></i>Approve &amp; Activate</button><button @click="rejectVipRequest(request)" class="bg-red-50 text-red-600 px-2.5 py-1.5 rounded-lg font-bold">Reject</button></td>
                                 </tr>
@@ -1764,7 +1767,7 @@
                             <i class="fas fa-times"></i> Close
                         </button>
                         <img :src="receiptModalUrl" class="w-full rounded-2xl shadow-2xl" alt="Payment Receipt">
-                        <a :href="receiptModalUrl" target="_blank" class="mt-3 flex items-center justify-center gap-2 w-full bg-white/10 hover:bg-white/20 text-white font-bold py-2.5 rounded-xl text-sm transition">
+                        <a :href="safeUrl(receiptModalUrl)" target="_blank" rel="noopener noreferrer" class="mt-3 flex items-center justify-center gap-2 w-full bg-white/10 hover:bg-white/20 text-white font-bold py-2.5 rounded-xl text-sm transition">
                             <i class="fas fa-external-link-alt"></i> Open in New Tab
                         </a>
                     </div>
@@ -2668,6 +2671,46 @@
  </div>
 
                       <!-- ==================== MILESTONE GIFTS MANAGEMENT PAGE (DYNAMIC) ==================== -->
+            <div v-if="currentPage == 'giftClaims'" class="space-y-4 p-4 md:p-6">
+                <div class="bg-gradient-to-r from-orange-500 to-pink-500 rounded-2xl p-5 text-white shadow">
+                    <h2 class="text-xl font-black"><i class="fas fa-box-open mr-2"></i>Gift Claims</h2>
+                    <p class="text-xs text-white/90 mt-1">Milestone reward claim karne wale customers ke gifts yahan dikhte hain. Gift bhejne ke baad status badlo.</p>
+                </div>
+                <div class="flex flex-wrap gap-1.5">
+                    <button v-for="f in giftClaimFilters" :key="f.key" @click="giftClaimFilter = f.key" :class="giftClaimFilter === f.key ? 'bg-orange-500 text-white' : 'bg-white text-gray-600 border'" class="px-3 py-1.5 rounded-full text-[11px] font-bold">
+                        {{ f.label }} ({{ giftClaimCount(f.key) }})
+                    </button>
+                </div>
+                <p v-if="!filteredGiftClaims.length" class="bg-white rounded-2xl p-8 text-center text-gray-400 text-xs shadow-sm">Is filter mein koi gift claim nahi hai.</p>
+                <div class="grid gap-3 md:grid-cols-2">
+                    <div v-for="c in filteredGiftClaims" :key="c.id" class="bg-white rounded-2xl p-4 shadow-sm border border-orange-100 text-xs space-y-3">
+                        <div class="flex items-start gap-3">
+                            <div class="w-16 h-16 rounded-xl bg-gray-50 border overflow-hidden flex items-center justify-center flex-shrink-0">
+                                <img v-if="c.giftImage" :src="getDriveImageUrl(c.giftImage)" class="w-full h-full object-contain" onerror="this.style.display='none'">
+                                <i v-else class="fas fa-gift text-pink-400 text-xl"></i>
+                            </div>
+                            <div class="min-w-0 flex-1">
+                                <p class="font-black text-gray-800 text-sm leading-tight">{{ c.giftTitle || 'Gift' }}</p>
+                                <p class="text-[10px] text-gray-500 mt-0.5">Milestone: <b>{{ c.milestoneLevel }} Items</b></p>
+                                <p v-if="c.vipPlanName" class="text-[10px] text-amber-700 font-bold mt-0.5">👑 VIP bhi mila: {{ c.vipPlanName }}</p>
+                            </div>
+                            <span :class="giftStatusClass(c.status)" class="px-2 py-1 rounded-full text-[10px] font-black uppercase whitespace-nowrap">{{ c.status || 'pending' }}</span>
+                        </div>
+                        <div class="bg-gray-50 rounded-xl p-3 space-y-1">
+                            <p><i class="fas fa-user w-4 text-gray-400"></i> <b>{{ c.customerName || 'Customer' }}</b></p>
+                            <p v-if="c.customerPhone"><i class="fas fa-phone w-4 text-gray-400"></i> <a :href="'tel:' + String(c.customerPhone).replace(/[^0-9+]/g,'')" class="text-blue-600 font-bold">{{ c.customerPhone }}</a></p>
+                            <p><i class="fas fa-map-marker-alt w-4 text-gray-400"></i> {{ c.customerAddress || 'Address nahi mila' }}</p>
+                            <p class="text-[10px] text-gray-400"><i class="far fa-clock w-4"></i> {{ formatGiftDate(c.createdAt) }}<span v-if="c.orderId"> · Order: #{{ String(c.orderId).slice(-6) }}</span></p>
+                        </div>
+                        <div class="flex flex-wrap gap-2">
+                            <button v-if="c.status === 'pending'" @click="updateGiftClaimStatus(c, 'dispatched')" class="flex-1 bg-blue-600 text-white py-2 rounded-xl font-bold active:scale-95">🚚 Dispatched</button>
+                            <button v-if="c.status === 'pending' || c.status === 'dispatched'" @click="updateGiftClaimStatus(c, 'delivered')" class="flex-1 bg-green-600 text-white py-2 rounded-xl font-bold active:scale-95">✅ Delivered</button>
+                            <button v-if="c.status === 'pending' || c.status === 'dispatched'" @click="updateGiftClaimStatus(c, 'cancelled')" class="bg-red-50 text-red-600 px-4 py-2 rounded-xl font-bold active:scale-95">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <div v-if="currentPage == 'milestones'" class="space-y-5 p-4 md:p-6">
                 <div class="flex flex-wrap items-center justify-between gap-3">
                     <div>
@@ -2720,6 +2763,13 @@
                                 <div>
                                     <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Bonus Reward Points</label>
                                     <input type="number" v-model.number="adminMilestones[lvl].points" min="0" class="w-full p-2 border rounded-xl text-xs font-bold outline-none focus:border-indigo-500 bg-gray-50">
+                                </div>
+                                <div>
+                                    <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">👑 Select VIP Plan (Optional)</label>
+                                    <select v-model="adminMilestones[lvl].milestoneVipPlanId" class="w-full p-2 border rounded-xl text-xs font-bold outline-none focus:border-indigo-500 bg-gray-50">
+                                        <option value="">— Koi VIP Plan nahi —</option>
+                                        <option v-for="plan in membershipPlans" :key="plan.id" :value="plan.id">{{ plan.name }} ({{ plan.durationDays }} days · ₹{{ plan.price }})</option>
+                                    </select>
                                 </div>
 <!-- Har Milestone Level ke andar Gifts List -->
 <div class="mt-3 p-3 bg-gray-50 rounded-2xl border border-gray-200 space-y-3">
@@ -2937,6 +2987,7 @@
                 </div>
                 <label class="block text-xs font-bold text-gray-600">Discount (%)<input v-model.number="vipPlanDraft.discount" type="number" min="0" max="100" step="0.01" required class="mt-1 w-full border rounded-xl p-3 text-sm"></label>
                 <label class="flex items-center gap-2 rounded-xl bg-amber-50 p-3 text-sm font-bold text-amber-900"><input v-model="vipPlanDraft.freeDelivery" type="checkbox" class="accent-amber-500 w-4 h-4"> Free delivery during membership</label>
+                <label class="flex items-start gap-2 rounded-xl bg-pink-50 p-3 text-sm font-bold text-pink-900"><input v-model="vipPlanDraft.milestoneOnly" type="checkbox" class="accent-pink-500 w-4 h-4 mt-0.5"> <span>🎁 Sirf Milestone reward ke liye<span class="block text-[10px] font-medium text-pink-700">Tick karne par ye plan customers ki VIP khareedne wali list mein nahi dikhega. Sirf Milestone mein "Select VIP Plan" se milega.</span></span></label>
                 <button type="submit" :disabled="loading" class="w-full bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-white rounded-xl p-3 font-black">{{ loading ? 'Saving…' : 'Save VIP Plan' }}</button>
             </form>
         </div>
@@ -3082,11 +3133,14 @@ new Vue({
         emailUsers: [],
         membershipPlans: [],
         vipMembershipRequests: [],
+        giftClaims: [],
+        giftClaimFilter: 'pending',
+        giftClaimFilters: [{ key: 'pending', label: 'Pending' }, { key: 'dispatched', label: 'Dispatched' }, { key: 'delivered', label: 'Delivered' }, { key: 'cancelled', label: 'Cancelled' }, { key: 'all', label: 'All' }],
         _vipAdminPlanRef: null,
         _vipAdminRequestsRef: null,
         showVipPlanModal: false,
         editingVipPlanId: null,
-        vipPlanDraft: { name: 'VIP Pass', price: 199, durationDays: 30, discount: 10, freeDelivery: true },
+        vipPlanDraft: { name: 'VIP Pass', price: 199, durationDays: 30, discount: 10, freeDelivery: true, milestoneOnly: false },
         showManualVipModal: false,
         vipManualTarget: '',
         vipManualPlanId: '',
@@ -3339,13 +3393,18 @@ monthlyChartTotalRevenue() {
                 return typeof user.membership === 'object' && user.membership.status === 'active';
             });
         },
+        pendingGiftClaims() { return (this.giftClaims || []).filter(c => (c.status || 'pending') === 'pending'); },
+        filteredGiftClaims() {
+            const f = this.giftClaimFilter;
+            return (this.giftClaims || []).filter(c => f === 'all' || (c.status || 'pending') === f);
+        },
         pendingVipRequests() {
             return this.vipMembershipRequests.filter(request => request.status === 'pending');
         },
         filteredUsers() { let list = this.allUsers; if (this.userTypeFilter === 'mobile') list = list.filter(u => u.type === 'mobile'); else if (this.userTypeFilter === 'email') list = list.filter(u => u.type === 'email'); if (this.userSearch) { const s = this.userSearch.toLowerCase(); list = list.filter(u => (u.name && u.name.toLowerCase().includes(s)) || (u.phone && u.phone.includes(s)) || (u.email && u.email.toLowerCase().includes(s))); } return list; },
         filteredProducts() { if (!this.productSearch) return this.products; const s = this.productSearch.toLowerCase(); return this.products.filter(p => p.name.toLowerCase().includes(s) || (p.category && p.category.toLowerCase().includes(s))); },
         filteredOrders() { let filtered = this.orders; if (this.orderStatusFilter === 'cancelled') { filtered = filtered.filter(o => o.status === 'cancelled' || o.status === 'rejected'); } else if (this.orderStatusFilter === 'online_pending') { filtered = filtered.filter(o => o.payment_method === 'Online' && o.status === 'pending'); } else if (this.orderStatusFilter !== 'all') { filtered = filtered.filter(o => o.status === this.orderStatusFilter); } if (this.orderSearch) { const s = this.orderSearch.toLowerCase(); filtered = filtered.filter(o => (o.id && o.id.toLowerCase().includes(s)) || (o.customerName && o.customerName.toLowerCase().includes(s)) || (o.customerPhone && o.customerPhone.includes(s))); } return filtered; },
-        getPageTitle() { const t = { dashboard: 'Dashboard', products: 'Products', addProduct: 'Add Product', storeRooms: 'Store Rooms', banners: 'Banners', categories: 'Categories', users: 'Users', vipMembership: 'VIP Membership', orders: 'Orders', returns: 'Returns', settings: 'Settings', riders: 'Riders', withdrawals: 'Withdrawals',kisanPurchase: 'Kisan Purchases',milestones: 'Milestone Gifts'
+        getPageTitle() { const t = { dashboard: 'Dashboard', products: 'Products', addProduct: 'Add Product', storeRooms: 'Store Rooms', banners: 'Banners', categories: 'Categories', users: 'Users', vipMembership: 'VIP Membership', orders: 'Orders', returns: 'Returns', settings: 'Settings', riders: 'Riders', withdrawals: 'Withdrawals',kisanPurchase: 'Kisan Purchases',milestones: 'Milestone Gifts', giftClaims: 'Gift Claims'
 }; return t[this.currentPage] || 'Admin'; },
 
         // ===== TOP SELLING PRODUCTS (Dashboard Analytics) =====
@@ -3473,7 +3532,13 @@ addGiftToMilestone(lvl) {
         async saveAllMilestones() {
             this.isSavingMilestones = true;
             try {
-                await database.ref('admin_settings/milestones').set(this.adminMilestones);
+                // milestoneVipPlanId har level me save hoga ('' = koi VIP plan nahi); undefined values Firebase me nahi jaati
+                const clean = {};
+                Object.keys(this.adminMilestones || {}).forEach(lvl => {
+                    const m = this.adminMilestones[lvl] || {};
+                    clean[lvl] = JSON.parse(JSON.stringify({ ...m, milestoneVipPlanId: m.milestoneVipPlanId || '' }));
+                });
+                await database.ref('admin_settings/milestones').set(clean);
                 this.showMessage('✅ Saare Milestone Levels & Gifts save ho gaye!');
             } catch (err) {
                 this.showMessage('❌ Error: ' + err.message);
@@ -3481,7 +3546,7 @@ addGiftToMilestone(lvl) {
                 this.isSavingMilestones = false;
             }
         },
-        showMessage(msg) { const t = document.getElementById('toast'); document.getElementById('toastMsg').innerHTML = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2000); },
+        showMessage(msg) { const t = document.getElementById('toast'); document.getElementById('toastMsg').textContent = String(msg); t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2000); },
 
         getMonthlySalesData() {
             const months = [];
@@ -3622,6 +3687,34 @@ addGiftToMilestone(lvl) {
 
 
         // ===== ADMIN AUTH =====
+        async isAdminUid(uid) {
+            try { const snap = await database.ref('admins/' + uid).once('value'); return snap.exists(); }
+            catch (e) { return false; }
+        },
+        // 30 minute koi activity nahi to auto logout
+        startIdleTimer() {
+            const LIMIT = 30 * 60 * 1000;
+            const reset = () => {
+                clearTimeout(this._idleTimer);
+                if (!this.adminLoggedIn) return;
+                this._idleTimer = setTimeout(() => {
+                    try { this.stopAllRealtimeListeners(); } catch (e) {}
+                    auth.signOut().catch(() => {});
+                    localStorage.removeItem('pk_admin_session');
+                    window.location.reload();
+                }, LIMIT);
+            };
+            if (!this._idleBound) {
+                this._idleBound = true;
+                ['click', 'keydown', 'touchstart', 'mousemove', 'scroll'].forEach(ev => window.addEventListener(ev, reset, { passive: true }));
+            }
+            reset();
+        },
+        // Sirf http/https links allow (javascript: links se bachav)
+        safeUrl(u) {
+            try { const x = new URL(String(u || ''), window.location.href); return (x.protocol === 'https:' || x.protocol === 'http:') ? x.href : '#'; }
+            catch (e) { return '#'; }
+        },
         handleAdminLogin() {
             if (!this.adminLoginForm.email || !this.adminLoginForm.password) {
                 this.adminLoginError = 'Email aur password dono zaroori hain';
@@ -3635,30 +3728,9 @@ addGiftToMilestone(lvl) {
                     const uid = user.uid;
 
                     // ===== ADMIN ROLE CHECK =====
-                    // Firebase Database mein user ka role check karo
-                    let isAdmin = false;
-
-                    // Check 1: users_email node mein role check karo
-                    const emailSnap = await database.ref('users_email/' + uid).once('value');
-                    if (emailSnap.exists()) {
-                        const userData = emailSnap.val();
-                        if (userData.role === 'admin') isAdmin = true;
-                    }
-
-                    // Check 2: admins node mein UID check karo (agar pehle nahi mila)
-                    if (!isAdmin) {
-                        const adminSnap = await database.ref('admins/' + uid).once('value');
-                        if (adminSnap.exists()) isAdmin = true;
-                    }
-
-                    // Check 3: users node mein role check karo
-                    if (!isAdmin) {
-                        const userSnap = await database.ref('users/' + uid).once('value');
-                        if (userSnap.exists()) {
-                            const userData = userSnap.val();
-                            if (userData.role === 'admin') isAdmin = true;
-                        }
-                    }
+                    // Sirf 'admins/{uid}' node par bharosa (Firebase rules bhi yahi check karte hain).
+                    // Purana 'role' field wala check hata diya: koi bhi user apne profile me role='admin' likh sakta tha.
+                    const isAdmin = await this.isAdminUid(uid);
 
                     if (!isAdmin) {
                         // Normal user hai — logout karo aur error dikhao
@@ -3672,6 +3744,7 @@ addGiftToMilestone(lvl) {
                     this.adminLoginLoading = false;
                     this.adminLoggedIn = true;
                     localStorage.setItem('pk_admin_session', '1');
+                    this.startIdleTimer();
                     this.startAllRealtimeListeners();
                     try { await this.loadAllData(); } catch (e) { console.error('loadAllData failed:', e); }
                 })
@@ -3695,6 +3768,7 @@ addGiftToMilestone(lvl) {
                     console.warn(e);
                 }
                 
+                clearTimeout(this._idleTimer);
                 auth.signOut().catch(() => {});
                 localStorage.removeItem('pk_admin_session');
                 this.adminLoggedIn = false;
@@ -4415,7 +4489,8 @@ addGiftToMilestone(lvl) {
                 // Pehle se existing listeners — inko bhi preserve kiya
                 ['products', () => this.loadProducts()],
                 ['return_requests', () => this.loadReturnRequests()],
-                ['shopkeepers', () => this.loadStoreRooms()]
+                ['shopkeepers', () => this.loadStoreRooms()],
+                ['gift_claims', () => this.loadGiftClaims()]
             ];
 
             this._rtListeners = [];
@@ -4435,6 +4510,36 @@ addGiftToMilestone(lvl) {
             this._rtListeners = [];
         },
         async loadUsers() { const [snap1, snap2] = await Promise.all([database.ref('users').once('value').catch(e => { console.error('users load failed:', e); return { val: () => null }; }), database.ref('users_email').once('value').catch(e => { console.error('users_email load failed:', e); return { val: () => null }; })]); const d1 = snap1.val(); const d2 = snap2.val(); this.users = d1 ? Object.keys(d1).map(k => ({ id: k, ...d1[k], type: 'mobile' })) : []; this.emailUsers = d2 ? Object.keys(d2).map(k => ({ id: k, ...d2[k], type: 'email' })) : []; },
+        // ===== GIFT CLAIMS =====
+        async loadGiftClaims() {
+            try {
+                const snap = await database.ref('gift_claims').once('value');
+                const d = snap.val() || {};
+                this.giftClaims = Object.keys(d).map(id => ({ id, ...d[id] }))
+                    .sort((a, b) => (Date.parse(b.createdAt) || 0) - (Date.parse(a.createdAt) || 0));
+            } catch (e) { console.error('gift_claims load failed:', e); this.giftClaims = []; }
+        },
+        giftClaimCount(key) {
+            return (this.giftClaims || []).filter(c => key === 'all' || (c.status || 'pending') === key).length;
+        },
+        giftStatusClass(st) {
+            return { pending: 'bg-yellow-100 text-yellow-700', dispatched: 'bg-blue-100 text-blue-700', delivered: 'bg-green-100 text-green-700', cancelled: 'bg-red-100 text-red-600' }[st || 'pending'] || 'bg-gray-100 text-gray-600';
+        },
+        formatGiftDate(iso) {
+            const d = new Date(iso); return isNaN(d.getTime()) ? '' : d.toLocaleString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+        },
+        async updateGiftClaimStatus(claim, status) {
+            const label = { dispatched: 'Dispatched', delivered: 'Delivered', cancelled: 'Cancelled' }[status] || status;
+            if (!confirm(`${claim.customerName || 'Customer'} ka gift "${claim.giftTitle}" ko ${label} mark karna hai?`)) return;
+            try {
+                await database.ref('gift_claims/' + claim.id).update({
+                    status, updatedAt: new Date().toISOString(),
+                    updatedBy: (auth.currentUser && auth.currentUser.uid) || ''
+                });
+                this.showMessage('✅ Gift status: ' + label);
+                await this.loadGiftClaims();
+            } catch (e) { this.showMessage('❌ Error: ' + e.message); }
+        },
         async loadMembershipPlans() {
             const snap = await database.ref('admin_settings/membership_plans').once('value');
             const data = snap.val() || {};
@@ -4462,8 +4567,8 @@ addGiftToMilestone(lvl) {
         openVipPlanModal(plan) {
             this.editingVipPlanId = plan ? plan.id : null;
             this.vipPlanDraft = plan
-                ? { name: plan.name || '', price: Number(plan.price), durationDays: Number(plan.durationDays), discount: Number(plan.discount), freeDelivery: !!plan.freeDelivery }
-                : { name: 'VIP Pass', price: 199, durationDays: 30, discount: 10, freeDelivery: true };
+                ? { name: plan.name || '', price: Number(plan.price), durationDays: Number(plan.durationDays), discount: Number(plan.discount), freeDelivery: !!plan.freeDelivery, milestoneOnly: !!plan.milestoneOnly }
+                : { name: 'VIP Pass', price: 199, durationDays: 30, discount: 10, freeDelivery: true, milestoneOnly: false };
             this.showVipPlanModal = true;
         },
         async saveVipPlan() {
@@ -4477,7 +4582,7 @@ addGiftToMilestone(lvl) {
             }
             this.loading = true;
             try {
-                const plan = { name, price, durationDays, discount, freeDelivery: !!this.vipPlanDraft.freeDelivery };
+                const plan = { name, price, durationDays, discount, freeDelivery: !!this.vipPlanDraft.freeDelivery, milestoneOnly: !!this.vipPlanDraft.milestoneOnly };
                 const planRef = this.editingVipPlanId
                     ? database.ref(`admin_settings/membership_plans/${this.editingVipPlanId}`)
                     : database.ref('admin_settings/membership_plans').push();
@@ -5792,7 +5897,16 @@ addGiftToMilestone(lvl) {
         // Firebase Auth state check — admin session restore
         auth.onAuthStateChanged(async (user) => {
             if (user && localStorage.getItem('pk_admin_session')) {
+                // Sirf flag par bharosa nahi: asli admin hai ya nahi, database se verify karo
+                const okAdmin = await this.isAdminUid(user.uid);
+                if (!okAdmin) {
+                    localStorage.removeItem('pk_admin_session');
+                    this.adminLoggedIn = false;
+                    auth.signOut().catch(() => {});
+                    return;
+                }
                 this.adminLoggedIn = true;
+                this.startIdleTimer();
                 this.startAllRealtimeListeners();
                 try { await this.loadAllData(); } catch (e) { console.error('loadAllData failed:', e); }
             } else if (!user) {
