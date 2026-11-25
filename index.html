@@ -4512,8 +4512,10 @@ addGiftToMilestone(lvl) {
                ['orders', snap => {
     const data = snap.val();
     this.orders = data ? Object.keys(data).map(k => ({ id: k, ...data[k] })).reverse() : [];
-    if (this.currentPage === 'dashboard') this.renderMonthlySalesChart(); // <-- YEH LINE ADD KAREIN
+    this.scheduleLeaderboardRefresh();
+    if (this.currentPage === 'dashboard') this.renderMonthlySalesChart();
 }],
+
                 ['users', () => this.loadUsers()],
                 ['users_email', () => this.loadUsers()],
                 ['vip_membership_requests', () => this.loadVipMembershipRequests().catch(e => console.error('VIP request sync failed:', e))],
