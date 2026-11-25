@@ -2551,34 +2551,65 @@
                         </p>
                     </div>
 
-                    <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 space-y-4">
+                    <!-- ===== SPLASH SCREEN POPUP CARD ===== -->
+                    <div class="bg-white p-5 rounded-2xl shadow-sm border border-red-100 space-y-4">
                         <h3 class="font-bold text-gray-800 text-base flex items-center gap-2">
-                            <i class="fas fa-bullhorn text-red-500"></i> Quick Live Broadcast (Safe Mode)
+                            <i class="fas fa-bullhorn text-red-500"></i> Splash Screen Popup
                         </h3>
-                        <p class="text-[11px] text-gray-400 -mt-2">Yahan se aap jo bhi alert bhejenge, wo instantly sabhi active users ke screen par sirf ek baar show hoga.</p>
+                        <p class="text-[11px] text-gray-400 -mt-2">App khulte hi ye popup customers ko dikhega. Jab chaho ON ya OFF karo.</p>
 
-                        <div>
-                            <label class="block text-[11px] font-bold text-gray-500 uppercase mb-1">Offer Title</label>
-                            <input type="text" id="quickTitle" placeholder="e.g., Loot Offer! 🎉" class="w-full px-3 py-2.5 border rounded-xl text-sm outline-none focus:border-red-400">
+                        <div class="flex items-center justify-between bg-red-50 rounded-2xl px-4 py-3 border border-red-100">
+                            <div class="min-w-0 pr-3">
+                                <p class="text-xs font-bold text-gray-700">Splash Status</p>
+                                <p v-if="splashLive" class="text-[11px] text-red-600 font-semibold mt-0.5">🔥 LIVE — {{ splashEndsText }} tak</p>
+                                <p v-else-if="splashInput.isActive" class="text-[11px] text-amber-600 font-semibold mt-0.5">⏰ ON hai par samay khatam — naya duration chun kar Save karein</p>
+                                <p v-else class="text-[11px] text-gray-400 mt-0.5">OFF — customers ko nahi dikh raha</p>
+                            </div>
+                            <div @click="toggleSplash" class="cursor-pointer flex items-center gap-2 flex-shrink-0">
+                                <span class="text-[10px] font-bold" :class="splashInput.isActive ? 'text-red-600' : 'text-gray-400'">{{ splashInput.isActive ? 'ON' : 'OFF' }}</span>
+                                <div class="relative w-12 h-6 rounded-full transition-colors" :class="splashInput.isActive ? 'bg-red-500' : 'bg-gray-300'">
+                                    <div class="absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-all" :class="splashInput.isActive ? 'left-7' : 'left-1'"></div>
+                                </div>
+                            </div>
                         </div>
 
+                        <div>
+                            <label class="block text-[11px] font-bold text-gray-500 uppercase mb-1">Title</label>
+                            <input type="text" v-model="splashInput.title" maxlength="60" placeholder="e.g., Diwali Loot Offer! 🎉" class="w-full px-3 py-2.5 border rounded-xl text-sm outline-none focus:border-red-400">
+                        </div>
                         <div>
                             <label class="block text-[11px] font-bold text-gray-500 uppercase mb-1">Message</label>
-                            <textarea id="quickMsg" rows="2" placeholder="e.g., Flat 50% OFF on all items..." class="w-full px-3 py-2.5 border rounded-xl text-sm outline-none resize-none focus:border-red-400"></textarea>
+                            <textarea v-model="splashInput.message" rows="3" maxlength="300" placeholder="e.g., Flat 50% OFF on all items..." class="w-full px-3 py-2.5 border rounded-xl text-sm outline-none resize-none focus:border-red-400"></textarea>
                         </div>
-
+                        <div>
+                            <label class="block text-[11px] font-bold text-gray-500 uppercase mb-1">Image Link (Optional)</label>
+                            <input type="text" v-model="splashInput.imageUrl" placeholder="https://... (banner / poster ka link)" class="w-full px-3 py-2.5 border rounded-xl text-sm outline-none focus:border-red-400">
+                        </div>
                         <div>
                             <label class="block text-[11px] font-bold text-gray-500 uppercase mb-1">Coupon Code (Optional)</label>
-                            <input type="text" id="quickCode" placeholder="e.g., LOOT50" class="w-full px-3 py-2.5 border rounded-xl text-sm outline-none uppercase tracking-wider focus:border-red-400">
+                            <input type="text" v-model="splashInput.code" placeholder="e.g., LOOT50" class="w-full px-3 py-2.5 border rounded-xl text-sm outline-none uppercase tracking-wider focus:border-red-400">
                         </div>
-
-                        <button onclick="sendQuickAlert()" class="w-full bg-red-500 hover:bg-red-600 text-white py-3 rounded-xl text-sm font-semibold transition shadow-md active:scale-95 flex items-center justify-center gap-2">
-                            <i class="fas fa-paper-plane"></i> Send Alert Now 🚀
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-[11px] font-bold text-gray-500 uppercase mb-1">Kitne din dikhana hai</label>
+                                <select v-model.number="splashInput.durationDays" class="w-full px-3 py-2.5 border rounded-xl text-sm outline-none bg-white">
+                                    <option :value="1">1 din</option><option :value="2">2 din</option><option :value="3">3 din</option>
+                                    <option :value="7">7 din</option><option :value="15">15 din</option><option :value="30">30 din</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-bold text-gray-500 uppercase mb-1">Kitni baar dikhe</label>
+                                <select v-model="splashInput.frequency" class="w-full px-3 py-2.5 border rounded-xl text-sm outline-none bg-white">
+                                    <option value="once">Har user ko 1 baar</option>
+                                    <option value="daily">Roz 1 baar</option>
+                                    <option value="open">Har baar app kholne par</option>
+                                </select>
+                            </div>
+                        </div>
+                        <button @click="saveSplash" :disabled="loading" class="w-full bg-red-500 hover:bg-red-600 disabled:bg-red-300 text-white py-3 rounded-xl text-sm font-semibold transition shadow-md active:scale-95 flex items-center justify-center gap-2">
+                            <i v-if="loading" class="fas fa-circle-notch fa-spin"></i><i v-else class="fas fa-rocket"></i> Save &amp; Publish
                         </button>
-
-                        <button onclick="deleteLiveAlert()" class="w-full bg-gray-50 hover:bg-gray-100 text-gray-600 py-2.5 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 border border-gray-200 active:scale-95">
-                            <i class="fas fa-trash-alt text-red-500"></i> Clear / Delete Current Offer
-                        </button>
+                        <p class="text-[10px] text-gray-400 text-center"><i class="fas fa-info-circle mr-1"></i>Save karte hi naya duration shuru hota hai. Settings <code class="bg-gray-100 px-1 rounded">app_settings/splash</code> mein save hoti hain</p>
                     </div>
                 </div>
             </div>
@@ -3224,6 +3255,7 @@ editCategoryUploading: false,
             deliveryCharge: 40,
             isActive: true
         },
+        splashInput: { isActive: false, title: '', message: '', code: '', imageUrl: '', durationDays: 1, frequency: 'once', showUntil: 0, version: '' },
         flashSaleInput: { isActive: false, title: 'Flash Sale ⚡', discountPercent: 10, endAt: '' },
         deliverySettingsInput: {
             minOrderLimit: 199,
@@ -3392,6 +3424,11 @@ monthlyChartTotalRevenue() {
                 // Check if membership status is active or valid object
                 return typeof user.membership === 'object' && user.membership.status === 'active';
             });
+        },
+        splashLive() { const x = this.splashInput; return !!(x.isActive && Number(x.showUntil) > Date.now()); },
+        splashEndsText() {
+            const t = Number(this.splashInput.showUntil); if (!t) return '';
+            return new Date(t).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
         },
         pendingGiftClaims() { return (this.giftClaims || []).filter(c => (c.status || 'pending') === 'pending'); },
         filteredGiftClaims() {
@@ -4930,6 +4967,7 @@ addGiftToMilestone(lvl) {
             }
             await this.loadDeliverySettings();
             await this.loadFlashSale();
+            await this.loadSplash();
         },
         viewPodPhoto(order) { this.podPhotoModal = order; },
         async loadWithdrawals() {
@@ -5827,6 +5865,61 @@ addGiftToMilestone(lvl) {
             }
         },
 
+        // ===== SPLASH SCREEN POPUP =====
+        async serverNowMs() {
+            try { const off = Number((await database.ref('.info/serverTimeOffset').once('value')).val()) || 0; return Date.now() + off; }
+            catch (e) { return Date.now(); }
+        },
+        async loadSplash() {
+            try {
+                const snap = await database.ref('app_settings/splash').once('value');
+                if (snap.exists()) {
+                    const d = snap.val();
+                    this.splashInput = {
+                        isActive: d.isActive === true, title: d.title || '', message: d.message || '', code: d.code || '',
+                        imageUrl: d.imageUrl || '', durationDays: Number(d.durationDays) || 1, frequency: d.frequency || 'once',
+                        showUntil: Number(d.showUntil) || 0, version: d.version || ''
+                    };
+                }
+            } catch (e) { console.log('Splash load error', e); }
+        },
+        async saveSplash() {
+            const x = this.splashInput;
+            if (!String(x.title).trim() || !String(x.message).trim()) { this.showMessage('❌ Title aur Message dono zaroori hain!'); return; }
+            const img = String(x.imageUrl || '').trim();
+            if (img && !/^https?:\/\//i.test(img)) { this.showMessage('❌ Image link http ya https se shuru hona chahiye'); return; }
+            this.loading = true;
+            try {
+                const now = await this.serverNowMs();
+                const days = Math.max(1, Number(x.durationDays) || 1);
+                const payload = {
+                    isActive: true, title: String(x.title).trim(), message: String(x.message).trim(),
+                    code: String(x.code || '').trim().toUpperCase(), imageUrl: img,
+                    durationDays: days, frequency: x.frequency || 'once',
+                    showUntil: now + days * 86400000, version: String(now), updatedAt: now
+                };
+                await database.ref('app_settings/splash').set(payload);
+                this.splashInput = { ...payload };
+                this.showMessage('✅ Splash screen live ho gayi! ' + days + ' din tak dikhegi.');
+            } catch (e) { this.showMessage('❌ Error: ' + e.message); }
+            finally { this.loading = false; }
+        },
+        async toggleSplash() {
+            const x = this.splashInput;
+            const turningOn = !x.isActive;
+            if (turningOn && (!String(x.title).trim() || !String(x.message).trim())) { this.showMessage('❌ Pehle Title aur Message bharke Save karein'); return; }
+            try {
+                const now = await this.serverNowMs();
+                const upd = { isActive: turningOn, updatedAt: now };
+                if (turningOn) {
+                    if (!(Number(x.showUntil) > now)) upd.showUntil = now + Math.max(1, Number(x.durationDays) || 1) * 86400000;
+                    upd.version = String(now); // dobara ON karne par sabko phir se dikhe
+                }
+                await database.ref('app_settings/splash').update(upd);
+                this.splashInput = { ...x, ...upd };
+                this.showMessage(turningOn ? '✅ Splash screen ON ho gayi' : '✅ Splash screen OFF — ab customers ko nahi dikhegi');
+            } catch (e) { this.showMessage('❌ Error: ' + e.message); }
+        },
         // ===== FLASH SALE SETTINGS =====
         async saveFlashSale() {
             const f = this.flashSaleInput;
@@ -5972,7 +6065,8 @@ function sendQuickAlert() {
         title: titleText,
         message: messageText,
         code: codeText,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        sentAt: firebase.database.ServerValue.TIMESTAMP
     }).then(() => {
         alert("Notification successfully sent to all users! 👍");
         titleInput.value = '';
