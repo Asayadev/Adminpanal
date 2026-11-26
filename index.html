@@ -755,6 +755,7 @@
 <button @click="changePage('milestones')" :class="{'nav-active': currentPage=='milestones'}" class="w-full text-left px-3 py-2 rounded-lg flex items-center gap-2 text-sm font-medium"><i class="fas fa-gift w-4 text-pink-500"></i> Milestone Gifts</button>
                     <button @click="changePage('giftClaims')" :class="{'nav-active': currentPage=='giftClaims'}" class="w-full text-left px-3 py-2 rounded-lg flex items-center gap-2 text-sm font-medium"><i class="fas fa-box-open w-4 text-orange-500"></i> Gift Claims<span v-if="pendingGiftClaims.length" class="ml-auto rounded-full bg-orange-100 px-2 py-0.5 text-[9px] font-black text-orange-800">{{ pendingGiftClaims.length }}</span></button>
                     <button @click="changePage('vehicleBookings')" :class="{'nav-active': currentPage=='vehicleBookings'}" class="w-full text-left px-3 py-2 rounded-lg flex items-center gap-2 text-sm font-medium"><i class="fas fa-car-side w-4 text-amber-500"></i> Vehicle Bookings<span v-if="vbActionCount" class="ml-auto rounded-full bg-amber-100 px-2 py-0.5 text-[9px] font-black text-amber-800">{{ vbActionCount }}</span></button>
+                    <button @click="changePage('securityAudit')" :class="{'nav-active': currentPage=='securityAudit'}" class="w-full text-left px-3 py-2 rounded-lg flex items-center gap-2 text-sm font-medium"><i class="fas fa-shield-alt w-4 text-red-500"></i> Security Audit<span v-if="auditFlaggedOrders.length" class="ml-auto rounded-full bg-red-100 px-2 py-0.5 text-[9px] font-black text-red-700">{{ auditFlaggedOrders.length }}</span></button>
 
                     <button @click="changePage('categories')" :class="{'nav-active': currentPage=='categories'}" class="w-full text-left px-3 py-2 rounded-lg flex items-center gap-2 text-sm font-medium"><i class="fas fa-tags w-4"></i> Categories</button>
                     <button @click="changePage('vipMembership')" :class="{'nav-active': currentPage=='vipMembership'}" class="w-full text-left px-3 py-2 rounded-lg flex items-center gap-2 text-sm font-medium"><i class="fas fa-crown w-4 text-amber-500"></i> VIP Membership<span v-if="pendingVipRequests.length" class="ml-auto rounded-full bg-amber-100 px-2 py-0.5 text-[9px] font-black text-amber-800">{{ pendingVipRequests.length }}</span></button>
@@ -1579,7 +1580,7 @@
     <option value="rejected">❌ Rejected</option>
 </select>
 
-<span class="font-black text-blue-700 text-sm">₹{{ Number(order.total).toFixed(2) }}</span></div></div>
+<span class="font-black text-blue-700 text-sm">₹{{ Number(order.total).toFixed(2) }}</span><span v-if="orderIntegrity(order).length" @click="showMessage('⚠️ ' + orderIntegrity(order).join(' | '))" class="ml-1 bg-red-100 text-red-700 font-black text-[10px] px-2 py-0.5 rounded-full cursor-pointer">⚠️ Price check</span></div></div>
                         <div class="p-4 grid grid-cols-3 gap-3 text-xs border-b"><div class="bg-blue-50/50 p-2.5 rounded-lg"><p class="text-[10px] text-gray-400 font-semibold">Customer Name</p><p class="font-bold text-gray-800">{{ order.customerName }}</p></div><div class="bg-green-50/50 p-2.5 rounded-lg"><p class="text-[10px] text-gray-400 font-semibold">Mobile Number</p><p class="font-bold text-gray-800">{{ order.customerPhone }}</p></div><div class="bg-amber-50/50 p-2.5 rounded-lg"><p class="text-[10px] text-gray-400 font-semibold">Payment</p>
                                 <div class="flex items-center gap-1 mt-0.5">
                                     <span :class="order.payment_method === 'Online' ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700'" class="text-[10px] font-black px-2 py-0.5 rounded-full">
@@ -2806,6 +2807,46 @@
                 </div>
             </div>
 
+            <div v-if="currentPage == 'securityAudit'" class="space-y-4 p-4 md:p-6">
+                <div class="bg-gradient-to-r from-red-600 to-rose-500 rounded-2xl p-5 text-white shadow">
+                    <h2 class="text-xl font-black"><i class="fas fa-shield-alt mr-2"></i>Security Audit</h2>
+                    <p class="text-xs text-white/90 mt-1">Galat daam, double gift claim aur shak wale wallet yahan dikhte hain. Ye sirf jaanch hai, kuch apne aap nahi badalta.</p>
+                </div>
+
+                <div class="bg-white rounded-2xl p-4 shadow-sm border border-red-100">
+                    <p class="text-sm font-black text-gray-800 mb-2">⚠️ Price check wale orders ({{ auditFlaggedOrders.length }})</p>
+                    <p v-if="!auditFlaggedOrders.length" class="text-xs text-green-600 font-bold">Sab orders ke daam sahi lag rahe hain ✅</p>
+                    <div v-for="o in auditFlaggedOrders" :key="o.id" class="border-t py-2 text-xs">
+                        <p class="font-black text-gray-800">#{{ o.id.slice(-6).toUpperCase() }} · {{ o.customerName }} · ₹{{ Number(o.total).toFixed(2) }} <span class="text-[10px] font-bold text-gray-400">({{ o.status }})</span></p>
+                        <p v-for="(is, i) in orderIntegrity(o)" :key="i" class="text-[11px] text-red-600">• {{ is }}</p>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-2xl p-4 shadow-sm border border-orange-100">
+                    <p class="text-sm font-black text-gray-800 mb-2">🎁 Ek hi milestone ke ek se zyada claim ({{ auditDuplicateClaims.length }})</p>
+                    <p v-if="!auditDuplicateClaims.length" class="text-xs text-green-600 font-bold">Koi double claim nahi mila ✅</p>
+                    <p v-for="d in auditDuplicateClaims" :key="d.key" class="text-xs border-t py-2"><b>{{ d.name }}</b> ({{ d.phone }}) · {{ d.level }} Items · <span class="text-red-600 font-black">{{ d.count }} baar claim</span></p>
+                </div>
+
+                <div class="bg-white rounded-2xl p-4 shadow-sm border border-amber-100">
+                    <p class="text-sm font-black text-gray-800 mb-1">💰 Cashback wallet jaanch ({{ auditCashback.length }})</p>
+                    <p class="text-[10px] text-gray-400 mb-2">Wallet unke orders se banne wale cashback se zyada hai. Agar aapne khud manual credit kiya ho to ise ignore karein.</p>
+                    <p v-if="!auditCashback.length" class="text-xs text-green-600 font-bold">Sab wallet orders ke hisaab se theek hain ✅</p>
+                    <div v-for="r in auditCashback" :key="r.uid" class="border-t py-2 text-xs flex justify-between gap-2">
+                        <div><p class="font-black text-gray-800">{{ r.name }}</p><p class="text-[10px] text-gray-400">{{ r.phone }}</p></div>
+                        <div class="text-right"><p class="font-black text-red-600">₹{{ r.actual.toFixed(2) }}</p><p class="text-[10px] text-gray-500">orders ke hisaab se: ₹{{ r.expected.toFixed(2) }}</p></div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+                    <p class="text-sm font-black text-gray-800 mb-2">🏆 Sabse bade wallet / points (nazar rakhne ke liye)</p>
+                    <div v-for="r in auditTopWallets" :key="r.uid" class="border-t py-2 text-xs flex justify-between gap-2">
+                        <span class="font-bold text-gray-700">{{ r.name }} <span class="text-[10px] text-gray-400">{{ r.phone }}</span></span>
+                        <span class="font-black">₹{{ r.cashback.toFixed(2) }} · {{ r.rewards }} pts</span>
+                    </div>
+                </div>
+            </div>
+
             <div v-if="currentPage == 'giftClaims'" class="space-y-4 p-4 md:p-6">
                 <div class="bg-gradient-to-r from-orange-500 to-pink-500 rounded-2xl p-5 text-white shadow">
                     <h2 class="text-xl font-black"><i class="fas fa-box-open mr-2"></i>Gift Claims</h2>
@@ -2827,7 +2868,11 @@
                             <div class="min-w-0 flex-1">
                                 <p class="font-black text-gray-800 text-sm leading-tight">{{ c.giftTitle || 'Gift' }}</p>
                                 <p class="text-[10px] text-gray-500 mt-0.5">Milestone: <b>{{ c.milestoneLevel }} Items</b></p>
-                                <p v-if="c.vipPlanName" class="text-[10px] text-amber-700 font-bold mt-0.5">👑 VIP bhi mila: {{ c.vipPlanName }}</p>
+                                <div v-if="c.vipPlanName" class="mt-1">
+                                    <p class="text-[10px] text-amber-700 font-bold">👑 VIP plan: {{ c.vipPlanName }}</p>
+                                    <p v-if="c.vipActivated" class="text-[10px] text-green-600 font-black">✅ VIP chalu ho chuka</p>
+                                    <button v-else-if="c.status !== 'cancelled'" @click="activateGiftVip(c)" class="mt-1 bg-amber-500 text-white text-[10px] font-black px-3 py-1 rounded-full active:scale-95">👑 VIP Activate karein</button>
+                                </div>
                             </div>
                             <span :class="giftStatusClass(c.status)" class="px-2 py-1 rounded-full text-[10px] font-black uppercase whitespace-nowrap">{{ c.status || 'pending' }}</span>
                         </div>
@@ -3550,6 +3595,34 @@ monthlyChartTotalRevenue() {
             const commission = Math.round(fare * pct) / 100;
             return { commission, driverPayout: Math.round((fare - commission) * 100) / 100 };
         },
+        auditFlaggedOrders() { return (this.orders || []).filter(o => this.orderIntegrity(o).length).slice(0, 60); },
+        auditDuplicateClaims() {
+            const map = {};
+            (this.giftClaims || []).filter(c => c.status !== 'cancelled').forEach(c => {
+                const k = (c.uid || c.customerPhone || '?') + '|' + c.milestoneLevel;
+                (map[k] = map[k] || { key: k, name: c.customerName || 'Customer', phone: c.customerPhone || '', level: c.milestoneLevel, count: 0 }).count++;
+            });
+            return Object.values(map).filter(x => x.count > 1);
+        },
+        auditCashback() {
+            const byUid = {};
+            (this.orders || []).forEach(o => { if (o.uid) (byUid[o.uid] = byUid[o.uid] || []).push(o); });
+            const out = [];
+            (this.emailUsers || []).forEach(u => {
+                let earned = 0, used = 0;
+                (byUid[u.id] || []).forEach(o => {
+                    if (o.cashbackCredited === true) earned += Number(o.totalCashbackEarnable || 0);
+                    if (o.status !== 'cancelled' && o.status !== 'rejected') used += Number(o.cashbackUsed || 0);
+                });
+                const expected = Math.max(0, earned - used), actual = Number(u.cashback || 0);
+                if (actual > expected + 5) out.push({ uid: u.id, name: u.name || 'User', phone: u.phone || '', actual, expected });
+            });
+            return out.sort((a, b) => (b.actual - b.expected) - (a.actual - a.expected)).slice(0, 30);
+        },
+        auditTopWallets() {
+            return (this.emailUsers || []).map(u => ({ uid: u.id, name: u.name || 'User', phone: u.phone || '', cashback: Number(u.cashback || 0), rewards: Number(u.rewards || 0) }))
+                .sort((a, b) => (b.cashback + b.rewards) - (a.cashback + a.rewards)).slice(0, 10);
+        },
         pendingGiftClaims() { return (this.giftClaims || []).filter(c => (c.status || 'pending') === 'pending'); },
         filteredGiftClaims() {
             const f = this.giftClaimFilter;
@@ -3561,7 +3634,7 @@ monthlyChartTotalRevenue() {
         filteredUsers() { let list = this.allUsers; if (this.userTypeFilter === 'mobile') list = list.filter(u => u.type === 'mobile'); else if (this.userTypeFilter === 'email') list = list.filter(u => u.type === 'email'); if (this.userSearch) { const s = this.userSearch.toLowerCase(); list = list.filter(u => (u.name && u.name.toLowerCase().includes(s)) || (u.phone && u.phone.includes(s)) || (u.email && u.email.toLowerCase().includes(s))); } return list; },
         filteredProducts() { if (!this.productSearch) return this.products; const s = this.productSearch.toLowerCase(); return this.products.filter(p => p.name.toLowerCase().includes(s) || (p.category && p.category.toLowerCase().includes(s))); },
         filteredOrders() { let filtered = this.orders; if (this.orderStatusFilter === 'cancelled') { filtered = filtered.filter(o => o.status === 'cancelled' || o.status === 'rejected'); } else if (this.orderStatusFilter === 'online_pending') { filtered = filtered.filter(o => o.payment_method === 'Online' && o.status === 'pending'); } else if (this.orderStatusFilter !== 'all') { filtered = filtered.filter(o => o.status === this.orderStatusFilter); } if (this.orderSearch) { const s = this.orderSearch.toLowerCase(); filtered = filtered.filter(o => (o.id && o.id.toLowerCase().includes(s)) || (o.customerName && o.customerName.toLowerCase().includes(s)) || (o.customerPhone && o.customerPhone.includes(s))); } return filtered; },
-        getPageTitle() { const t = { dashboard: 'Dashboard', products: 'Products', addProduct: 'Add Product', storeRooms: 'Store Rooms', banners: 'Banners', categories: 'Categories', users: 'Users', vipMembership: 'VIP Membership', orders: 'Orders', returns: 'Returns', settings: 'Settings', riders: 'Riders', withdrawals: 'Withdrawals',kisanPurchase: 'Kisan Purchases',milestones: 'Milestone Gifts', giftClaims: 'Gift Claims', vehicleBookings: 'Vehicle Bookings'
+        getPageTitle() { const t = { dashboard: 'Dashboard', products: 'Products', addProduct: 'Add Product', storeRooms: 'Store Rooms', banners: 'Banners', categories: 'Categories', users: 'Users', vipMembership: 'VIP Membership', orders: 'Orders', returns: 'Returns', settings: 'Settings', riders: 'Riders', withdrawals: 'Withdrawals',kisanPurchase: 'Kisan Purchases',milestones: 'Milestone Gifts', giftClaims: 'Gift Claims', vehicleBookings: 'Vehicle Bookings', securityAudit: 'Security Audit'
 }; return t[this.currentPage] || 'Admin'; },
 
         // ===== TOP SELLING PRODUCTS (Dashboard Analytics) =====
@@ -4580,36 +4653,53 @@ addGiftToMilestone(lvl) {
             clearTimeout(this._lbTimer);
             this._lbTimer = setTimeout(() => { this.refreshLeaderboard().catch(e => console.log('Leaderboard error', e)); }, 3000);
         },
-        async refreshLeaderboard() {
-            const now = new Date();
-            const month = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
-            const map = {};
-            (this.orders || []).forEach(o => {
-                if (o.status !== 'delivered' || !o.date) return;
-                const d = new Date(o.date);
-                if (isNaN(d.getTime()) || d.getFullYear() !== now.getFullYear() || d.getMonth() !== now.getMonth()) return;
-                const phone = String(o.customerPhone || '').replace(/\D/g, '');
-                const uid = o.uid || phone;
-                if (!uid) return;
-                if (!map[uid]) {
-                    map[uid] = {
-                        uid: uid,
-                        name: String(o.customerName || 'Shopper').split(' ')[0],
-                        maskedPhone: phone.length >= 10 ? phone.slice(0, 4) + '****' + phone.slice(-2) : 'User',
-                        avatarUrl: o.customerAvatar || o.userAvatar || '',
-                        totalSpent: 0
-                    };
-                }
-                map[uid].totalSpent += Number(o.total || 0);
-                if (!map[uid].avatarUrl) map[uid].avatarUrl = o.customerAvatar || o.userAvatar || '';
-            });
-            const list = Object.values(map).sort((a, b) => b.totalSpent - a.totalSpent).slice(0, 20)
-                .map(x => ({ ...x, totalSpent: Math.round(x.totalSpent * 100) / 100 }));
-            const sig = month + JSON.stringify(list);
-            if (sig === this._lbSig) return; // kuch badla nahi to dobara write nahi
-            this._lbSig = sig;
-            await database.ref('public_leaderboard').set({ month, list, updatedAt: new Date().toISOString() });
-        },
+       async refreshLeaderboard() {
+    const now = new Date();
+    const month = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
+    const map = {};
+
+    const avatarByUid = {};
+    const avatarByPhone = {};
+    (this.allUsers || []).forEach(u => {
+        const av = u.avatarUrl || u.photoURL || u.avatar || '';
+        if (av) {
+            if (u.id) avatarByUid[u.id] = av;
+            if (u.uid) avatarByUid[u.uid] = av;
+            const ph = String(u.phone || u.mobile || '').replace(/\D/g, '');
+            if (ph) avatarByPhone[ph] = av;
+        }
+    });
+
+    (this.orders || []).forEach(o => {
+        if (o.status !== 'delivered' || !o.date) return;
+        const d = new Date(o.date);
+        if (isNaN(d.getTime()) || d.getFullYear() !== now.getFullYear() || d.getMonth() !== now.getMonth()) return;
+        const phone = String(o.customerPhone || '').replace(/\D/g, '');
+        const uid = o.uid || phone;
+        if (!uid) return;
+
+        const foundAvatar = o.customerAvatar || o.userAvatar || avatarByUid[uid] || avatarByPhone[phone] || '';
+
+        if (!map[uid]) {
+            map[uid] = {
+                uid: uid,
+                name: String(o.customerName || 'Shopper').split(' ')[0],
+                maskedPhone: phone.length >= 10 ? phone.slice(0, 4) + '****' + phone.slice(-2) : 'User',
+                avatarUrl: foundAvatar,
+                totalSpent: 0
+            };
+        }
+        map[uid].totalSpent += Number(o.total || 0);
+        if (!map[uid].avatarUrl && foundAvatar) map[uid].avatarUrl = foundAvatar;
+    });
+
+    const list = Object.values(map).sort((a, b) => b.totalSpent - a.totalSpent).slice(0, 20)
+        .map(x => ({ ...x, totalSpent: Math.round(x.totalSpent * 100) / 100 }));
+    const sig = month + JSON.stringify(list);
+    if (sig === this._lbSig) return; // kuch badla nahi to dobara write nahi
+    this._lbSig = sig;
+    await database.ref('public_leaderboard').set({ month, list, updatedAt: new Date().toISOString() });
+},
         attachOrdersListener() {
             if (!this._ordersRef) this._ordersRef = database.ref('orders');
             if (!this._ordersListener) {
@@ -4759,6 +4849,64 @@ addGiftToMilestone(lvl) {
             if (!confirm('Is booking ko cancel karna hai?')) return;
             try { await database.ref('vehicle_bookings/' + b.id).update({ status: 'cancelled', cancelledBy: 'admin', updatedAt: new Date().toISOString() }); this.showMessage('Booking cancel ho gayi'); await this.loadVehicleBookings(); }
             catch (e) { this.showMessage('❌ Error: ' + e.message); }
+        },
+        // ===== SECURITY AUDIT + VIP ACTIVATE =====
+        orderIntegrity(o) {
+            const issues = [];
+            if (!o || o.paymentMethod === 'FREE_GIFT') return issues;
+            const items = Array.isArray(o.items) ? o.items : [];
+            const flashPct = (this.flashSaleInput && Number(this.flashSaleInput.discountPercent) > 0) ? Number(this.flashSaleInput.discountPercent) : 0;
+            const maxDisc = Math.max(flashPct, Number(this.globalDiscount) || 0, 0);
+            let sum = 0, cb = 0;
+            items.forEach(it => {
+                const q = Number(it.quantity || 1), p = Number(it.price || 0);
+                sum += p * q;
+                const prod = (this.products || []).find(x => x.id === it.id);
+                if (!prod) return;
+                cb += Number(prod.cashback || 0) * q;
+                let base = Number(prod.price);
+                if (prod.hasVariants && Array.isArray(prod.variants) && prod.variants.length) {
+                    const v = prod.variants.find(x => String(x.weight) === String(it.weight));
+                    base = v ? Number(v.price) : Math.min(...prod.variants.map(x => Number(x.price)));
+                }
+                if (base > 0 && p < base * (1 - maxDisc / 100) - 1) issues.push((it.name || 'Item') + ': daam ₹' + p + ' (asli ₹' + base + ')');
+            });
+            const itemTotal = Number(o.itemTotal || 0);
+            if (items.length && Math.abs(sum - itemTotal) > 1) issues.push('Items ka jod ₹' + sum.toFixed(2) + ' hai, par order mein ₹' + itemTotal.toFixed(2) + ' likha');
+            if (Number(o.totalCashbackEarnable || 0) > cb + 1) issues.push('Cashback ₹' + Number(o.totalCashbackEarnable).toFixed(2) + ' hai, products ke hisaab se ₹' + cb.toFixed(2) + ' hona chahiye');
+            const vipD = Number(o.vipDiscount || 0);
+            if (vipD > 0 && !o.isVipOrder) issues.push('VIP discount ₹' + vipD + ' hai par order VIP nahi hai');
+            if (vipD > 0 && o.isVipOrder) {
+                const plan = (this.membershipPlans || []).find(p => p.id === o.vipPlanId);
+                if (plan && vipD > itemTotal * Number(plan.discount || 0) / 100 + 1) issues.push('VIP discount plan ke %' + plan.discount + ' se zyada hai');
+            }
+            if (Number(o.rewardPointsUsed || 0) > 0 && !o.isVipOrder) issues.push('Reward points use hue par order VIP nahi hai');
+            const implied = itemTotal - vipD - Number(o.cashbackUsed || 0) - Number(o.rewardPointsUsed || 0) + Number(o.deliveryCharge || 0) - Number(o.total || 0);
+            if (implied > 0.5 && o.couponCode === '') issues.push('₹' + implied.toFixed(2) + ' ka extra discount bina coupon ke');
+            if (implied < -2) issues.push('Total hisaab se ₹' + Math.abs(implied).toFixed(2) + ' zyada hai');
+            return issues;
+        },
+        async activateGiftVip(c) {
+            const plan = (this.membershipPlans || []).find(p => p.id === c.vipPlanId);
+            if (!plan) { this.showMessage('❌ VIP plan nahi mila (shayad delete ho gaya)'); return; }
+            if (!c.uid) { this.showMessage('❌ Customer ki ID nahi mili'); return; }
+            if (!confirm(c.customerName + ' ko "' + plan.name + '" (' + plan.durationDays + ' din) VIP dena hai?')) return;
+            try {
+                const cur = (await database.ref('users_email/' + c.uid + '/membership').once('value')).val();
+                const now = Date.now();
+                const curExp = cur && cur.expiryDate ? Date.parse(cur.expiryDate) : 0;
+                const days = Number(plan.durationDays || 30);
+                const membership = {
+                    status: 'active', planId: plan.id, planName: plan.name,
+                    discountPercent: Number(plan.discount || 0), freeDelivery: plan.freeDelivery !== false,
+                    expiryDate: new Date(Math.max(now, curExp || 0) + days * 86400000).toISOString(),
+                    activatedAt: new Date(now).toISOString()
+                };
+                await database.ref('users_email/' + c.uid + '/membership').set(membership);
+                await database.ref('gift_claims/' + c.id).update({ vipActivated: true, vipActivatedAt: new Date().toISOString(), updatedAt: new Date().toISOString() });
+                this.showMessage('✅ VIP chalu ho gaya');
+                await this.loadGiftClaims();
+            } catch (e) { this.showMessage('❌ Error: ' + e.message); }
         },
         // ===== GIFT CLAIMS =====
         async loadGiftClaims() {
